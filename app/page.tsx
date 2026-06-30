@@ -15,9 +15,10 @@ function daysLeft(iso: string | null): number | null {
   return Math.max(0, Math.ceil(ms / 86400000));
 }
 
-// App keys that have a real, openable room built.
-const LIVE_APPS: Record<string, string> = {
-  site_builder: "/apps/site-builder",
+// App keys that have a real, openable room.
+const LIVE_APPS: Record<string, { href: string; external?: boolean }> = {
+  site_builder: { href: "/apps/site-builder" },
+  time_material: { href: "https://tm.serviceopspro.com", external: true },
 };
 
 export default async function Home() {
@@ -100,8 +101,8 @@ export default async function Home() {
             const status = ent?.status ?? "locked";
             const left = daysLeft(ent?.trial_ends_at ?? null);
             const entitled = status === "active" || status === "trialing";
-            const href = LIVE_APPS[app.key];
-            const openable = entitled && !!href;
+            const live = LIVE_APPS[app.key];
+            const canOpen = entitled && !!live;
 
             const badge =
               status === "active"
@@ -136,14 +137,26 @@ export default async function Home() {
                   {app.description}
                 </p>
                 <div className="mt-4">
-                  {openable ? (
-                    <Link
-                      href={href}
-                      className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900"
-                      style={{ background: "#e0a82e" }}
-                    >
-                      Open →
-                    </Link>
+                  {canOpen && live ? (
+                    live.external ? (
+                      
+                        href={live.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900"
+                        style={{ background: "#e0a82e" }}
+                      >
+                        Open ↗
+                      </a>
+                    ) : (
+                      <Link
+                        href={live.href}
+                        className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900"
+                        style={{ background: "#e0a82e" }}
+                      >
+                        Open →
+                      </Link>
+                    )
                   ) : (
                     <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">
                       Coming soon — being built
