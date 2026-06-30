@@ -23,13 +23,13 @@ const LIVE_APPS: Record<string, { href: string; external?: boolean }> = {
   time_material: { href: "https://tm.serviceopspro.com", external: true },
 };
 
-// Corner placement for the four tiles around the center logo (desktop).
-const CORNER = [
-  "md:col-start-1 md:row-start-1",
-  "md:col-start-3 md:row-start-1",
-  "md:col-start-1 md:row-start-2",
-  "md:col-start-3 md:row-start-2",
-];
+// Corner placement for each app around the center logo (desktop).
+const POS: Record<string, string> = {
+  site_builder: "md:col-start-1 md:row-start-1", // top-left
+  app_four: "md:col-start-3 md:row-start-1", // top-right (Client Outreach)
+  time_material: "md:col-start-1 md:row-start-2", // bottom-left
+  estimating: "md:col-start-3 md:row-start-2", // bottom-right
+};
 
 export default async function Home() {
   const supabase = await createClient();
@@ -100,7 +100,7 @@ export default async function Home() {
 
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Your command center</h1>
+          <h1 className="text-3xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #e0a82e" }}>YOUR COMMAND CENTER</h1>
           {trialDaysLeft != null && (
             <p className="mt-2 text-sm font-semibold text-amber-300">
               Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"}{" "}
@@ -125,7 +125,7 @@ export default async function Home() {
             </div>
           </div>
 
-          {list.map((app: AppRow, i: number) => {
+          {list.map((app: AppRow) => {
             const ent = entByApp.get(app.key);
             const status = ent?.status ?? "locked";
             const left = daysLeft(ent?.trial_ends_at ?? null);
@@ -151,7 +151,7 @@ export default async function Home() {
               <div
                 key={app.key}
                 className={`rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col items-center text-center ${
-                  CORNER[i] ?? ""
+                  POS[app.key] ?? ""
                 }`}
               >
                 <span
