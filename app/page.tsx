@@ -15,6 +15,11 @@ function daysLeft(iso: string | null): number | null {
   return Math.max(0, Math.ceil(ms / 86400000));
 }
 
+// App keys that have a real, openable room built.
+const LIVE_APPS: Record<string, string> = {
+  site_builder: "/apps/site-builder",
+};
+
 export default async function Home() {
   const supabase = await createClient();
   const {
@@ -94,6 +99,9 @@ export default async function Home() {
             const ent = entByApp.get(app.key);
             const status = ent?.status ?? "locked";
             const left = daysLeft(ent?.trial_ends_at ?? null);
+            const entitled = status === "active" || status === "trialing";
+            const href = LIVE_APPS[app.key];
+            const openable = entitled && !!href;
 
             const badge =
               status === "active"
@@ -128,9 +136,19 @@ export default async function Home() {
                   {app.description}
                 </p>
                 <div className="mt-4">
-                  <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">
-                    Coming soon — being built
-                  </span>
+                  {openable ? (
+                    <Link
+                      href={href}
+                      className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900"
+                      style={{ background: "#e0a82e" }}
+                    >
+                      Open →
+                    </Link>
+                  ) : (
+                    <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">
+                      Coming soon — being built
+                    </span>
+                  )}
                 </div>
               </div>
             );
