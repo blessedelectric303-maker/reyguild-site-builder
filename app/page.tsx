@@ -19,9 +19,9 @@ function daysLeft(iso: string | null): number | null {
 const LIVE_APPS: Record<string, { href: string; external?: boolean }> = {
   site_builder: { href: "/apps/site-builder" },
   estimating: { href: "/apps/estimating" },
+  app_four: { href: "/apps/field-log" },
   time_material: { href: "https://tm.serviceopspro.com", external: true },
 };
-
 export default async function Home() {
   const supabase = await createClient();
   const {
