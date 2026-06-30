@@ -139,28 +139,12 @@ export default async function Home() {
                 <div className="mt-4">
                   {canOpen && live ? (
                     live.external ? (
-                      
-                        href={live.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900"
-                        style={{ background: "#e0a82e" }}
-                      >
-                        Open ↗
-                      </a>
+                      <a href={live.href} target="_blank" rel="noopener noreferrer" className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open ↗</a>
                     ) : (
-                      <Link
-                        href={live.href}
-                        className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900"
-                        style={{ background: "#e0a82e" }}
-                      >
-                        Open →
-                      </Link>
+                      <Link href={live.href} className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open →</Link>
                     )
                   ) : (
-                    <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">
-                      Coming soon — being built
-                    </span>
+                    <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">Coming soon — being built</span>
                   )}
                 </div>
               </div>
