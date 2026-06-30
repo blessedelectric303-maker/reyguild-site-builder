@@ -18,6 +18,7 @@ function daysLeft(iso: string | null): number | null {
 // App keys that have a real, openable room.
 const LIVE_APPS: Record<string, { href: string; external?: boolean }> = {
   site_builder: { href: "/apps/site-builder" },
+  estimating: { href: "/apps/estimating" },
   time_material: { href: "https://tm.serviceopspro.com", external: true },
 };
 
