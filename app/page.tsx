@@ -117,7 +117,7 @@ export default async function Home() {
             <img
               src="/crest.png"
               alt="ReyGuild"
-              className="w-32 md:w-44 h-auto drop-shadow-lg"
+              className="w-64 md:w-[28rem] h-auto drop-shadow-2xl"
             />
             <div className="mt-3 text-2xl md:text-3xl font-extrabold tracking-wide">
               <span style={{ color: "#e0a82e" }}>REY</span>
