@@ -22,6 +22,15 @@ const LIVE_APPS: Record<string, { href: string; external?: boolean }> = {
   app_four: { href: "/apps/field-log" },
   time_material: { href: "https://tm.serviceopspro.com", external: true },
 };
+
+// Corner placement for the four tiles around the center logo (desktop).
+const CORNER = [
+  "md:col-start-1 md:row-start-1",
+  "md:col-start-3 md:row-start-1",
+  "md:col-start-1 md:row-start-2",
+  "md:col-start-3 md:row-start-2",
+];
+
 export default async function Home() {
   const supabase = await createClient();
   const {
@@ -31,9 +40,7 @@ export default async function Home() {
   if (!user) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-center p-8">
-        <div className="text-xs tracking-[0.3em] text-slate-400 mb-6">
-          SERVICE COMPANY SOFTWARE
-        </div>
+        <img src="/crest.png" alt="ReyGuild" className="w-28 h-auto mb-6" />
         <h1 className="text-5xl font-extrabold tracking-wide">
           <span style={{ color: "#e0a82e" }}>REY</span>
           <span className="text-white">GUILD</span>
@@ -68,13 +75,16 @@ export default async function Home() {
     (ents ?? []).map((e: EntRow) => [e.app_key, e])
   );
 
+  const trialing = (ents ?? []).filter((e: EntRow) => e.status === "trialing");
+  const trialDaysLeft = trialing.length
+    ? Math.max(...trialing.map((e: EntRow) => daysLeft(e.trial_ends_at) ?? 0))
+    : null;
+
+  const list = (apps ?? []) as AppRow[];
+
   return (
     <main className="min-h-screen p-6 md:p-10">
-      <header className="flex items-center justify-between mb-10">
-        <div className="text-xl font-extrabold tracking-wide">
-          <span style={{ color: "#e0a82e" }}>REY</span>
-          <span className="text-white">GUILD</span>
-        </div>
+      <header className="flex items-center justify-end mb-6">
         <div className="flex items-center gap-3 text-sm">
           <span className="text-slate-400 hidden sm:inline">{user.email}</span>
           <form action="/auth/signout" method="post">
@@ -88,16 +98,34 @@ export default async function Home() {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-1">
-          Your command center
-        </h1>
-        <p className="text-slate-400 mb-8 text-sm">
-          Every ReyGuild app, one login. Your free trial is running.
-        </p>
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white">Your command center</h1>
+          {trialDaysLeft != null && (
+            <p className="mt-2 text-sm font-semibold text-amber-300">
+              Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"}{" "}
+              left
+            </p>
+          )}
+          <p className="mt-1 text-slate-400 text-sm">
+            Every ReyGuild app, one login.
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {(apps ?? []).map((app: AppRow) => {
+        <div className="grid gap-5 md:grid-cols-[1fr_auto_1fr] md:grid-rows-2 md:items-stretch">
+          <div className="flex flex-col items-center justify-center px-6 py-4 md:col-start-2 md:row-start-1 md:row-span-2">
+            <img
+              src="/crest.png"
+              alt="ReyGuild"
+              className="w-32 md:w-44 h-auto drop-shadow-lg"
+            />
+            <div className="mt-3 text-2xl md:text-3xl font-extrabold tracking-wide">
+              <span style={{ color: "#e0a82e" }}>REY</span>
+              <span className="text-white">GUILD</span>
+            </div>
+          </div>
+
+          {list.map((app: AppRow, i: number) => {
             const ent = entByApp.get(app.key);
             const status = ent?.status ?? "locked";
             const left = daysLeft(ent?.trial_ends_at ?? null);
@@ -122,30 +150,32 @@ export default async function Home() {
             return (
               <div
                 key={app.key}
-                className="rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col"
+                className={`rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col items-center text-center ${
+                  CORNER[i] ?? ""
+                }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className="text-lg font-semibold text-white">
-                    {app.name}
-                  </h2>
-                  <span
-                    className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] ${badgeColor}`}
-                  >
-                    {badge}
-                  </span>
-                </div>
+                <span
+                  className={`rounded-full border px-2 py-0.5 text-[11px] ${badgeColor}`}
+                >
+                  {badge}
+                </span>
+                <h2 className="mt-3 text-lg font-semibold text-white">
+                  {app.name}
+                </h2>
                 <p className="mt-1 text-sm text-slate-400 flex-1">
                   {app.description}
                 </p>
                 <div className="mt-4">
                   {canOpen && live ? (
                     live.external ? (
-                      <a href={live.href} target="_blank" rel="noopener noreferrer" className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open ↗</a>
+                      <a href={live.href} target="_blank" rel="noopener noreferrer" className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open ↗</a>
                     ) : (
-                      <Link href={live.href} className="inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open →</Link>
+                      <Link href={live.href} className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open →</Link>
                     )
                   ) : (
-                    <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">Coming soon — being built</span>
+                    <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">
+                      Coming soon — being built
+                    </span>
                   )}
                 </div>
               </div>
