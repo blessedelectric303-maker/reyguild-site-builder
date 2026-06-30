@@ -2008,8 +2008,8 @@ function StarterFlow({ onDone }) {
 
 /* ---------- main app ---------- */
 
-export default function App() {
-  const [site, setSite] = useState(() => makeSite("electrical"));
+export default function App({ initialSite, initialStarted, onPersist }) {
+  const [site, setSite] = useState(() => initialSite || makeSite("electrical"));
   const [page, setPage] = useState("home");
   const [open, setOpen] = useState("brand");
   const [device, setDevice] = useState("desktop");
@@ -2017,9 +2017,14 @@ export default function App() {
   const [showDomain, setShowDomain] = useState(false);
   const [showLaunch, setShowLaunch] = useState(false);
   const [launched, setLaunched] = useState(false);
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(!!initialStarted);
   const [dragBlock, setDragBlock] = useState(null);
   const photoRef = useRef(null);
+
+  // Save builder state up to the host wrapper (which persists to the account).
+  useEffect(() => {
+    if (started && typeof onPersist === "function") onPersist({ site, started });
+  }, [site, started]);
 
   // if the current page isn't available in the selected tier, fall back to Home
   useEffect(() => {
