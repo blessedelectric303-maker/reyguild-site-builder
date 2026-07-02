@@ -83,7 +83,7 @@ export default async function Home() {
   const list = (apps ?? []) as AppRow[];
 
   return (
-    <main className="min-h-screen p-6 md:p-10">
+    <main className="min-h-screen flex flex-col p-6 md:p-10">
       <header className="flex items-center justify-end mb-6">
         <div className="flex items-center gap-3 text-sm">
           <span className="text-slate-400 hidden sm:inline">{user.email}</span>
@@ -183,6 +183,13 @@ export default async function Home() {
           })}
         </div>
       </div>
+
+      <footer className="mt-auto pt-10 text-center">
+        <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#e0a82e]" />
+        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">
+          Software for service companies — for the best of them
+        </p>
+      </footer>
     </main>
   );
 }
