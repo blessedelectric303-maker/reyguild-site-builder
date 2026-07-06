@@ -35,6 +35,23 @@ if (typeof window !== "undefined" && !(window as any).storage) {
   };
 }
 
+// Match the estimating app: company name blue on white, role badge always gold
+// with white text, let the top stat cards wrap on phones, and center the inner
+// pages instead of pinning them to the left.
+const STYLE_FIX = `
+.fl-actas { background: #FFFFFF !important; }
+.fl-actas select { color: #34507A !important; font-weight: 700 !important; }
+.fl-rolebadge { background: #e0a82e !important; color: #FFFFFF !important; }
+.fl-noprint { display: flex !important; flex-direction: column !important; }
+.fl-header, .fl-nav { width: 100% !important; }
+.fl-weekly, .fl-home, .fl-grid { margin-left: auto !important; margin-right: auto !important; }
+@media (max-width: 620px) {
+  .fl-stats { flex-wrap: wrap !important; row-gap: 8px !important; }
+  .fl-stats > .fl-actas { flex: 1 1 100% !important; }
+  .fl-stats > .fl-chip { flex: 1 1 28% !important; min-width: 0 !important; }
+}
+`;
+
 const FieldLogApp = dynamic(() => import("./FieldLogCRM"), {
   ssr: false,
   loading: () => (
@@ -43,5 +60,10 @@ const FieldLogApp = dynamic(() => import("./FieldLogCRM"), {
 }) as ComponentType<any>;
 
 export default function FieldLog() {
-  return <FieldLogApp />;
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: STYLE_FIX }} />
+      <FieldLogApp />
+    </>
+  );
 }
