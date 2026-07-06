@@ -2790,7 +2790,7 @@ const CSS = `
 .so-audit-action{font-weight:800}
 .so-audit-detail{color:var(--ink-2)}
 .so-audit-meta{font-size:12px; color:var(--muted); white-space:nowrap}
-.so-subnav{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px}
+.so-subnav{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; max-width:880px; margin-left:auto; margin-right:auto}
 .so-msg-thread{display:flex; flex-direction:column; gap:8px; max-height:52vh; overflow-y:auto; padding:4px 2px 8px}
 .so-msg{max-width:80%; align-self:flex-start; background:var(--paper-2); border:1px solid var(--line); border-radius:10px; border-top-left-radius:2px; padding:8px 12px}
 .so-msg.mine{align-self:flex-end; background:var(--amber); border-color:var(--amber-deep); border-radius:10px; border-top-right-radius:2px}
@@ -2905,7 +2905,7 @@ const CSS = `
 .fl-link:hover{color:var(--ink)}
 .fl-link.danger{color:var(--red)}
 
-.fl-weekly{max-width:880px}
+.fl-weekly{max-width:880px; margin-left:auto; margin-right:auto}
 .fl-weekbar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:var(--paper-2); border:1px solid var(--line); border-radius:2px; padding:12px 14px; margin-bottom:16px}
 .fl-wk-nav{background:none; border:1px solid var(--line); border-radius:2px; padding:7px 12px; font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer; color:var(--ink)}
 .fl-wk-label{display:flex; flex-direction:column; flex:1; text-align:center}
