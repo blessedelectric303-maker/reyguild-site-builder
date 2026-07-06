@@ -766,11 +766,10 @@ export default function FieldLogCRM() {
         </div>
         <div className="fl-stats">
           <label className="fl-actas">
-            <span className="fl-actas-lbl">Acting as</span>
             <span className="fl-actas-co">{business.name || "Your company"}</span>
             <span className="fl-rolebadge" style={{ "--accent": ROLE_COLOR[role] || "var(--ink-2)" }}>{role}</span>
             <select className="fl-actas-switch" value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)} title="Switch view">
-              <option value="">Owner (you)</option>
+              <option value="">Owner</option>
               {people.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.role}</option>)}
             </select>
           </label>
