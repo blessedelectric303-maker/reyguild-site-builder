@@ -1262,7 +1262,7 @@ export default function ReyGuild() {
         <div className="fl-stats">
           <label className="fl-actas">
             <select value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)}>
-              <option value="">{profile.name ? profile.name + " (Owner)" : "Owner"}</option>
+              <option value="">{profile.name || "Owner"}</option>
               {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             <span className="fl-rolebadge" style={{ "--accent": ROLE_COLOR[role] || "var(--ink-2)" }}>{role}</span>
@@ -2846,7 +2846,7 @@ const CSS = `
 .fl-menu-item.on{background:var(--ink); color:var(--amber)}
 @media(max-width:560px){.fl-menubtn,.fl-midtab,.fl-righttab{padding:10px 11px; font-size:12px; letter-spacing:.03em} .fl-menu{min-width:64vw}}
 
-.fl-grid{display:grid; grid-template-columns:380px 1fr; gap:20px; align-items:start}
+.fl-grid{display:grid; grid-template-columns:1fr; gap:20px; align-items:start; max-width:900px; margin:0 auto}
 @media(max-width:860px){.fl-grid{grid-template-columns:1fr}}
 .fl-panel{background:var(--paper-2); border:1px solid var(--line); border-top:3px solid var(--ink); border-radius:2px; position:sticky; top:18px}
 @media(max-width:860px){.fl-panel{position:static}}
