@@ -17,6 +17,7 @@ const STORAGE_KEY = "crm_visits";
 const PEOPLE_KEY = "crm_people";
 const INVOICES_KEY = "crm_invoices";
 const BUSINESS_KEY = "crm_business";
+const MESSAGES_KEY = "crm_messages";
 const defaultBusiness = () => ({
   name: "", email: "", phone: "", address: "", website: "", logo: "", signature: "",
   introSubject: "Following up from {business}",
@@ -315,6 +316,10 @@ export default function FieldLogCRM() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState("home");
+  const [navOpen, setNavOpen] = useState(false);
+  const [setOpen, setSetOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [msgText, setMsgText] = useState("");
   const [form, setForm] = useState(emptyForm());
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All");
@@ -379,6 +384,7 @@ export default function FieldLogCRM() {
         if (window.storage) {
           try { const r = await window.storage.get(STORAGE_KEY, false); if (r && r.value) setVisits(JSON.parse(r.value)); } catch (e) {}
           try { const p = await window.storage.get(PEOPLE_KEY, false); if (p && p.value) setPeople(JSON.parse(p.value)); } catch (e) {}
+          try { const mm = await window.storage.get(MESSAGES_KEY, false); if (mm && mm.value) setMessages(JSON.parse(mm.value)); } catch (e) {}
           try { const iv = await window.storage.get(INVOICES_KEY, false); if (iv && iv.value) setInvoices(JSON.parse(iv.value)); } catch (e) {}
           try { const bz = await window.storage.get(BUSINESS_KEY, false); if (bz && bz.value) { const b = { ...defaultBusiness(), ...JSON.parse(bz.value) }; setBusiness(b); setBizForm(b); } } catch (e) {}
           try { const th = await window.storage.get("crm_theme", false); if (th && th.value) setTheme(th.value === "dark" ? "dark" : "light"); } catch (e) {}
@@ -559,6 +565,15 @@ export default function FieldLogCRM() {
   const currentUser = people.find((p) => p.id === currentUserId) || null;
   const role = currentUser ? currentUser.role : "Owner"; // default to Owner until a person is picked
   const myName = currentUser ? currentUser.name : "";
+
+  async function postMessage() {
+    const t = msgText.trim();
+    if (!t) return;
+    const next = [...messages, { id: Date.now() + "-" + Math.random().toString(36).slice(2), ts: Date.now(), fromName: myName || (business.name || "Owner"), fromRole: role, text: t }];
+    setMessages(next);
+    setMsgText("");
+    try { if (window.storage) await window.storage.set(MESSAGES_KEY, JSON.stringify(next), false); } catch (e) {}
+  }
   const can = {
     viewWeekly: role === "Owner" || role === "Admin",
     viewEmployees: role === "Owner" || role === "Admin",
@@ -579,9 +594,12 @@ export default function FieldLogCRM() {
     { key: "help", label: "Help", show: true },
     { key: "account", label: "Account", show: can.managePeople },
   ].filter((t) => t.show);
+  const SETTINGS_KEYS = ["sops", "help", "account"];
+  const MAIN_TABS = TABS.filter((t) => !SETTINGS_KEYS.includes(t.key));
+  const SETTINGS_TABS = TABS.filter((t) => SETTINGS_KEYS.includes(t.key));
 
   useEffect(() => {
-    if (!TABS.some((t) => t.key === page)) setPage("daily");
+    if (page !== "messages" && !TABS.some((t) => t.key === page)) setPage("daily");
   }, [role]); // if the active role can't see the current tab, fall back to Daily
 
   // Sales Reps log under their own name
@@ -750,7 +768,7 @@ export default function FieldLogCRM() {
           <label className="fl-actas">
             <span className="fl-actas-lbl">Acting as</span>
             <select value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)}>
-              <option value="">Owner (you)</option>
+              <option value="">{business.name || "You"}</option>
               {people.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.role}</option>)}
             </select>
             <span className="fl-rolebadge" style={{ "--accent": ROLE_COLOR[role] || "var(--ink-2)" }}>{role}</span>
@@ -764,9 +782,31 @@ export default function FieldLogCRM() {
       </header>
 
       <nav className="fl-nav">
-        {TABS.map((t) => (
-          <button key={t.key} className={"fl-tab" + (page === t.key ? " on" : "")} onClick={() => setPage(t.key)}>{t.label}</button>
-        ))}
+        <div className="fl-menuwrap">
+          <button className="fl-menubtn" onClick={() => setNavOpen(!navOpen)}>
+            <span className="fl-menu-ic">☰</span> {(MAIN_TABS.find((t) => t.key === page) || {}).label || "Menu"} <span className="fl-menu-car">▾</span>
+          </button>
+          {navOpen && <div className="fl-menu-overlay" onClick={() => setNavOpen(false)} />}
+          {navOpen && (
+            <div className="fl-menu">
+              {MAIN_TABS.map((t) => (
+                <button key={t.key} className={"fl-menu-item" + (page === t.key ? " on" : "")} onClick={() => { setPage(t.key); setNavOpen(false); }}>{t.label}</button>
+              ))}
+            </div>
+          )}
+        </div>
+        <button className={"fl-msgtab" + (page === "messages" ? " on" : "")} onClick={() => { setPage("messages"); setNavOpen(false); setSetOpen(false); }}>Messages</button>
+        <div className="fl-setwrap">
+          <button className={"fl-setbtn" + (SETTINGS_TABS.some((t) => t.key === page) ? " on" : "")} onClick={() => setSetOpen(!setOpen)}>Settings <span className="fl-menu-car">▾</span></button>
+          {setOpen && <div className="fl-menu-overlay" onClick={() => setSetOpen(false)} />}
+          {setOpen && (
+            <div className="fl-menu fl-setmenu">
+              {SETTINGS_TABS.map((t) => (
+                <button key={t.key} className={"fl-menu-item" + (page === t.key ? " on" : "")} onClick={() => { setPage(t.key); setSetOpen(false); }}>{t.label}</button>
+              ))}
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* ════════════════════ HOME / ADDRESS SEARCH ════════════════════ */}
@@ -1591,6 +1631,35 @@ export default function FieldLogCRM() {
       )}
 
       {/* ════════════════════ HELP CENTER ════════════════════ */}
+      {page === "messages" && (
+        <div className="fl-weekly">
+          <div className="fl-hero">
+            <h2>Team Messages</h2>
+            <p>Messages for your company. Everyone on your team can post and read here; the owner sees everything.</p>
+          </div>
+          <div className="fl-panel" style={{ padding: 16 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+              {messages.length === 0 ? (
+                <div className="fl-empty">No messages yet. Post the first one below.</div>
+              ) : (
+                messages.slice().sort((a, b) => a.ts - b.ts).map((m) => (
+                  <div key={m.id} style={{ borderLeft: "3px solid var(--amber-deep)", padding: "6px 12px", background: "var(--paper-2)", borderRadius: 2 }}>
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 3 }}>
+                      <strong style={{ color: "var(--ink)" }}>{m.fromName || "Owner"}</strong> · {m.fromRole} · {new Date(m.ts).toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: 14, color: "var(--ink)", whiteSpace: "pre-wrap" }}>{m.text}</div>
+                  </div>
+                ))
+              )}
+            </div>
+            <textarea rows={3} value={msgText} onChange={(e) => setMsgText(e.target.value)} placeholder="Write a message to your team…" style={{ width: "100%", boxSizing: "border-box", border: "1px solid var(--line)", borderRadius: 2, padding: 10, fontFamily: "inherit", fontSize: 14, resize: "vertical" }} />
+            <div style={{ marginTop: 10 }}>
+              <button className="fl-primary" onClick={postMessage} disabled={!msgText.trim()}>Send message</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {page === "help" && (
         <div className="fl-weekly">
           <div className="fl-hero">
@@ -1846,6 +1915,21 @@ const CSS = `
 .fl-nav{display:flex; gap:4px; margin:16px 0 18px; border-bottom:1px solid var(--line)}
 .fl-tab{background:none; border:none; border-bottom:3px solid transparent; padding:10px 16px; font-family:'Times New Roman',Times,serif; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); cursor:pointer; margin-bottom:-1px}
 .fl-tab.on{color:var(--ink); border-bottom-color:var(--amber-deep)}
+.fl-menuwrap{position:relative}
+.fl-menubtn{background:var(--ink); color:var(--paper-2); border:none; border-radius:3px 3px 0 0; padding:11px 16px; font-family:'Times New Roman',Times,serif; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.06em; cursor:pointer; margin-bottom:-1px; white-space:nowrap}
+.fl-menu-ic{font-size:14px} .fl-menu-car{font-size:10px; opacity:.8}
+.fl-menu-overlay{position:fixed; inset:0; z-index:40}
+.fl-menu{position:absolute; top:calc(100% + 4px); left:0; z-index:41; background:var(--paper-2); border:1px solid var(--line); border-radius:4px; box-shadow:0 8px 28px rgba(0,0,0,.18); min-width:210px; padding:6px; display:flex; flex-direction:column}
+.fl-menu-item{text-align:left; background:none; border:none; padding:11px 14px; font-family:'Times New Roman',Times,serif; font-weight:700; font-size:13px; color:var(--ink); cursor:pointer; border-radius:3px; text-transform:uppercase; letter-spacing:.04em}
+.fl-menu-item:hover{background:var(--paper)}
+.fl-menu-item.on{background:var(--ink); color:var(--gold)}
+.fl-msgtab{background:none; border:none; border-bottom:3px solid transparent; padding:11px 16px; font-family:'Times New Roman',Times,serif; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); cursor:pointer; margin-bottom:-1px; margin-left:auto; white-space:nowrap}
+.fl-msgtab.on{color:var(--ink); border-bottom-color:var(--amber-deep)}
+.fl-setwrap{position:relative}
+.fl-setbtn{background:none; border:none; border-bottom:3px solid transparent; padding:11px 16px; font-family:'Times New Roman',Times,serif; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); cursor:pointer; margin-bottom:-1px; white-space:nowrap}
+.fl-setbtn.on{color:var(--ink); border-bottom-color:var(--amber-deep)}
+.fl-setmenu{left:auto; right:0}
+@media(max-width:560px){.fl-menu{min-width:64vw}}
 
 .fl-grid{display:grid; grid-template-columns:380px 1fr; gap:20px; align-items:start}
 @media(max-width:860px){.fl-grid{grid-template-columns:1fr}}
