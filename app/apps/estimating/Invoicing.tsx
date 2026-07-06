@@ -35,9 +35,9 @@ if (typeof window !== "undefined" && !(window as any).storage) {
   };
 }
 
-// Styling: company name blue on white; role badge always gold w/ white text;
-// center the Settings pages (Help / SOPs / Audit log) instead of pinning left;
-// and let the top stat cards wrap on phones instead of scrolling sideways.
+// Company name blue on white; role badge always gold w/ white text;
+// center the inner pages (Follow-ups, Royalties, Numbers, Help, SOPs, Audit)
+// and the settings pill row; and wrap the top stat cards on phones.
 const STYLE_FIX = `
 .fl-actas { background: #FFFFFF !important; }
 .fl-actas select { color: #34507A !important; font-weight: 700 !important; }
