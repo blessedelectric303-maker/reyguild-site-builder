@@ -35,6 +35,16 @@ if (typeof window !== "undefined" && !(window as any).storage) {
   };
 }
 
+// Mobile fix: let the top stat cards wrap to fit the phone instead of
+// running off the right edge.
+const MOBILE_FIX = `
+@media (max-width: 620px) {
+  .fl-stats { flex-wrap: wrap !important; row-gap: 8px !important; }
+  .fl-stats > .fl-actas { flex: 1 1 100% !important; }
+  .fl-stats > .fl-chip { flex: 1 1 28% !important; min-width: 0 !important; }
+}
+`;
+
 const InvoicingApp = dynamic(() => import("./ReyGuild-Invoicing"), {
   ssr: false,
   loading: () => (
@@ -43,5 +53,10 @@ const InvoicingApp = dynamic(() => import("./ReyGuild-Invoicing"), {
 }) as ComponentType<any>;
 
 export default function Invoicing() {
-  return <InvoicingApp />;
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: MOBILE_FIX }} />
+      <InvoicingApp />
+    </>
+  );
 }
