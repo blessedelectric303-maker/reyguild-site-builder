@@ -35,15 +35,17 @@ if (typeof window !== "undefined" && !(window as any).storage) {
   };
 }
 
-// Match the estimating app: company name blue on white, role badge always gold
-// with white text, let the top stat cards wrap on phones, and center the inner
-// pages instead of pinning them to the left.
+// Match the estimating app: company name blue on white, role badge always gold;
+// stack the two-column pages into one centered column (form on top, list below);
+// center the inner pages; and wrap the top stat cards on phones.
 const STYLE_FIX = `
 .fl-actas { background: #FFFFFF !important; }
 .fl-actas select { color: #34507A !important; font-weight: 700 !important; }
 .fl-rolebadge { background: #e0a82e !important; color: #FFFFFF !important; }
 .fl-noprint { display: flex !important; flex-direction: column !important; }
 .fl-header, .fl-nav { width: 100% !important; }
+.fl-grid { grid-template-columns: 1fr !important; max-width: 900px !important; }
+.fl-panel { position: static !important; }
 .fl-weekly, .fl-home, .fl-grid { margin-left: auto !important; margin-right: auto !important; }
 @media (max-width: 620px) {
   .fl-stats { flex-wrap: wrap !important; row-gap: 8px !important; }
