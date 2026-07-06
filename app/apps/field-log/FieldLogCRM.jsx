@@ -767,11 +767,12 @@ export default function FieldLogCRM() {
         <div className="fl-stats">
           <label className="fl-actas">
             <span className="fl-actas-lbl">Acting as</span>
-            <select value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)}>
-              <option value="">{business.name || "You"}</option>
+            <span className="fl-actas-co">{business.name || "Your company"}</span>
+            <span className="fl-rolebadge" style={{ "--accent": ROLE_COLOR[role] || "var(--ink-2)" }}>{role}</span>
+            <select className="fl-actas-switch" value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)} title="Switch view">
+              <option value="">Owner (you)</option>
               {people.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.role}</option>)}
             </select>
-            <span className="fl-rolebadge" style={{ "--accent": ROLE_COLOR[role] || "var(--ink-2)" }}>{role}</span>
           </label>
           <div className="fl-chip"><span className="fl-chip-num">{visibleVisits.length}</span><span className="fl-chip-lbl">visits</span></div>
           {can.manageInvoices && (
@@ -2016,6 +2017,8 @@ const CSS = `
 .fl-actas{display:flex; align-items:center; gap:6px; background:var(--paper-2); border:1px solid var(--line); border-radius:2px; padding:6px 8px}
 .fl-actas-lbl{font-family:'Times New Roman',Times,serif; font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted)}
 .fl-actas select{border:none; background:none; font-family:'Times New Roman',Times,serif; font-size:13px; color:var(--ink); max-width:150px}
+.fl-actas-co{font-family:'Times New Roman',Times,serif; font-size:14px; font-weight:700; color:#34507A; white-space:nowrap}
+.fl-actas-switch{max-width:118px; font-size:11px; opacity:.75}
 .fl-actas select:focus{outline:none}
 .fl-rolebadge{font-family:'Times New Roman',Times,serif; font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:#fff; background:var(--accent); padding:3px 7px; border-radius:2px}
 .fl-readonly{background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--blue); border-radius:2px; padding:10px 14px; font-size:13px; color:var(--ink-2); margin:0 0 14px}
