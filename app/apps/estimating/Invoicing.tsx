@@ -35,15 +35,19 @@ if (typeof window !== "undefined" && !(window as any).storage) {
   };
 }
 
-// Company name blue on white; role badge always gold w/ white text;
-// center the inner pages (Follow-ups, Royalties, Numbers, Help, SOPs, Audit)
-// and the settings pill row; and wrap the top stat cards on phones.
+// Company name blue on white; role badge always gold w/ white text.
+// Make the content column a flex column so the inner pages actually center,
+// then center them (Follow-ups, Royalties, Numbers, Help, SOPs, Audit + pills).
+// Plus wrap the top stat cards on phones.
 const STYLE_FIX = `
 .fl-actas { background: #FFFFFF !important; }
 .fl-actas select { color: #34507A !important; font-weight: 700 !important; }
 .fl-rolebadge { background: #e0a82e !important; color: #FFFFFF !important; }
+.fl-noprint { display: flex !important; flex-direction: column !important; }
+.fl-header, .fl-nav3 { width: 100% !important; }
 .fl-weekly { margin-left: auto !important; margin-right: auto !important; }
-.so-subnav { max-width: 880px !important; margin-left: auto !important; margin-right: auto !important; }
+.fl-grid { margin-left: auto !important; margin-right: auto !important; }
+.so-subnav { width: 100% !important; max-width: 880px !important; margin-left: auto !important; margin-right: auto !important; }
 @media (max-width: 620px) {
   .fl-stats { flex-wrap: wrap !important; row-gap: 8px !important; }
   .fl-stats > .fl-actas { flex: 1 1 100% !important; }
