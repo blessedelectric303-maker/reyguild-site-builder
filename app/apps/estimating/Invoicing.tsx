@@ -35,9 +35,12 @@ if (typeof window !== "undefined" && !(window as any).storage) {
   };
 }
 
-// Mobile fix: let the top stat cards wrap to fit the phone instead of
-// running off the right edge.
-const MOBILE_FIX = `
+// Styling: company name in blue on white; role badge always gold w/ white text.
+// Plus the mobile fix so the top stat cards wrap instead of scrolling sideways.
+const STYLE_FIX = `
+.fl-actas { background: #FFFFFF !important; }
+.fl-actas select { color: #34507A !important; font-weight: 700 !important; }
+.fl-rolebadge { background: #e0a82e !important; color: #FFFFFF !important; }
 @media (max-width: 620px) {
   .fl-stats { flex-wrap: wrap !important; row-gap: 8px !important; }
   .fl-stats > .fl-actas { flex: 1 1 100% !important; }
@@ -55,7 +58,7 @@ const InvoicingApp = dynamic(() => import("./ReyGuild-Invoicing"), {
 export default function Invoicing() {
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: MOBILE_FIX }} />
+      <style dangerouslySetInnerHTML={{ __html: STYLE_FIX }} />
       <InvoicingApp />
     </>
   );
