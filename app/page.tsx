@@ -52,8 +52,10 @@ export default async function Home() {
 
   let companyName = "";
   let companyLogo = "";
+  let companyId = "";
   let myRole = "owner";
   let armyMode = false;
+  let ownerIsAdmin = true;
   try {
     await supabase.schema("suite").rpc("ensure_company");
     const { data: mem } = await supabase
@@ -64,16 +66,17 @@ export default async function Home() {
       .maybeSingle();
     if (mem) {
       myRole = (mem as any).role || "owner";
-      const cid = (mem as any).company_id;
+      companyId = (mem as any).company_id || "";
       const { data: co } = await supabase
         .schema("suite")
         .from("companies")
-        .select("name,army_mode,logo")
-        .eq("id", cid)
+        .select("name,army_mode,owner_is_admin,logo")
+        .eq("id", companyId)
         .maybeSingle();
       companyName = (co as any)?.name || "";
       companyLogo = (co as any)?.logo || "";
       armyMode = (co as any)?.army_mode === true;
+      ownerIsAdmin = (co as any)?.owner_is_admin !== false;
     }
   } catch (e) {
     // foundation not present yet — the command center still works.
@@ -113,7 +116,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen flex flex-col p-6 md:p-10">
       <header className="flex items-center justify-end mb-6">
-        <SettingsMenu email={user.email || ""} role={myRole} companyName={companyName} isStaff={isStaff(myRole)} />
+        <SettingsMenu email={user.email || ""} role={myRole} companyName={companyName} isStaff={isStaff(myRole)} companyId={companyId} armyMode={armyMode} ownerIsAdmin={ownerIsAdmin} />
       </header>
 
       <div className="max-w-5xl mx-auto">
@@ -123,7 +126,7 @@ export default async function Home() {
             <p className="mt-2 text-sm font-semibold text-amber-300">Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left</p>
           )}
           <p className="mt-1 text-slate-400 text-sm">Every ReyGuild app, one login.</p>
-          <div className="mt-3 flex items-center justify-center gap-2 text-xs flex-wrap">
+          <div className="mt-3 flex flex-col items-center gap-2 text-xs">
             {companyName && (
               <span className="rounded-full border border-slate-600 px-3 py-1 text-slate-200">{companyName}</span>
             )}
