@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 import { contextFromPath, sopFor, SUPPORT } from "@/utils/sops";
 
 type Props = {
@@ -10,6 +11,9 @@ type Props = {
   role: string;
   companyName?: string;
   isStaff: boolean;
+  companyId?: string;
+  armyMode?: boolean;
+  ownerIsAdmin?: boolean;
 };
 
 type Tab = "help" | "sops" | "account";
@@ -19,12 +23,18 @@ function roleLabel(role: string): string {
   return role.charAt(0).toUpperCase() + role.slice(1);
 }
 
-export default function SettingsMenu({ email, role, companyName, isStaff }: Props) {
+export default function SettingsMenu({ email, role, companyName, isStaff, companyId, armyMode, ownerIsAdmin }: Props) {
   const pathname = usePathname() || "/";
+  const router = useRouter();
+  const supabase = createClient();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("sops");
+  const [army, setArmy] = useState(armyMode === true);
+  const [ownerAdmin, setOwnerAdmin] = useState(ownerIsAdmin !== false);
+  const [savingMode, setSavingMode] = useState(false);
 
   const sop = sopFor(contextFromPath(pathname));
+  const showMode = isStaff && !!companyId;
 
   useEffect(() => {
     if (!open) return;
@@ -43,6 +53,36 @@ export default function SettingsMenu({ email, role, companyName, isStaff }: Prop
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
+
+  async function toggleArmy() {
+    if (!companyId || savingMode) return;
+    const next = !army;
+    setArmy(next);
+    setSavingMode(true);
+    const { error } = await supabase.schema("suite").from("companies").update({ army_mode: next }).eq("id", companyId);
+    setSavingMode(false);
+    if (error) {
+      setArmy(!next);
+      alert("Couldn't save that change: " + error.message);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function toggleOwnerAdmin() {
+    if (!companyId || savingMode) return;
+    const next = !ownerAdmin;
+    setOwnerAdmin(next);
+    setSavingMode(true);
+    const { error } = await supabase.schema("suite").from("companies").update({ owner_is_admin: next }).eq("id", companyId);
+    setSavingMode(false);
+    if (error) {
+      setOwnerAdmin(!next);
+      alert("Couldn't save that change: " + error.message);
+      return;
+    }
+    router.refresh();
+  }
 
   const tabBtn = (id: Tab, label: string) => {
     const active = tab === id;
@@ -131,10 +171,29 @@ export default function SettingsMenu({ email, role, companyName, isStaff }: Prop
                     <div className="text-slate-200">{roleLabel(role)}</div>
                   </div>
 
+                  {showMode ? (
+                    <div className="mb-4 rounded-lg border border-slate-700 p-3 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="text-slate-100 text-sm font-medium">Mode</div>
+                          <div className="text-slate-500 text-xs">One Man Army = just you. Army Mode = you and your team.</div>
+                        </div>
+                        <button type="button" onClick={toggleArmy} disabled={savingMode} className={"shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold " + (army ? "text-slate-900" : "text-slate-200 border border-slate-600")} style={army ? { background: "#34d399" } : undefined}>{army ? "Army Mode" : "One Man Army"}</button>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 border-t border-slate-800 pt-3">
+                        <div>
+                          <div className="text-slate-100 text-sm font-medium">Owner and Admin</div>
+                          <div className="text-slate-500 text-xs">Combined = the owner also has admin powers. Separate = two distinct roles.</div>
+                        </div>
+                        <button type="button" onClick={toggleOwnerAdmin} disabled={savingMode} className={"shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold " + (ownerAdmin ? "text-slate-900" : "text-slate-200 border border-slate-600")} style={ownerAdmin ? { background: "#e0a82e" } : undefined}>{ownerAdmin ? "Combined" : "Separate"}</button>
+                      </div>
+                    </div>
+                  ) : null}
+
                   {isStaff ? (
                     <div className="mb-4 grid grid-cols-2 gap-2">
                       <Link href="/company" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Company</Link>
-                      <Link href="/team" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Team</Link>
+                      <Link href="/team" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Army</Link>
                     </div>
                   ) : null}
 
