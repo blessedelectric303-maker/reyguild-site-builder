@@ -86,10 +86,11 @@ export default async function Home() {
   } catch (e) {
     // foundation not present yet — the command center still works.
   }
-  const soloMode = !const soloMode = !armyMode;
+  const soloMode = !armyMode;
 
   // Role-based access: employees skip the command center and go straight to their app.
-  if (!isStaff(myRole)) redirect(homeFor(myRole));;
+  if (!isStaff(myRole)) redirect(homeFor(myRole));
+
   const roleLabel =
     myRole === "sales_rep"
       ? "Sales Rep"
