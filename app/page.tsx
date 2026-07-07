@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { isStaff, homeFor } from "@/utils/roles";
+import SettingsMenu from "@/app/components/SettingsMenu";
 
 type AppRow = {
   key: string;
@@ -123,23 +124,12 @@ export default async function Home() {
   return (
     <main className="min-h-screen flex flex-col p-6 md:p-10">
       <header className="flex items-center justify-end mb-6">
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-slate-400 hidden sm:inline">{user.email}</span>
-          {(myRole === "owner" || myRole === "admin") && (
-            <>
-              <Link href="/company" className="rounded-md border border-slate-600 px-3 py-1.5 text-slate-200 hover:bg-slate-800">Company</Link>
-              <Link href="/team" className="rounded-md border border-slate-600 px-3 py-1.5 text-slate-200 hover:bg-slate-800">Team</Link>
-            </>
-          )}
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              className="rounded-md border border-slate-600 px-3 py-1.5 text-slate-200 hover:bg-slate-800"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
+        <SettingsMenu
+          email={user.email || ""}
+          role={myRole}
+          companyName={companyName}
+          isStaff={isStaff(myRole)}
+        />
       </header>
 
       <div className="max-w-5xl mx-auto">
