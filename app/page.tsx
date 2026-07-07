@@ -15,7 +15,6 @@ function daysLeft(iso: string | null): number | null {
   return Math.max(0, Math.ceil(ms / 86400000));
 }
 
-// App keys that have a real, openable room.
 const LIVE_APPS: Record<string, { href: string; external?: boolean }> = {
   site_builder: { href: "/apps/site-builder" },
   estimating: { href: "/apps/estimating" },
@@ -59,11 +58,9 @@ export default async function Home() {
     );
   }
 
-  // Accounts foundation: make sure a company exists (One Man Army by default),
-  // then read the company name, this user's role, and how many people are in it.
   let companyName = "";
   let myRole = "owner";
-  let memberCount = 1;
+  let armyMode = false;
   try {
     await supabase.schema("suite").rpc("ensure_company");
     const { data: mem } = await supabase
@@ -78,21 +75,16 @@ export default async function Home() {
       const { data: co } = await supabase
         .schema("suite")
         .from("companies")
-        .select("name")
+        .select("name,army_mode")
         .eq("id", cid)
         .maybeSingle();
       companyName = (co as any)?.name || "";
-      const { count } = await supabase
-        .schema("suite")
-        .from("memberships")
-        .select("id", { count: "exact", head: true })
-        .eq("company_id", cid);
-      memberCount = count || 1;
+      armyMode = (co as any)?.army_mode === true;
     }
   } catch (e) {
     // foundation not present yet — the command center still works.
   }
-  const soloMode = memberCount <= 1;
+  const soloMode = !armyMode;
   const roleLabel =
     myRole === "sales_rep"
       ? "Sales Rep"
