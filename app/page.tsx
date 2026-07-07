@@ -161,7 +161,7 @@ export default async function Home() {
               className="rounded-full px-3 py-1 font-semibold text-slate-900"
               style={{ background: soloMode ? "#e0a82e" : "#34d399" }}
             >
-              {soloMode ? "One Man Army mode" : "Team mode"} · {roleLabel}
+              {soloMode ? "One Man Army" : "Army Mode"} · {roleLabel}
             </span>
           </div>
         </div>
