@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { isStaff, homeFor } from "@/utils/roles";
 import SettingsMenu from "@/app/components/SettingsMenu";
+import Messages from "@/app/components/Messages";
 
 type AppRow = {
   key: string;
@@ -116,7 +117,10 @@ export default async function Home() {
   return (
     <main className="min-h-screen flex flex-col p-6 md:p-10">
       <header className="flex items-center justify-end mb-6">
-        <SettingsMenu email={user.email || ""} role={myRole} companyName={companyName} isStaff={isStaff(myRole)} companyId={companyId} armyMode={armyMode} ownerIsAdmin={ownerIsAdmin} />
+        <div className="flex items-center gap-3">
+          <Messages userId={user.id} companyId={companyId} />
+          <SettingsMenu email={user.email || ""} role={myRole} companyName={companyName} isStaff={isStaff(myRole)} companyId={companyId} armyMode={armyMode} ownerIsAdmin={ownerIsAdmin} />
+        </div>
       </header>
 
       <div className="max-w-5xl mx-auto">
