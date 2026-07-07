@@ -42,20 +42,9 @@ export default async function Home() {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-center p-8">
         <img src="/crest.png" alt="ReyGuild" className="w-28 h-auto mb-6" />
-        <h1 className="text-5xl font-extrabold tracking-wide">
-          <span style={{ color: "#e0a82e" }}>REY</span>
-          <span className="text-white">GUILD</span>
-        </h1>
-        <p className="mt-4 text-slate-300 max-w-md">
-          One login. Every ReyGuild app in one place.
-        </p>
-        <Link
-          href="/login"
-          className="mt-6 rounded-md px-5 py-2 text-sm font-semibold text-slate-900"
-          style={{ background: "#e0a82e" }}
-        >
-          Sign in
-        </Link>
+        <h1 className="text-5xl font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></h1>
+        <p className="mt-4 text-slate-300 max-w-md">One login. Every ReyGuild app in one place.</p>
+        <Link href="/login" className="mt-6 rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Sign in</Link>
         <div className="mt-10 h-[3px] w-16 rounded bg-[#e0a82e]" />
       </main>
     );
@@ -124,38 +113,21 @@ export default async function Home() {
   return (
     <main className="min-h-screen flex flex-col p-6 md:p-10">
       <header className="flex items-center justify-end mb-6">
-        <SettingsMenu
-          email={user.email || ""}
-          role={myRole}
-          companyName={companyName}
-          isStaff={isStaff(myRole)}
-        />
+        <SettingsMenu email={user.email || ""} role={myRole} companyName={companyName} isStaff={isStaff(myRole)} />
       </header>
 
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #e0a82e" }}>YOUR COMMAND CENTER</h1>
           {trialDaysLeft != null && (
-            <p className="mt-2 text-sm font-semibold text-amber-300">
-              Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"}{" "}
-              left
-            </p>
+            <p className="mt-2 text-sm font-semibold text-amber-300">Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left</p>
           )}
-          <p className="mt-1 text-slate-400 text-sm">
-            Every ReyGuild app, one login.
-          </p>
+          <p className="mt-1 text-slate-400 text-sm">Every ReyGuild app, one login.</p>
           <div className="mt-3 flex items-center justify-center gap-2 text-xs flex-wrap">
             {companyName && (
-              <span className="rounded-full border border-slate-600 px-3 py-1 text-slate-200">
-                {companyName}
-              </span>
+              <span className="rounded-full border border-slate-600 px-3 py-1 text-slate-200">{companyName}</span>
             )}
-            <span
-              className="rounded-full px-3 py-1 font-semibold text-slate-900"
-              style={{ background: soloMode ? "#e0a82e" : "#34d399" }}
-            >
-              {soloMode ? "One Man Army" : "Army Mode"} · {roleLabel}
-            </span>
+            <span className="rounded-full px-3 py-1 font-semibold text-slate-900" style={{ background: soloMode ? "#e0a82e" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} · {roleLabel}</span>
           </div>
         </div>
 
@@ -163,31 +135,17 @@ export default async function Home() {
           <div className="flex flex-col items-center justify-center px-6 py-4 md:col-start-2 md:row-start-1 md:row-span-2">
             {companyLogo ? (
               <>
-                <img
-                  src={companyLogo}
-                  alt={companyName || "Company"}
-                  className="w-40 md:w-56 h-auto max-h-56 object-contain drop-shadow-lg"
-                />
+                <img src={companyLogo} alt={companyName || "Company"} className="w-40 md:w-56 h-auto max-h-56 object-contain drop-shadow-lg" />
                 <div className="mt-4 flex items-center gap-1.5 opacity-70">
                   <span className="text-[10px] uppercase tracking-wider text-slate-400">Powered by</span>
                   <img src="/crest.png" alt="" className="w-4 h-auto" />
-                  <span className="text-[11px] font-extrabold tracking-wide">
-                    <span style={{ color: "#e0a82e" }}>REY</span>
-                    <span className="text-white">GUILD</span>
-                  </span>
+                  <span className="text-[11px] font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></span>
                 </div>
               </>
             ) : (
               <>
-                <img
-                  src="/crest.png"
-                  alt="ReyGuild"
-                  className="w-32 md:w-44 h-auto drop-shadow-lg"
-                />
-                <div className="mt-3 text-2xl md:text-3xl font-extrabold tracking-wide">
-                  <span style={{ color: "#e0a82e" }}>REY</span>
-                  <span className="text-white">GUILD</span>
-                </div>
+                <img src="/crest.png" alt="ReyGuild" className="w-32 md:w-44 h-auto drop-shadow-lg" />
+                <div className="mt-3 text-2xl md:text-3xl font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></div>
               </>
             )}
           </div>
@@ -204,7 +162,7 @@ export default async function Home() {
               status === "active"
                 ? "Active"
                 : status === "trialing"
-                ? `Free trial · ${left ?? 0}d left`
+                ? "Free trial · " + (left ?? 0) + "d left"
                 : "Locked";
 
             const badgeColor =
@@ -214,24 +172,15 @@ export default async function Home() {
                 ? "text-amber-300 border-amber-700"
                 : "text-slate-400 border-slate-700";
 
+            const cardCls =
+              "rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col items-center text-center " +
+              (POS[app.key] ?? "");
+
             return (
-              <div
-                key={app.key}
-                className={`rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col items-center text-center ${
-                  POS[app.key] ?? ""
-                }`}
-              >
-                <span
-                  className={`rounded-full border px-2 py-0.5 text-[11px] ${badgeColor}`}
-                >
-                  {badge}
-                </span>
-                <h2 className="mt-3 text-lg font-semibold text-white">
-                  {app.name}
-                </h2>
-                <p className="mt-1 text-sm text-slate-400 flex-1">
-                  {app.description}
-                </p>
+              <div key={app.key} className={cardCls}>
+                <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeColor}>{badge}</span>
+                <h2 className="mt-3 text-lg font-semibold text-white">{app.name}</h2>
+                <p className="mt-1 text-sm text-slate-400 flex-1">{app.description}</p>
                 <div className="mt-4">
                   {canOpen && live ? (
                     live.external ? (
@@ -240,9 +189,7 @@ export default async function Home() {
                       <Link href={live.href} className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open →</Link>
                     )
                   ) : (
-                    <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">
-                      Coming soon — being built
-                    </span>
+                    <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">Coming soon — being built</span>
                   )}
                 </div>
               </div>
@@ -253,9 +200,7 @@ export default async function Home() {
 
       <footer className="mt-auto pt-10 text-center">
         <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#e0a82e]" />
-        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">
-          Software for service companies — for the best of them
-        </p>
+        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">Software for service companies — for the best of them</p>
       </footer>
     </main>
   );
