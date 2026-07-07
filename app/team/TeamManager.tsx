@@ -27,11 +27,15 @@ function roleLabel(r: string) {
 export default function TeamManager({
   companyName,
   companyId,
+  armyMode,
+  ownerIsAdmin,
   members,
   invites: initialInvites,
 }: {
   companyName: string;
   companyId: string;
+  armyMode: boolean;
+  ownerIsAdmin: boolean;
   members: Member[];
   invites: Invite[];
 }) {
@@ -41,6 +45,19 @@ export default function TeamManager({
   const [invites, setInvites] = useState<Invite[]>(initialInvites);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState("");
+  const [army, setArmy] = useState(armyMode);
+  const [ownerAdmin, setOwnerAdmin] = useState(ownerIsAdmin);
+
+  async function toggleArmy() {
+    const v = !army;
+    setArmy(v);
+    await supabase.schema("suite").from("companies").update({ army_mode: v }).eq("id", companyId);
+  }
+  async function toggleOwnerAdmin() {
+    const v = !ownerAdmin;
+    setOwnerAdmin(v);
+    await supabase.schema("suite").from("companies").update({ owner_is_admin: v }).eq("id", companyId);
+  }
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
@@ -91,8 +108,26 @@ export default function TeamManager({
         </h1>
         <p className="text-slate-400 text-sm mt-1">
           Add people and send them an invite link. The moment someone joins, your
-          account switches from One Man Army to Team mode.
+          account switches from One Man Army to Army Mode.
         </p>
+
+        <div className="mt-6 rounded-xl border border-slate-700 bg-slate-900/50 p-5">
+          <h2 className="text-white font-semibold mb-3">Company settings</h2>
+          <div className="flex items-center justify-between gap-3 py-2">
+            <div>
+              <div className="text-slate-100 text-sm font-medium">Mode</div>
+              <div className="text-slate-400 text-xs">One Man Army = just you. Army Mode = you and your team.</div>
+            </div>
+            <button onClick={toggleArmy} className={"shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold " + (army ? "text-slate-900" : "text-slate-200 border border-slate-600")} style={army ? { background: "#34d399" } : {}}>{army ? "Army Mode" : "One Man Army"}</button>
+          </div>
+          <div className="flex items-center justify-between gap-3 py-2 border-t border-slate-800">
+            <div>
+              <div className="text-slate-100 text-sm font-medium">Owner &amp; Admin</div>
+              <div className="text-slate-400 text-xs">Combined = the owner also has admin powers. Separate = two distinct roles.</div>
+            </div>
+            <button onClick={toggleOwnerAdmin} className={"shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold " + (ownerAdmin ? "text-slate-900" : "text-slate-200 border border-slate-600")} style={ownerAdmin ? { background: "#e0a82e" } : {}}>{ownerAdmin ? "Combined" : "Separate"}</button>
+          </div>
+        </div>
 
         <div className="mt-6 rounded-xl border border-slate-700 bg-slate-900/50 p-5">
           <h2 className="text-white font-semibold mb-3">Invite someone</h2>
