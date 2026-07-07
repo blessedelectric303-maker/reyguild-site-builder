@@ -56,9 +56,55 @@ export default async function Home() {
           Sign in
         </Link>
         <div className="mt-10 h-[3px] w-16 rounded bg-[#e0a82e]" />
-      </main>
+  
+      <footer className="mt-auto pt-10 text-center">
+        <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#e0a82e]" />
+        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">
+          Software for service companies — for the best of them
+        </p>
+      </footer>
+    </main>
     );
   }
+
+  // Accounts foundation: make sure a company exists (One Man Army by default),
+  // then read the company name, this user's role, and how many people are in it.
+  let companyName = "";
+  let myRole = "owner";
+  let memberCount = 1;
+  try {
+    await supabase.schema("suite").rpc("ensure_company");
+    const { data: mem } = await supabase
+      .schema("suite")
+      .from("memberships")
+      .select("role,company_id")
+      .limit(1)
+      .maybeSingle();
+    if (mem) {
+      myRole = (mem as any).role || "owner";
+      const cid = (mem as any).company_id;
+      const { data: co } = await supabase
+        .schema("suite")
+        .from("companies")
+        .select("name")
+        .eq("id", cid)
+        .maybeSingle();
+      companyName = (co as any)?.name || "";
+      const { count } = await supabase
+        .schema("suite")
+        .from("memberships")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", cid);
+      memberCount = count || 1;
+    }
+  } catch (e) {
+    // foundation not present yet — the command center still works.
+  }
+  const soloMode = memberCount <= 1;
+  const roleLabel =
+    myRole === "sales_rep"
+      ? "Sales Rep"
+      : myRole.charAt(0).toUpperCase() + myRole.slice(1);
 
   const { data: apps } = await supabase
     .schema("suite")
@@ -87,6 +133,9 @@ export default async function Home() {
       <header className="flex items-center justify-end mb-6">
         <div className="flex items-center gap-3 text-sm">
           <span className="text-slate-400 hidden sm:inline">{user.email}</span>
+          {(myRole === "owner" || myRole === "admin") && (
+            <Link href="/team" className="rounded-md border border-slate-600 px-3 py-1.5 text-slate-200 hover:bg-slate-800">Team</Link>
+          )}
           <form action="/auth/signout" method="post">
             <button
               type="submit"
@@ -99,6 +148,7 @@ export default async function Home() {
       </header>
 
       <div className="max-w-5xl mx-auto">
+        {/* Title + trial countdown, centered */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #e0a82e" }}>YOUR COMMAND CENTER</h1>
           {trialDaysLeft != null && (
@@ -110,9 +160,24 @@ export default async function Home() {
           <p className="mt-1 text-slate-400 text-sm">
             Every ReyGuild app, one login.
           </p>
+          <div className="mt-3 flex items-center justify-center gap-2 text-xs flex-wrap">
+            {companyName && (
+              <span className="rounded-full border border-slate-600 px-3 py-1 text-slate-200">
+                {companyName}
+              </span>
+            )}
+            <span
+              className="rounded-full px-3 py-1 font-semibold text-slate-900"
+              style={{ background: soloMode ? "#e0a82e" : "#34d399" }}
+            >
+              {soloMode ? "One Man Army mode" : "Team mode"} · {roleLabel}
+            </span>
+          </div>
         </div>
 
+        {/* Command-center grid: crest in the center, four apps in the corners */}
         <div className="grid gap-5 md:grid-cols-[1fr_auto_1fr] md:grid-rows-2 md:items-stretch">
+          {/* Center logo */}
           <div className="flex flex-col items-center justify-center px-6 py-4 md:col-start-2 md:row-start-1 md:row-span-2">
             <img
               src="/crest.png"
@@ -125,6 +190,7 @@ export default async function Home() {
             </div>
           </div>
 
+          {/* Four app tiles */}
           {list.map((app: AppRow) => {
             const ent = entByApp.get(app.key);
             const status = ent?.status ?? "locked";
@@ -183,13 +249,6 @@ export default async function Home() {
           })}
         </div>
       </div>
-
-      <footer className="mt-auto pt-10 text-center">
-        <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#e0a82e]" />
-        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">
-          Software for service companies — for the best of them
-        </p>
-      </footer>
     </main>
   );
 }
