@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { isStaff, homeFor } from "@/utils/roles";
 
 type AppRow = {
   key: string;
