@@ -23,12 +23,11 @@ const LIVE_APPS: Record<string, { href: string; external?: boolean }> = {
   time_material: { href: "https://tm.serviceopspro.com", external: true },
 };
 
-// Corner placement for each app around the center logo (desktop).
 const POS: Record<string, string> = {
-  site_builder: "md:col-start-1 md:row-start-1", // top-left
-  app_four: "md:col-start-3 md:row-start-1", // top-right (Client Outreach)
-  time_material: "md:col-start-1 md:row-start-2", // bottom-left
-  estimating: "md:col-start-3 md:row-start-2", // bottom-right
+  site_builder: "md:col-start-1 md:row-start-1",
+  app_four: "md:col-start-3 md:row-start-1",
+  time_material: "md:col-start-1 md:row-start-2",
+  estimating: "md:col-start-3 md:row-start-2",
 };
 
 export default async function Home() {
@@ -56,14 +55,7 @@ export default async function Home() {
           Sign in
         </Link>
         <div className="mt-10 h-[3px] w-16 rounded bg-[#e0a82e]" />
-  
-      <footer className="mt-auto pt-10 text-center">
-        <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#e0a82e]" />
-        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">
-          Software for service companies — for the best of them
-        </p>
-      </footer>
-    </main>
+      </main>
     );
   }
 
@@ -148,7 +140,6 @@ export default async function Home() {
       </header>
 
       <div className="max-w-5xl mx-auto">
-        {/* Title + trial countdown, centered */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #e0a82e" }}>YOUR COMMAND CENTER</h1>
           {trialDaysLeft != null && (
@@ -175,9 +166,7 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Command-center grid: crest in the center, four apps in the corners */}
         <div className="grid gap-5 md:grid-cols-[1fr_auto_1fr] md:grid-rows-2 md:items-stretch">
-          {/* Center logo */}
           <div className="flex flex-col items-center justify-center px-6 py-4 md:col-start-2 md:row-start-1 md:row-span-2">
             <img
               src="/crest.png"
@@ -190,7 +179,6 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* Four app tiles */}
           {list.map((app: AppRow) => {
             const ent = entByApp.get(app.key);
             const status = ent?.status ?? "locked";
@@ -249,6 +237,13 @@ export default async function Home() {
           })}
         </div>
       </div>
+
+      <footer className="mt-auto pt-10 text-center">
+        <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#e0a82e]" />
+        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">
+          Software for service companies — for the best of them
+        </p>
+      </footer>
     </main>
   );
 }
