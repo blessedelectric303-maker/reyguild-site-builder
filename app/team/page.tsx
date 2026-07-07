@@ -1,63 +1,55 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import TeamManager from "./TeamManager";
 
-const PUBLIC_PATHS = [
-  "/welcome",
-  "/login",
-  "/signup",
-  "/verify-email",
-  "/forgot-password",
-  "/reset-password",
-  "/terms",
-  "/privacy",
-  "/api/auth/login",
-  "/api/auth/logout",
-  "/api/auth/signup",
-  "/api/auth/verify-email",
-  "/api/auth/request-password-reset",
-  "/api/auth/reset-password",
-];
+export default async function TeamPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-function getSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET not set");
-  return new TextEncoder().encode(secret);
+  await supabase.schema("suite").rpc("ensure_company");
+
+  const { data: mem } = await supabase
+    .schema("suite")
+    .from("memberships")
+    .select("role,company_id")
+    .limit(1)
+    .maybeSingle();
+
+  const role = (mem as any)?.role || "owner";
+  const companyId = (mem as any)?.company_id;
+  if (!companyId || !(role === "owner" || role === "admin")) redirect("/");
+
+  const { data: company } = await supabase
+    .schema("suite")
+    .from("companies")
+    .select("name")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  const { data: members } = await supabase
+    .schema("suite")
+    .from("memberships")
+    .select("id,user_id,role,created_at")
+    .eq("company_id", companyId)
+    .order("created_at");
+
+  const { data: invites } = await supabase
+    .schema("suite")
+    .from("invites")
+    .select("id,email,role,token,status,created_at")
+    .eq("company_id", companyId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  return (
+    <TeamManager
+      companyName={(company as any)?.name || "My Company"}
+      companyId={companyId}
+      members={(members as any) ?? []}
+      invites={(invites as any) ?? []}
+    />
+  );
 }
-
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-
-  // Marketing site: when someone visits reyguild.com, show the landing page.
-  const host = req.headers.get("host") || "";
-  if (
-    (host === "reyguild.com" || host === "www.reyguild.com") &&
-    pathname === "/"
-  ) {
-    return NextResponse.rewrite(new URL("/welcome", req.url));
-  }
-
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
-    return NextResponse.next();
-  }
-
-  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon")) {
-    return NextResponse.next();
-  }
-
-  const token = req.cookies.get("blessed_track_session")?.value;
-  if (!token) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  try {
-    await jwtVerify(token, getSecret());
-    return NextResponse.next();
-  } catch {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-}
-
-export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
-};
