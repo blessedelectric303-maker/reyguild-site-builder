@@ -25,7 +25,7 @@ export default async function TeamPage() {
   const { data: company } = await supabase
     .schema("suite")
     .from("companies")
-    .select("name")
+    .select("name,army_mode,owner_is_admin")
     .eq("id", companyId)
     .maybeSingle();
 
@@ -48,6 +48,8 @@ export default async function TeamPage() {
     <TeamManager
       companyName={(company as any)?.name || "My Company"}
       companyId={companyId}
+      armyMode={(company as any)?.army_mode === true}
+      ownerIsAdmin={(company as any)?.owner_is_admin !== false}
       members={(members as any) ?? []}
       invites={(invites as any) ?? []}
     />
