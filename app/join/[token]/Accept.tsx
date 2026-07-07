@@ -38,13 +38,7 @@ export default function Accept({ token }: { token: string }) {
         <img src="/crest.png" alt="ReyGuild" className="w-20 h-auto mx-auto mb-6" />
         <p className="text-slate-200">{msg}</p>
         {needLogin && (
-          
-            href="/login"
-            className="inline-block mt-6 rounded-md px-4 py-2 text-sm font-semibold text-slate-900"
-            style={{ background: "#e0a82e" }}
-          >
-            Sign in
-          </a>
+          <a href="/login" className="inline-block mt-6 rounded-md px-4 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Sign in</a>
         )}
       </div>
     </main>
