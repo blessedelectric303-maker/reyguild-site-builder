@@ -3,11 +3,13 @@ import type { ReactNode } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { isStaff } from "@/utils/roles";
 import SettingsMenu from "@/app/components/SettingsMenu";
+import Messages from "@/app/components/Messages";
 
 // The shared shell every app room inherits. Built once here so every app
-// (now and future) gets the same branded top bar — including Settings — automatically.
+// (now and future) gets the same branded top bar automatically.
 export default async function AppsLayout({ children }: { children: ReactNode }) {
   let email = "";
+  let userId = "";
   let role = "owner";
   let companyName = "";
   let companyId = "";
@@ -19,6 +21,7 @@ export default async function AppsLayout({ children }: { children: ReactNode }) 
       data: { user },
     } = await supabase.auth.getUser();
     email = user?.email || "";
+    userId = user?.id || "";
 
     const { data: mem } = await supabase
       .schema("suite")
@@ -48,6 +51,7 @@ export default async function AppsLayout({ children }: { children: ReactNode }) 
       <header className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800 bg-slate-950">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white"><span aria-hidden>&larr;</span> Back to command center</Link>
         <div className="flex items-center gap-3">
+          <Messages userId={userId} companyId={companyId} />
           <SettingsMenu email={email} role={role} companyName={companyName} isStaff={isStaff(role)} companyId={companyId} armyMode={armyMode} ownerIsAdmin={ownerIsAdmin} />
           <div className="flex items-center gap-2">
             <img src="/crest.png" alt="" className="w-6 h-auto" />
