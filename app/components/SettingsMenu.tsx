@@ -51,19 +51,19 @@ export default function SettingsMenu({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const tabBtn = (id: Tab, label: string) => (
-    <button
-      type="button"
-      onClick={() => setTab(id)}
-      className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${
-        tab === id
-          ? "bg-slate-800 text-white"
-          : "text-slate-400 hover:text-slate-200"
-      }`}
-    >
-      {label}
-    </button>
-  );
+  const tabBtn = (id: Tab, label: string) => {
+    const active = tab === id;
+    const cls =
+      "flex-1 rounded-md px-3 py-2 text-sm font-semibold transition " +
+      (active
+        ? "bg-slate-800 text-white"
+        : "text-slate-400 hover:text-slate-200");
+    return (
+      <button type="button" onClick={() => setTab(id)} className={cls}>
+        {label}
+      </button>
+    );
+  };
 
   return (
     <>
@@ -160,21 +160,21 @@ export default function SettingsMenu({
                     Need a hand?
                   </h3>
                   <p className="mt-2">
-                    We're here to help you get the most out of ReyGuild.
+                    We are here to help you get the most out of ReyGuild.
                   </p>
                   <div className="mt-4 space-y-2">
                     
-                      href={`mailto:${SUPPORT.email}`}
+                      href={"mailto:" + SUPPORT.email}
                       className="block rounded-md border border-slate-700 px-3 py-2 text-slate-200 hover:bg-slate-800"
                     >
-                      ✉️ {SUPPORT.email}
+                      Email {SUPPORT.email}
                     </a>
                     {SUPPORT.phone ? (
                       
-                        href={`tel:${SUPPORT.phone}`}
+                        href={"tel:" + SUPPORT.phone}
                         className="block rounded-md border border-slate-700 px-3 py-2 text-slate-200 hover:bg-slate-800"
                       >
-                        📞 {SUPPORT.phone}
+                        Call {SUPPORT.phone}
                       </a>
                     ) : null}
                   </div>
@@ -182,8 +182,8 @@ export default function SettingsMenu({
                     <p className="mt-3 text-xs text-slate-500">{SUPPORT.note}</p>
                   ) : null}
                   <p className="mt-4 text-xs text-slate-500">
-                    Tip: the SOPs tab has a quick guide for whichever screen
-                    you're on.
+                    Tip: the SOPs tab has a quick guide for whichever screen you
+                    are on.
                   </p>
                 </div>
               )}
