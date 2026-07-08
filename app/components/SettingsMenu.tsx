@@ -32,6 +32,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
   const [army, setArmy] = useState(armyMode === true);
   const [ownerAdmin, setOwnerAdmin] = useState(ownerIsAdmin !== false);
   const [savingMode, setSavingMode] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   const sop = sopFor(contextFromPath(pathname));
   const showMode = isStaff && !!companyId;
@@ -84,6 +85,19 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
     router.refresh();
   }
 
+  useEffect(() => {
+    setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem("reyguild-theme", next);
+    } catch (e) {}
+  }
+
   const tabBtn = (id: Tab, label: string) => {
     const active = tab === id;
     const cls =
@@ -102,6 +116,12 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18M6 6l12 12" /></svg>
   );
 
+  const themeIcon = theme === "light" ? (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" /></svg>
+  ) : (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4" /></svg>
+  );
+
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} aria-label="Settings" className="inline-flex items-center gap-1.5 rounded-md border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800">
@@ -117,7 +137,10 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                 <img src="/crest.png" alt="" className="h-5 w-auto" />
                 <span className="text-sm font-bold text-white">Settings</span>
               </div>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white">{closeIcon}</button>
+              <div className="flex items-center gap-1">
+                <button type="button" onClick={toggleTheme} aria-label="Toggle light or dark" className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white">{themeIcon}</button>
+                <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white">{closeIcon}</button>
+              </div>
             </div>
 
             <div className="flex gap-1 border-b border-slate-800 p-2">
@@ -193,7 +216,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                   {isStaff ? (
                     <div className="mb-4 grid grid-cols-2 gap-2">
                       <Link href="/company" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Company</Link>
-                      <Link href="/team" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Army / Team</Link>
+                      <Link href="/team" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Army / Employees</Link>
                     </div>
                   ) : null}
 
