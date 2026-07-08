@@ -207,7 +207,7 @@ export default async function Home() {
 
       <footer className="mt-auto pt-10 text-center">
         <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#e0a82e]" />
-        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">Software for service companies — for the best of them</p>
+        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">Software For Service Companies — That Battle Life Everyday</p>
       </footer>
     </main>
   );
