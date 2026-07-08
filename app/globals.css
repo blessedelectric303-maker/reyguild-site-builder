@@ -12,3 +12,30 @@ body {
     Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Light mode. Dark stays the default (no data-theme set = dark look).
+   This remaps the slate palette so the whole shell flips at once. */
+html[data-theme="light"] {
+  color-scheme: light;
+  --color-slate-950: #eef2f7;
+  --color-slate-900: #ffffff;
+  --color-slate-800: #e7edf3;
+  --color-slate-700: #d4dde6;
+  --color-slate-600: #b6c2cf;
+  --color-slate-500: #7c8a99;
+  --color-slate-400: #55647a;
+  --color-slate-300: #3b4a5e;
+  --color-slate-200: #26333f;
+  --color-slate-100: #16202b;
+  --color-white: #0f172a;
+}
+
+html[data-theme="light"] body {
+  background: #eef2f7;
+  color: #16202b;
+}
+
+/* Keep dark text readable on the bright gold/emerald/amber accents. */
+html[data-theme="light"] .text-slate-900 {
+  color: #0f172a;
+}
