@@ -91,7 +91,7 @@ export default function TeamManager({
   }
 
   function copyLink(token: string) {
-    const link = origin + "/join/" + token;
+    const link = "https://reyguild-site-builder.vercel.app/join/" + token;
     navigator.clipboard.writeText(link);
     setCopied(token);
     setTimeout(() => setCopied(""), 1500);
