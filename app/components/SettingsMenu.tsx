@@ -1,4 +1,4 @@
-"use client";
+F"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,7 +9,7 @@ import { contextFromPath, sopFor, SUPPORT } from "@/utils/sops";
 type Props = {
   email: string;
   role: string;
-  companyName?: string;
+  companyName?: string;F
   isStaff: boolean;
   companyId?: string;
   armyMode?: boolean;
@@ -193,7 +193,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                   {isStaff ? (
                     <div className="mb-4 grid grid-cols-2 gap-2">
                       <Link href="/company" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Company</Link>
-                      <Link href="/team" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Army</Link>
+                      <Link href="/team" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Army</>Army / Team</Link>>
                     </div>
                   ) : null}
 
