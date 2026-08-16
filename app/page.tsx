@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { isStaff, homeFor } from "@/utils/roles";
 import SettingsMenu from "@/app/components/SettingsMenu";
 import Messages from "@/app/components/Messages";
+import Calendar from "@/app/components/Calendar";
 
 type AppRow = {
   key: string;
@@ -19,18 +20,10 @@ function daysLeft(iso: string | null): number | null {
   return Math.max(0, Math.ceil(ms / 86400000));
 }
 
+// Only these two apps show now (one on each side of the calendar).
 const LIVE_APPS: Record<string, { href: string; external?: boolean }> = {
-  site_builder: { href: "/apps/site-builder" },
   estimating: { href: "/apps/estimating" },
-  app_four: { href: "/apps/field-log" },
   time_material: { href: "https://tm.serviceopspro.com", external: true },
-};
-
-const POS: Record<string, string> = {
-  site_builder: "md:col-start-1 md:row-start-1",
-  app_four: "md:col-start-3 md:row-start-1",
-  time_material: "md:col-start-1 md:row-start-2",
-  estimating: "md:col-start-3 md:row-start-2",
 };
 
 export default async function Home() {
@@ -112,7 +105,51 @@ export default async function Home() {
     ? Math.max(...trialing.map((e: EntRow) => daysLeft(e.trial_ends_at) ?? 0))
     : null;
 
-  const list = (apps ?? []) as AppRow[];
+  const allApps = (apps ?? []) as AppRow[];
+  const estimatingApp = allApps.find((a) => a.key === "estimating");
+  const tmApp = allApps.find((a) => a.key === "time_material");
+
+  function tile(app: AppRow | undefined) {
+    if (!app) return null;
+    const ent = entByApp.get(app.key);
+    const status = ent?.status ?? "locked";
+    const left = daysLeft(ent?.trial_ends_at ?? null);
+    const entitled = status === "active" || status === "trialing";
+    const live = LIVE_APPS[app.key];
+    const canOpen = entitled && !!live;
+
+    const badge =
+      status === "active"
+        ? "Active"
+        : status === "trialing"
+        ? "Free trial · " + (left ?? 0) + "d left"
+        : "Locked";
+    const badgeColor =
+      status === "active"
+        ? "text-emerald-400 border-emerald-700"
+        : status === "trialing"
+        ? "text-amber-300 border-amber-700"
+        : "text-slate-400 border-slate-700";
+
+    return (
+      <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col items-center text-center h-full">
+        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeColor}>{badge}</span>
+        <h2 className="mt-3 text-lg font-semibold text-white">{app.name}</h2>
+        <p className="mt-1 text-sm text-slate-400 flex-1">{app.description}</p>
+        <div className="mt-4">
+          {canOpen && live ? (
+            live.external ? (
+              <a href={live.href} target="_blank" rel="noopener noreferrer" className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open ↗</a>
+            ) : (
+              <Link href={live.href} className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open →</Link>
+            )
+          ) : (
+            <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">Coming soon — being built</span>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen flex flex-col p-6 md:p-10">
@@ -123,91 +160,48 @@ export default async function Home() {
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #e0a82e" }}>YOUR COMMAND CENTER</h1>
-          {trialDaysLeft != null && (
-            <p className="mt-2 text-sm font-semibold text-amber-300">Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left</p>
-          )}
-          <p className="mt-1 text-slate-400 text-sm">Every ReyGuild app, one login.</p>
-          <div className="mt-3 flex flex-col items-center gap-2 text-xs">
-            {companyName && (
-              <span className="rounded-full border border-slate-600 px-3 py-1 text-slate-200">{companyName}</span>
-            )}
-            <span className="rounded-full px-3 py-1 font-semibold text-slate-900" style={{ background: soloMode ? "#e0a82e" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} · {roleLabel}</span>
+      <div className="max-w-6xl mx-auto w-full">
+        <div className="grid gap-5 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,260px)] md:items-start">
+          <div className="md:col-start-2 md:row-start-1">
+            <div className="flex flex-col items-center mb-4">
+              {companyLogo ? (
+                <img src={companyLogo} alt={companyName || "Company"} className="w-24 md:w-28 h-auto max-h-24 object-contain drop-shadow" />
+              ) : (
+                <>
+                  <img src="/crest.png" alt="ReyGuild" className="w-16 md:w-20 h-auto drop-shadow" />
+                  <div className="mt-1 text-lg font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></div>
+                </>
+              )}
+              {companyName && (
+                <span className="mt-2 rounded-full border border-slate-600 px-3 py-0.5 text-[11px] text-slate-200">{companyName}</span>
+              )}
+              <span className="mt-1 rounded-full px-3 py-0.5 text-[11px] font-semibold text-slate-900" style={{ background: soloMode ? "#e0a82e" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} · {roleLabel}</span>
+            </div>
+
+            <Calendar companyId={companyId} canEdit={isStaff(myRole)} />
+
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3 text-center text-sm text-slate-200 hover:bg-slate-800">Email</a>
+              <span className="rounded-lg border border-slate-800 bg-slate-900/30 px-3 py-3 text-center text-sm text-slate-500">Forms<span className="block text-[10px]">coming next</span></span>
+              <span className="rounded-lg border border-slate-800 bg-slate-900/30 px-3 py-3 text-center text-sm text-slate-500">Material<span className="block text-[10px]">coming next</span></span>
+            </div>
           </div>
+
+          <div className="md:col-start-1 md:row-start-1">{tile(estimatingApp)}</div>
+          <div className="md:col-start-3 md:row-start-1">{tile(tmApp)}</div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-[1fr_auto_1fr] md:grid-rows-2 md:items-stretch">
-          <div className="flex flex-col items-center justify-center px-6 py-4 md:col-start-2 md:row-start-1 md:row-span-2">
-            {companyLogo ? (
-              <>
-                <img src={companyLogo} alt={companyName || "Company"} className="w-40 md:w-56 h-auto max-h-56 object-contain drop-shadow-lg" />
-                <div className="mt-4 flex items-center gap-1.5 opacity-70">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400">Powered by</span>
-                  <img src="/crest.png" alt="" className="w-4 h-auto" />
-                  <span className="text-[11px] font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></span>
-                </div>
-              </>
-            ) : (
-              <>
-                <img src="/crest.png" alt="ReyGuild" className="w-32 md:w-44 h-auto drop-shadow-lg" />
-                <div className="mt-3 text-2xl md:text-3xl font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></div>
-              </>
-            )}
-          </div>
-
-          {list.map((app: AppRow) => {
-            const ent = entByApp.get(app.key);
-            const status = ent?.status ?? "locked";
-            const left = daysLeft(ent?.trial_ends_at ?? null);
-            const entitled = status === "active" || status === "trialing";
-            const live = LIVE_APPS[app.key];
-            const canOpen = entitled && !!live;
-
-            const badge =
-              status === "active"
-                ? "Active"
-                : status === "trialing"
-                ? "Free trial · " + (left ?? 0) + "d left"
-                : "Locked";
-
-            const badgeColor =
-              status === "active"
-                ? "text-emerald-400 border-emerald-700"
-                : status === "trialing"
-                ? "text-amber-300 border-amber-700"
-                : "text-slate-400 border-slate-700";
-
-            const cardCls =
-              "rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col items-center text-center " +
-              (POS[app.key] ?? "");
-
-            return (
-              <div key={app.key} className={cardCls}>
-                <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeColor}>{badge}</span>
-                <h2 className="mt-3 text-lg font-semibold text-white">{app.name}</h2>
-                <p className="mt-1 text-sm text-slate-400 flex-1">{app.description}</p>
-                <div className="mt-4">
-                  {canOpen && live ? (
-                    live.external ? (
-                      <a href={live.href} target="_blank" rel="noopener noreferrer" className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open ↗</a>
-                    ) : (
-                      <Link href={live.href} className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open →</Link>
-                    )
-                  ) : (
-                    <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">Coming soon — being built</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+        <div className="text-center mt-8">
+          <h1 className="text-2xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #e0a82e" }}>YOUR COMMAND CENTER</h1>
+          {trialDaysLeft != null && (
+            <p className="mt-1 text-sm font-semibold text-amber-300">Free trial · {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left</p>
+          )}
         </div>
       </div>
 
       <footer className="mt-auto pt-10 text-center">
         <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#e0a82e]" />
-        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">Software For Service Companies — That Battle Life Everyday</p>
+        <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">Software for service companies — ready for the battles of everyday work</p>
       </footer>
     </main>
   );
