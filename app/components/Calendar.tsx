@@ -10,7 +10,12 @@ type Ev = {
   event_type: string;
   event_date: string;
   event_time: string | null;
+  assigned_to: string | null;
+  duration_hours: number;
 };
+type Member = { user_id: string; role: string; email: string };
+
+const WORKDAY = 8; // hours a tech can be booked per day. Change this to cap it lower.
 
 const TYPE_COLOR: Record<string, string> = {
   estimate: "#3b82f6",
@@ -30,28 +35,46 @@ function pad(n: number): string {
 function dayKey(y: number, m: number, d: number): string {
   return y + "-" + pad(m + 1) + "-" + pad(d);
 }
+function shortName(email: string): string {
+  return email ? email.split("@")[0] : "Tech";
+}
 
-export default function Calendar({ companyId, canEdit }: { companyId?: string; canEdit: boolean }) {
+export default function Calendar({ companyId, canEdit, userId, userEmail }: { companyId?: string; canEdit: boolean; userId?: string; userEmail?: string }) {
   const supabase = createClient();
   const today = new Date();
   const [y, setY] = useState(today.getFullYear());
   const [m, setM] = useState(today.getMonth());
   const [events, setEvents] = useState<Ev[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [selDay, setSelDay] = useState<string | null>(null);
   const [fType, setFType] = useState("service_call");
   const [fTitle, setFTitle] = useState("");
   const [fAddr, setFAddr] = useState("");
   const [fTime, setFTime] = useState("");
+  const [fTech, setFTech] = useState<string>("");
+  const [fDur, setFDur] = useState(2);
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   const daysInMonth = new Date(y, m + 1, 0).getDate();
   const firstWeekday = new Date(y, m, 1).getDay();
+
+  const techOptions: Member[] = [];
+  if (userId) techOptions.push({ user_id: userId, role: "me", email: userEmail || "Me" });
+  members.forEach((mm) => techOptions.push(mm));
+
+  function nameFor(id: string | null): string {
+    if (!id) return "";
+    if (id === userId) return "Me";
+    const mm = members.find((x) => x.user_id === id);
+    return mm ? shortName(mm.email) : "Tech";
+  }
 
   const load = useCallback(async () => {
     if (!companyId) return;
     const from = dayKey(y, m, 1);
     const to = dayKey(y, m, daysInMonth);
-    const { data } = await supabase.schema("suite").from("calendar_events").select("id,title,address,event_type,event_date,event_time").gte("event_date", from).lte("event_date", to).order("event_date");
+    const { data } = await supabase.schema("suite").from("calendar_events").select("id,title,address,event_type,event_date,event_time,assigned_to,duration_hours").gte("event_date", from).lte("event_date", to).order("event_date");
     setEvents((data as Ev[]) || []);
   }, [companyId, y, m, daysInMonth, supabase]);
 
@@ -59,12 +82,35 @@ export default function Calendar({ companyId, canEdit }: { companyId?: string; c
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (!canEdit) return;
+    (async () => {
+      const { data } = await supabase.schema("suite").rpc("messageable_members");
+      setMembers((data as Member[]) || []);
+    })();
+  }, [canEdit, supabase]);
+
   function eventsFor(key: string): Ev[] {
     return events.filter((e) => e.event_date === key);
   }
+  function hoursBooked(techId: string, key: string): number {
+    return events
+      .filter((e) => e.event_date === key && e.assigned_to === techId)
+      .reduce((sum, e) => sum + (e.duration_hours || 0), 0);
+  }
+
+  function openDay(key: string) {
+    setSelDay(key);
+    setErr(null);
+    setFTitle("");
+    setFAddr("");
+    setFTime("");
+    setFTech("");
+    setFDur(2);
+    setFType("service_call");
+  }
 
   function prevMonth() {
-    setSelDay(null);
     if (m === 0) {
       setM(11);
       setY(y - 1);
@@ -73,7 +119,6 @@ export default function Calendar({ companyId, canEdit }: { companyId?: string; c
     }
   }
   function nextMonth() {
-    setSelDay(null);
     if (m === 11) {
       setM(0);
       setY(y + 1);
@@ -84,8 +129,13 @@ export default function Calendar({ companyId, canEdit }: { companyId?: string; c
 
   async function addEvent() {
     if (!companyId || !selDay || saving) return;
+    setErr(null);
     const title = fTitle.trim();
     if (!title) return;
+    if (fTech && hoursBooked(fTech, selDay) + fDur > WORKDAY) {
+      setErr(nameFor(fTech) + " would be over " + WORKDAY + " hours that day.");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.schema("suite").from("calendar_events").insert({
       company_id: companyId,
@@ -94,22 +144,25 @@ export default function Calendar({ companyId, canEdit }: { companyId?: string; c
       event_type: fType,
       event_date: selDay,
       event_time: fTime.trim() || null,
+      assigned_to: fTech || null,
+      duration_hours: fDur,
     });
     setSaving(false);
     if (error) {
-      alert("Couldn't add that job: " + error.message);
+      setErr("Couldn't add that job: " + error.message);
       return;
     }
     setFTitle("");
     setFAddr("");
     setFTime("");
+    setFTech("");
     load();
   }
 
   async function removeEvent(id: string) {
     const { error } = await supabase.schema("suite").from("calendar_events").delete().eq("id", id);
     if (error) {
-      alert("Couldn't remove that: " + error.message);
+      setErr("Couldn't remove that: " + error.message);
       return;
     }
     load();
@@ -127,6 +180,13 @@ export default function Calendar({ companyId, canEdit }: { companyId?: string; c
     const cls = "flex-1 rounded-md px-3 py-1.5 text-xs font-semibold border " + (on ? "text-slate-900 border-transparent" : "text-slate-300 border-slate-600");
     return (
       <button type="button" onClick={() => setFType(val)} className={cls} style={on ? { background: TYPE_COLOR[val] } : undefined}>{label}</button>
+    );
+  };
+  const durToggle = (val: number) => {
+    const on = fDur === val;
+    const cls = "flex-1 rounded-md px-3 py-1.5 text-xs font-semibold border " + (on ? "bg-slate-200 text-slate-900 border-transparent" : "text-slate-300 border-slate-600");
+    return (
+      <button type="button" onClick={() => setFDur(val)} className={cls}>{val}h</button>
     );
   };
 
@@ -149,10 +209,9 @@ export default function Calendar({ companyId, canEdit }: { companyId?: string; c
           if (d === null) return <div key={i} className="aspect-square" />;
           const key = dayKey(y, m, d);
           const dayEvents = eventsFor(key);
-          const selected = selDay === key;
-          const cellCls = "aspect-square rounded-md border p-1 text-left overflow-hidden " + (selected ? "border-slate-400 bg-slate-800" : "border-slate-800 hover:border-slate-600");
+          const cellCls = "aspect-square rounded-md border p-1 text-left overflow-hidden border-slate-800 hover:border-slate-500";
           return (
-            <button type="button" key={i} onClick={() => setSelDay(key)} className={cellCls}>
+            <button type="button" key={i} onClick={() => openDay(key)} className={cellCls}>
               <div className={"text-[11px] " + (isToday(d) ? "font-bold text-amber-300" : "text-slate-300")}>{d}</div>
               <div className="mt-0.5 space-y-0.5">
                 {dayEvents.slice(0, 3).map((e) => (
@@ -169,48 +228,84 @@ export default function Calendar({ companyId, canEdit }: { companyId?: string; c
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.service_call }} /> Service Call</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.estimate }} /> Estimate</span>
       </div>
+      <div className="mt-2 text-center text-xs text-slate-500">{canEdit ? "Tap a day to open it and add jobs." : "Tap a day to see the jobs."}</div>
 
       {selDay ? (
-        <div className="mt-4 border-t border-slate-800 pt-3">
-          <div className="text-sm font-semibold text-white mb-2">{selDay}</div>
-          <div className="space-y-2">
-            {eventsFor(selDay).length === 0 ? (
-              <div className="text-xs text-slate-500">No jobs on this day yet.</div>
-            ) : (
-              eventsFor(selDay).map((e) => (
-                <div key={e.id} className="flex items-start justify-between gap-2 rounded-md border border-slate-800 p-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-2 rounded-full" style={{ background: TYPE_COLOR[e.event_type] || "#94a3b8" }} />
-                      <span className="text-sm font-medium" style={{ color: TYPE_COLOR[e.event_type] || "#cbd5e1" }}>{e.title}</span>
-                    </div>
-                    <div className="text-xs text-slate-400 mt-0.5">{e.event_time ? e.event_time + " - " : ""}{TYPE_LABEL[e.event_type] || e.event_type}</div>
-                    {e.address ? <div className="text-xs text-slate-500 break-words">{e.address}</div> : null}
-                  </div>
-                  {canEdit ? (
-                    <button type="button" onClick={() => removeEvent(e.id)} aria-label="Remove" className="shrink-0 text-slate-500 hover:text-red-400 text-sm">&times;</button>
-                  ) : null}
-                </div>
-              ))
-            )}
-          </div>
-
-          {canEdit ? (
-            <div className="mt-3 space-y-2">
-              <div className="flex gap-2">
-                {typeToggle("service_call", "Service Call")}
-                {typeToggle("estimate", "Estimate")}
-              </div>
-              <input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="Job / customer name" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
-              <input value={fAddr} onChange={(e) => setFAddr(e.target.value)} placeholder="Address" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
-              <input value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="Time (e.g. 9:00 AM)" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
-              <button type="button" onClick={addEvent} disabled={saving || !fTitle.trim()} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-50" style={{ background: "#e0a82e" }}>{saving ? "Adding..." : "Add to calendar"}</button>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 sm:items-center" onClick={() => setSelDay(null)}>
+          <div className="mt-6 flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl sm:mt-0" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+              <div className="text-base font-bold text-white">{selDay}</div>
+              <button type="button" onClick={() => setSelDay(null)} aria-label="Close" className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white">&times;</button>
             </div>
-          ) : null}
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-2">
+                {eventsFor(selDay).length === 0 ? (
+                  <div className="text-sm text-slate-500">No jobs on this day yet.</div>
+                ) : (
+                  eventsFor(selDay).map((e) => (
+                    <div key={e.id} className="flex items-start justify-between gap-2 rounded-lg border border-slate-800 p-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: TYPE_COLOR[e.event_type] || "#94a3b8" }} />
+                          <span className="text-sm font-semibold" style={{ color: TYPE_COLOR[e.event_type] || "#cbd5e1" }}>{e.title}</span>
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1">{e.event_time ? e.event_time + " · " : ""}{e.duration_hours ? e.duration_hours + "h · " : ""}{TYPE_LABEL[e.event_type] || e.event_type}{e.assigned_to ? " · " + nameFor(e.assigned_to) : ""}</div>
+                        {e.address ? <div className="text-xs text-slate-500 break-words mt-0.5">{e.address}</div> : null}
+                      </div>
+                      {canEdit ? (
+                        <button type="button" onClick={() => removeEvent(e.id)} aria-label="Remove" className="shrink-0 text-slate-500 hover:text-red-400">&times;</button>
+                      ) : null}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {canEdit ? (
+                <div className="mt-4 border-t border-slate-800 pt-4 space-y-2">
+                  <div className="text-sm font-semibold text-white">Add a job</div>
+                  <div className="flex gap-2">
+                    {typeToggle("service_call", "Service Call")}
+                    {typeToggle("estimate", "Estimate")}
+                  </div>
+                  <input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="Job / customer name" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
+                  <input value={fAddr} onChange={(e) => setFAddr(e.target.value)} placeholder="Address" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
+                  <input value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="Start time (e.g. 9:00 AM)" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
+
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">How long?</div>
+                    <div className="flex gap-2">
+                      {durToggle(2)}
+                      {durToggle(4)}
+                      {durToggle(8)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Assign a tech (optional)</div>
+                    <div className="flex flex-wrap gap-2">
+                      {techOptions.map((t) => {
+                        const wouldExceed = hoursBooked(t.user_id, selDay) + fDur > WORKDAY;
+                        const on = fTech === t.user_id;
+                        const busy = wouldExceed && !on;
+                        const label = t.role === "me" ? "Me" : shortName(t.email);
+                        const cls = "rounded-full px-3 py-1 text-xs font-semibold border " + (on ? "text-slate-900 border-transparent" : busy ? "text-slate-600 border-slate-800" : "text-slate-200 border-slate-600");
+                        return (
+                          <button type="button" key={t.user_id} disabled={busy} onClick={() => setFTech(on ? "" : t.user_id)} className={cls} style={on ? { background: "#e0a82e" } : undefined}>{label}{busy ? " (full)" : ""}</button>
+                        );
+                      })}
+                      {techOptions.length === 0 ? <span className="text-xs text-slate-600">Invite your team to assign techs.</span> : null}
+                    </div>
+                  </div>
+
+                  {err ? <p className="text-xs text-red-400">{err}</p> : null}
+                  <button type="button" onClick={addEvent} disabled={saving || !fTitle.trim()} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-50" style={{ background: "#e0a82e" }}>{saving ? "Adding..." : "Add to calendar"}</button>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="mt-3 text-center text-xs text-slate-500">{canEdit ? "Tap a day to add a job." : "Tap a day to see the jobs."}</div>
-      )}
+      ) : null}
     </div>
   );
 }
