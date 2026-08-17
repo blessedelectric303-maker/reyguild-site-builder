@@ -5,6 +5,7 @@ import { isStaff, homeFor } from "@/utils/roles";
 import SettingsMenu from "@/app/components/SettingsMenu";
 import Messages from "@/app/components/Messages";
 import Calendar from "@/app/components/Calendar";
+import CallLinks from "@/app/components/CallLinks";
 
 type AppRow = {
   key: string;
@@ -155,14 +156,13 @@ export default async function Home() {
     <main className="min-h-screen flex flex-col p-6 md:p-10">
       <header className="flex items-center justify-end mb-6">
         <div className="flex items-center gap-3">
-          <Messages userId={user.id} companyId={companyId} />
           <SettingsMenu email={user.email || ""} role={myRole} companyName={companyName} isStaff={isStaff(myRole)} companyId={companyId} armyMode={armyMode} ownerIsAdmin={ownerIsAdmin} />
         </div>
       </header>
 
       <div className="max-w-6xl mx-auto w-full">
-        <div className="grid gap-5 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,260px)] md:items-start">
-          <div className="md:col-start-2 md:row-start-1">
+        <div className="grid gap-3 md:grid-cols-[120px_minmax(0,180px)_minmax(0,1fr)_minmax(0,180px)_120px] md:items-start">
+          <div className="md:col-start-3 md:row-start-1">
             <div className="flex flex-col items-center mb-4">
               {companyName ? (
                 <div className="text-2xl md:text-3xl font-extrabold tracking-wide text-white text-center">{companyName}</div>
@@ -176,16 +176,20 @@ export default async function Home() {
             </div>
 
             <Calendar companyId={companyId} canEdit={isStaff(myRole)} userId={user.id} userEmail={user.email || ""} logoUrl={companyLogo} />
-
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3 text-center text-sm text-slate-200 hover:bg-slate-800">Email</a>
-              <span className="rounded-lg border border-slate-800 bg-slate-900/30 px-3 py-3 text-center text-sm text-slate-500">Forms<span className="block text-[10px]">coming next</span></span>
-              <span className="rounded-lg border border-slate-800 bg-slate-900/30 px-3 py-3 text-center text-sm text-slate-500">Material<span className="block text-[10px]">coming next</span></span>
-            </div>
           </div>
 
-          <div className="md:col-start-1 md:row-start-1">{tile(estimatingApp)}</div>
-          <div className="md:col-start-3 md:row-start-1">{tile(tmApp)}</div>
+          <div className="md:col-start-1 md:row-start-1"><CallLinks keys={["emergency", "estimate", "service_call", "warranty_call"]} /></div>
+          <div className="md:col-start-2 md:row-start-1">{tile(tmApp)}</div>
+          <div className="md:col-start-4 md:row-start-1">{tile(estimatingApp)}</div>
+          <div className="md:col-start-5 md:row-start-1"><CallLinks keys={["concern", "question", "material", "absence"]} /></div>
+        </div>
+
+        <div className="mt-5 max-w-md mx-auto grid grid-cols-3 gap-2">
+          <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3 text-center text-sm text-slate-200 hover:bg-slate-800">Email</a>
+          <span className="rounded-lg border border-slate-800 bg-slate-900/30 px-3 py-3 text-center text-sm text-slate-500">Contacts<span className="block text-[10px]">coming next</span></span>
+          <div className="flex justify-center">
+            <Messages userId={user.id} companyId={companyId} />
+          </div>
         </div>
 
         <div className="text-center mt-8">
