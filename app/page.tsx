@@ -178,7 +178,7 @@ export default async function Home() {
             <Calendar companyId={companyId} canEdit={isStaff(myRole)} userId={user.id} userEmail={user.email || ""} logoUrl={companyLogo} />
           </div>
 
-          <div className="md:col-start-1 md:row-start-1"><CallLinks keys={["emergency", "estimate", "service_call", "warranty_call"]} companyId={companyId} userId={user.id} />
+          <div className="md:col-start-1 md:row-start-1"><CallLinks keys={["emergency", "estimate", "service_call", "warranty_call"]} companyId={companyId} userId={user.id} /></div>
           <div className="md:col-start-2 md:row-start-1">{tile(tmApp)}</div>
           <div className="md:col-start-4 md:row-start-1">{tile(estimatingApp)}</div>
           <div className="md:col-start-5 md:row-start-1"><CallLinks keys={["concern", "question", "material", "absence"]} companyId={companyId} userId={user.id} /></div>
