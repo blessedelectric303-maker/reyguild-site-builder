@@ -14,6 +14,7 @@ type Invite = {
 
 const ROLES = [
   { key: "admin", label: "Admin" },
+  { key: "supervisor", label: "Supervisor" },
   { key: "estimator", label: "Estimator" },
   { key: "sales_rep", label: "Sales Rep" },
   { key: "tech", label: "Tech" },
