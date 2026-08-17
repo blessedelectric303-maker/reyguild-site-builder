@@ -18,10 +18,10 @@ type Member = { user_id: string; role: string; email: string };
 const WORKDAY = 8; // hours a tech can be booked per day. Change this to cap it lower.
 
 const TYPE_COLOR: Record<string, string> = {
-  estimate: "#3b82f6",
-  service_call: "#22c55e",
-  warranty_call: "#f59e0b",
-  emergency: "#ef4444",
+  emergency: "#B31B1B",
+  service_call: "#1C5FA8",
+  estimate: "#1B7A3D",
+  warranty_call: "#B85C00",
 };
 const TYPE_LABEL: Record<string, string> = {
   estimate: "Estimate",
