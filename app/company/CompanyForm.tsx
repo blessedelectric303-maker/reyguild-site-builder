@@ -5,8 +5,13 @@ import { createClient } from "@/utils/supabase/client";
 
 type Profile = {
   name: string;
+  ownerName: string;
   trade: string;
   phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
   area: string;
   email: string;
   website: string;
@@ -39,6 +44,59 @@ function resizeImage(file: File, max: number): Promise<string> {
   });
 }
 
+// Removes a solid/near-solid background by keying out the corner color.
+// Works well for logos on white or flat backgrounds; already-transparent
+// PNGs pass through cleanly. Photographic backgrounds may need a clean PNG.
+function removeBackground(dataUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement("canvas");
+      cv.width = img.width;
+      cv.height = img.height;
+      const g = cv.getContext("2d");
+      if (!g) {
+        resolve(dataUrl);
+        return;
+      }
+      g.drawImage(img, 0, 0);
+      const id = g.getImageData(0, 0, cv.width, cv.height);
+      const d = id.data;
+      const corners = [
+        [0, 0],
+        [cv.width - 1, 0],
+        [0, cv.height - 1],
+        [cv.width - 1, cv.height - 1],
+      ];
+      let br = 0, bg = 0, bb = 0;
+      corners.forEach((c) => {
+        const i = (c[1] * cv.width + c[0]) * 4;
+        br += d[i];
+        bg += d[i + 1];
+        bb += d[i + 2];
+      });
+      br /= 4; bg /= 4; bb /= 4;
+      const tol = 50;
+      const feather = tol * 1.7;
+      for (let i = 0; i < d.length; i += 4) {
+        const dr = d[i] - br;
+        const dg = d[i + 1] - bg;
+        const db = d[i + 2] - bb;
+        const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+        if (dist < tol) {
+          d[i + 3] = 0;
+        } else if (dist < feather) {
+          d[i + 3] = Math.round(d[i + 3] * ((dist - tol) / (feather - tol)));
+        }
+      }
+      g.putImageData(id, 0, 0);
+      resolve(cv.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 export default function CompanyForm({
   companyId,
   initial,
@@ -49,6 +107,8 @@ export default function CompanyForm({
   const supabase = createClient();
   const [f, setF] = useState<Profile>(initial);
   const [status, setStatus] = useState("");
+  const [logoRaw, setLogoRaw] = useState("");
+  const [bgRemoved, setBgRemoved] = useState(true);
 
   function set(k: keyof Profile, v: string) {
     setF((prev) => ({ ...prev, [k]: v }));
@@ -61,8 +121,13 @@ export default function CompanyForm({
       .from("companies")
       .update({
         name: f.name,
+        owner_name: f.ownerName,
         trade: f.trade,
         phone: f.phone,
+        address: f.address,
+        city: f.city,
+        state: f.state,
+        zip: f.zip,
         area: f.area,
         email: f.email,
         website: f.website,
@@ -72,23 +137,43 @@ export default function CompanyForm({
     setTimeout(() => setStatus(""), 1800);
   }
 
-  async function onLogo(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    setStatus("Uploading logo…");
-    const dataUrl = await resizeImage(file, 420);
+  async function saveLogo(dataUrl: string) {
     setF((prev) => ({ ...prev, logo: dataUrl }));
     await supabase
       .schema("suite")
       .from("companies")
       .update({ logo: dataUrl })
       .eq("id", companyId);
-    setStatus("Logo saved ✓");
-    setTimeout(() => setStatus(""), 1800);
+  }
+
+  async function onLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setStatus("Processing logo…");
+    const resized = await resizeImage(file, 420);
+    setLogoRaw(resized);
+    const cleaned = await removeBackground(resized);
+    setBgRemoved(true);
+    await saveLogo(cleaned);
+    setStatus("Logo saved ✓ (background removed)");
+    setTimeout(() => setStatus(""), 2200);
+  }
+
+  async function toggleBg() {
+    if (!logoRaw) return;
+    const next = !bgRemoved;
+    setBgRemoved(next);
+    if (next) {
+      const cleaned = await removeBackground(logoRaw);
+      await saveLogo(cleaned);
+    } else {
+      await saveLogo(logoRaw);
+    }
   }
 
   async function removeLogo() {
     setF((prev) => ({ ...prev, logo: "" }));
+    setLogoRaw("");
     await supabase
       .schema("suite")
       .from("companies")
@@ -102,24 +187,15 @@ export default function CompanyForm({
   return (
     <main className="min-h-screen p-6 md:p-10">
       <div className="max-w-2xl mx-auto">
-        <a href="/" className="text-sm text-slate-400 hover:text-white">
-          ← Back to command center
-        </a>
+        <a href="/" className="text-sm text-slate-400 hover:text-white">&larr; Back to command center</a>
         <h1 className="mt-4 text-2xl font-bold text-white">Company profile</h1>
-        <p className="text-slate-400 text-sm mt-1">
-          Enter it once here — your name, logo, and details flow to every app you
-          use. No more typing it in five places.
-        </p>
+        <p className="text-slate-400 text-sm mt-1">Enter it once here — your name, logo, and details flow onto your proposals and invoices automatically. No more typing it in five places.</p>
 
         <div className="mt-6 rounded-xl border border-slate-700 bg-slate-900/50 p-5">
-          <span className={label}>Company logo</span>
-          <div className="flex items-center gap-4">
+          <span className={label} style={{ marginTop: 0 }}>Company logo</span>
+          <div className="flex items-center gap-4 flex-wrap">
             {f.logo ? (
-              <img
-                src={f.logo}
-                alt="Logo"
-                className="h-16 w-auto max-w-[140px] object-contain rounded bg-white p-1"
-              />
+              <img src={f.logo} alt="Logo" className="h-16 w-auto max-w-[140px] object-contain rounded" style={{ background: "repeating-conic-gradient(#334155 0% 25%, #1e293b 0% 50%) 50% / 16px 16px" }} />
             ) : (
               <span className="text-slate-500 text-sm">No logo yet</span>
             )}
@@ -128,38 +204,24 @@ export default function CompanyForm({
               <input type="file" accept="image/*" className="hidden" onChange={onLogo} />
             </label>
             {f.logo && (
-              <button onClick={removeLogo} className="text-xs text-slate-400 hover:text-white">
-                Remove
-              </button>
+              <button onClick={removeLogo} className="text-xs text-slate-400 hover:text-white">Remove</button>
             )}
           </div>
-          <p className="text-[11px] text-slate-500 mt-2">
-            This shows on your command center and on every app. PNG works best.
-          </p>
+          {logoRaw && (
+            <label className="mt-3 flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="checkbox" checked={bgRemoved} onChange={toggleBg} />
+              Remove the background (uncheck to keep the original)
+            </label>
+          )}
+          <p className="text-[11px] text-slate-500 mt-2">On upload we auto-remove a solid/white background so your logo can sit behind the calendar. For a busy photo background, upload a transparent PNG for the cleanest result.</p>
         </div>
 
         <div className="mt-6 rounded-xl border border-slate-700 bg-slate-900/50 p-5">
           <span className={label} style={{ marginTop: 0 }}>Company name</span>
           <input className={field} value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Blessed Electric" />
+          <span className={label}>Owner name</span>
+          <input className={field} value={f.ownerName} onChange={(e) => set("ownerName", e.target.value)} placeholder="Owner full name" />
           <span className={label}>Trade</span>
           <input className={field} value={f.trade} onChange={(e) => set("trade", e.target.value)} placeholder="electrician, plumber, HVAC…" />
           <span className={label}>Phone</span>
-          <input className={field} value={f.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(720) 555-0100" />
-          <span className={label}>Service area</span>
-          <input className={field} value={f.area} onChange={(e) => set("area", e.target.value)} placeholder="Denver & the metro area" />
-          <span className={label}>Email</span>
-          <input className={field} value={f.email} onChange={(e) => set("email", e.target.value)} placeholder="you@company.com" />
-          <span className={label}>Website</span>
-          <input className={field} value={f.website} onChange={(e) => set("website", e.target.value)} placeholder="yourcompany.com" />
-
-          <div className="mt-5 flex items-center gap-3">
-            <button onClick={save} className="rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>
-              Save
-            </button>
-            {status && <span className="text-xs text-slate-300">{status}</span>}
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
+          <input className={field} value={f.phone} onChange={(e) => set("phone", e.target.value)}
