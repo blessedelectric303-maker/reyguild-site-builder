@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import EmergencyIntake from "@/app/components/EmergencyIntake";
 
 export type CallKey =
   | "emergency"
@@ -23,7 +24,7 @@ const INFO: Record<CallKey, { label: string; color: string; blurb: string }> = {
   absence: { label: "Absence", color: "#B01560", blurb: "Call-in or schedule change. Auto-classified by time; tracks the 90-day absence count." },
 };
 
-export default function CallLinks({ keys }: { keys: CallKey[] }) {
+export default function CallLinks({ keys, companyId, userId }: { keys: CallKey[]; companyId?: string; userId?: string }) {
   const [open, setOpen] = useState<CallKey | null>(null);
 
   return (
@@ -35,7 +36,11 @@ export default function CallLinks({ keys }: { keys: CallKey[] }) {
         );
       })}
 
-      {open ? (
+      {open === "emergency" ? (
+        <EmergencyIntake companyId={companyId} userId={userId} onClose={() => setOpen(null)} />
+      ) : null}
+
+      {open && open !== "emergency" ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setOpen(null)}>
           <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2">
