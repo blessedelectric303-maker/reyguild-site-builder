@@ -25,7 +25,7 @@ export default async function CompanyPage() {
   const { data: company } = await supabase
     .schema("suite")
     .from("companies")
-    .select("name,trade,phone,area,email,website,logo")
+    .select("name,owner_name,trade,phone,address,city,state,zip,area,email,website,logo")
     .eq("id", companyId)
     .maybeSingle();
 
@@ -36,8 +36,13 @@ export default async function CompanyPage() {
       companyId={companyId}
       initial={{
         name: c.name || "",
+        ownerName: c.owner_name || "",
         trade: c.trade || "",
         phone: c.phone || "",
+        address: c.address || "",
+        city: c.city || "",
+        state: c.state || "",
+        zip: c.zip || "",
         area: c.area || "",
         email: c.email || "",
         website: c.website || "",
