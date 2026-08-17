@@ -224,4 +224,40 @@ export default function CompanyForm({
           <span className={label}>Trade</span>
           <input className={field} value={f.trade} onChange={(e) => set("trade", e.target.value)} placeholder="electrician, plumber, HVAC…" />
           <span className={label}>Phone</span>
-          <input className={field} value={f.phone} onChange={(e) => set("phone", e.target.value)}
+          <input className={field} value={f.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(720) 555-0100" />
+          <span className={label}>Email</span>
+          <input className={field} value={f.email} onChange={(e) => set("email", e.target.value)} placeholder="info@yourcompany.com" />
+
+          <div className="mt-2 border-t border-slate-800 pt-2">
+            <span className={label}>Street address</span>
+            <input className={field} value={f.address} onChange={(e) => set("address", e.target.value)} placeholder="123 Main St" />
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <span className={label}>City</span>
+                <input className={field} value={f.city} onChange={(e) => set("city", e.target.value)} placeholder="Denver" />
+              </div>
+              <div>
+                <span className={label}>State</span>
+                <input className={field} value={f.state} onChange={(e) => set("state", e.target.value)} placeholder="CO" />
+              </div>
+              <div>
+                <span className={label}>ZIP</span>
+                <input className={field} value={f.zip} onChange={(e) => set("zip", e.target.value)} placeholder="80014" />
+              </div>
+            </div>
+          </div>
+
+          <span className={label}>Service area</span>
+          <input className={field} value={f.area} onChange={(e) => set("area", e.target.value)} placeholder="Denver & the metro area" />
+          <span className={label}>Website</span>
+          <input className={field} value={f.website} onChange={(e) => set("website", e.target.value)} placeholder="yourcompany.com" />
+
+          <div className="mt-5 flex items-center gap-3">
+            <button onClick={save} className="rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Save</button>
+            {status && <span className="text-xs text-slate-300">{status}</span>}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
