@@ -164,21 +164,18 @@ export default async function Home() {
         <div className="grid gap-5 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,260px)] md:items-start">
           <div className="md:col-start-2 md:row-start-1">
             <div className="flex flex-col items-center mb-4">
-              {companyLogo ? (
-                <img src={companyLogo} alt={companyName || "Company"} className="w-24 md:w-28 h-auto max-h-24 object-contain drop-shadow" />
+              {companyName ? (
+                <div className="text-2xl md:text-3xl font-extrabold tracking-wide text-white text-center">{companyName}</div>
               ) : (
                 <>
                   <img src="/crest.png" alt="ReyGuild" className="w-16 md:w-20 h-auto drop-shadow" />
                   <div className="mt-1 text-lg font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></div>
                 </>
               )}
-              {companyName && (
-                <span className="mt-2 rounded-full border border-slate-600 px-3 py-0.5 text-[11px] text-slate-200">{companyName}</span>
-              )}
-              <span className="mt-1 rounded-full px-3 py-0.5 text-[11px] font-semibold text-slate-900" style={{ background: soloMode ? "#e0a82e" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} · {roleLabel}</span>
+              <span className="mt-2 rounded-full px-3 py-0.5 text-[11px] font-semibold text-slate-900" style={{ background: soloMode ? "#e0a82e" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} · {roleLabel}</span>
             </div>
 
-            <Calendar companyId={companyId} canEdit={isStaff(myRole)} />
+            <Calendar companyId={companyId} canEdit={isStaff(myRole)} userId={user.id} userEmail={user.email || ""} logoUrl={companyLogo} />
 
             <div className="mt-4 grid grid-cols-3 gap-2">
               <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3 text-center text-sm text-slate-200 hover:bg-slate-800">Email</a>
