@@ -39,7 +39,7 @@ function shortName(email: string): string {
   return email ? email.split("@")[0] : "Tech";
 }
 
-export default function Calendar({ companyId, canEdit, userId, userEmail }: { companyId?: string; canEdit: boolean; userId?: string; userEmail?: string }) {
+export default function Calendar({ companyId, canEdit, userId, userEmail, logoUrl }: { companyId?: string; canEdit: boolean; userId?: string; userEmail?: string; logoUrl?: string }) {
   const supabase = createClient();
   const today = new Date();
   const [y, setY] = useState(today.getFullYear());
@@ -191,7 +191,13 @@ export default function Calendar({ companyId, canEdit, userId, userEmail }: { co
   };
 
   return (
-    <div className="rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
+      {logoUrl ? (
+        <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
+          <img src={logoUrl} alt="" className="w-4/5 max-w-[380px] object-contain opacity-[0.07]" />
+        </div>
+      ) : null}
+      <div className="relative z-10">
       <div className="flex items-center justify-between mb-3">
         <button type="button" onClick={prevMonth} aria-label="Previous month" className="rounded-md border border-slate-600 px-2 py-1 text-sm text-slate-200 hover:bg-slate-800">&larr;</button>
         <div className="text-base font-bold text-white">{MONTHS[m]} {y}</div>
@@ -306,6 +312,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail }: { co
           </div>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
