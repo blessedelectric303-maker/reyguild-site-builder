@@ -33,6 +33,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
   const [ownerAdmin, setOwnerAdmin] = useState(ownerIsAdmin !== false);
   const [savingMode, setSavingMode] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [uid, setUid] = useState<string | null>(null);
 
   const sop = sopFor(contextFromPath(pathname));
   const showMode = isStaff && !!companyId;
@@ -87,6 +88,22 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
 
   useEffect(() => {
     setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      setUid(user.id);
+      const { data } = await supabase.schema("suite").from("user_prefs").select("theme").eq("user_id", user.id).maybeSingle();
+      const saved = (data as { theme?: string } | null)?.theme;
+      if (saved === "light" || saved === "dark") {
+        setTheme(saved);
+        document.documentElement.dataset.theme = saved;
+        try {
+          localStorage.setItem("reyguild-theme", saved);
+        } catch (e) {}
+      }
+    })();
   }, []);
 
   function toggleTheme() {
@@ -96,6 +113,9 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
     try {
       localStorage.setItem("reyguild-theme", next);
     } catch (e) {}
+    if (uid) {
+      supabase.schema("suite").from("user_prefs").upsert({ user_id: uid, theme: next }).then(() => {});
+    }
   }
 
   const tabBtn = (id: Tab, label: string) => {
