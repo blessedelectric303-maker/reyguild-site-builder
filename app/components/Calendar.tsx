@@ -24,7 +24,7 @@ const TYPE_COLOR: Record<string, string> = {
   emergency: "#F0302A",
 };
 const TYPE_LABEL: Record<string, string> = {
-  estimate: "Estimate",
+  estimate: "Proposal",
   service_call: "Service Call",
   warranty_call: "Warranty Call",
   emergency: "Emergency",
@@ -204,7 +204,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
       <div className="relative z-10">
       <div className="flex items-center justify-between mb-3">
         <button type="button" onClick={prevMonth} aria-label="Previous month" className="rounded-md border border-slate-600 px-2 py-1 text-sm text-slate-200 hover:bg-slate-800">&larr;</button>
-        <div className="text-base font-bold text-white">{MONTHS[m]} {y}</div>
+        <div className="mil text-base font-bold text-white">{MONTHS[m]} {y}</div>
         <button type="button" onClick={nextMonth} aria-label="Next month" className="rounded-md border border-slate-600 px-2 py-1 text-sm text-slate-200 hover:bg-slate-800">&rarr;</button>
       </div>
 
@@ -236,7 +236,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.service_call }} /> Service Call</span>
-        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.estimate }} /> Estimate</span>
+        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.estimate }} /> Proposal</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.warranty_call }} /> Warranty</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.emergency }} /> Emergency</span>
       </div>
@@ -278,7 +278,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                   <div className="text-sm font-semibold text-white">Add a job</div>
                   <div className="grid grid-cols-2 gap-2">
                     {typeToggle("service_call", "Service Call")}
-                    {typeToggle("estimate", "Estimate")}
+                    {typeToggle("estimate", "Proposal")}
                     {typeToggle("warranty_call", "Warranty")}
                     {typeToggle("emergency", "Emergency")}
                   </div>
