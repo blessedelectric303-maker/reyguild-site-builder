@@ -37,7 +37,7 @@ export default async function Home() {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-center p-8">
         <img src="/crest.png" alt="ReyGuild" className="w-28 h-auto mb-6" />
-        <h1 className="text-5xl font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></h1>
+        <h1 className="mil text-5xl tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></h1>
         <p className="mt-4 text-slate-300 max-w-md">One login. Every ReyGuild app in one place.</p>
         <Link href="/login" className="mt-6 rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Sign in</Link>
         <div className="mt-10 h-[3px] w-16 rounded bg-[#e0a82e]" />
@@ -163,11 +163,11 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto w-full">
         <div className="flex flex-col items-center mb-5">
           {companyName ? (
-            <div className="text-3xl md:text-4xl font-extrabold tracking-wide text-white text-center" style={{ WebkitTextStroke: "1.5px #e0a82e" }}>{companyName}</div>
+            <div className="mil text-3xl md:text-4xl tracking-wide text-white text-center" style={{ WebkitTextStroke: "1.5px #e0a82e" }}>{companyName}</div>
           ) : (
             <>
               <img src="/crest.png" alt="ReyGuild" className="w-16 md:w-20 h-auto drop-shadow" />
-              <div className="mt-1 text-lg font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></div>
+              <div className="mil mt-1 text-lg tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></div>
             </>
           )}
           <span className="mt-2 rounded-full px-3 py-0.5 text-xs font-semibold text-slate-900" style={{ background: soloMode ? "#e0a82e" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} &middot; {roleLabel}</span>
