@@ -163,7 +163,7 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto w-full">
         <div className="flex flex-col items-center mb-5">
           {companyName ? (
-            <div className="text-3xl md:text-4xl font-extrabold tracking-wide text-white text-center">{companyName}</div>
+            <div className="text-3xl md:text-4xl font-extrabold tracking-wide text-white text-center" style={{ WebkitTextStroke: "1.5px #e0a82e" }}>{companyName}</div>
           ) : (
             <>
               <img src="/crest.png" alt="ReyGuild" className="w-16 md:w-20 h-auto drop-shadow" />
