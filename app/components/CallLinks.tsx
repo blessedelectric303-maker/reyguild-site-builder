@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import EmergencyIntake from "@/app/components/EmergencyIntake";
+import ServiceCallIntake from "@/app/components/ServiceCallIntake";
 
 export type CallKey =
   | "emergency"
@@ -40,7 +41,11 @@ export default function CallLinks({ keys, companyId, userId }: { keys: CallKey[]
         <EmergencyIntake companyId={companyId} userId={userId} onClose={() => setOpen(null)} />
       ) : null}
 
-      {open && open !== "emergency" ? (
+      {open === "service_call" ? (
+        <ServiceCallIntake companyId={companyId} userId={userId} onClose={() => setOpen(null)} onEmergency={() => setOpen("emergency")} />
+      ) : null}
+
+      {open && open !== "emergency" && open !== "service_call" ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setOpen(null)}>
           <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2">
