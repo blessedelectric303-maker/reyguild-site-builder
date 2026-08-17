@@ -18,10 +18,10 @@ type Member = { user_id: string; role: string; email: string };
 const WORKDAY = 8; // hours a tech can be booked per day. Change this to cap it lower.
 
 const TYPE_COLOR: Record<string, string> = {
-  emergency: "#B31B1B",
-  service_call: "#1C5FA8",
-  estimate: "#1B7A3D",
-  warranty_call: "#B85C00",
+  estimate: "#1BBF55",
+  service_call: "#2183E8",
+  warranty_call: "#FF9012",
+  emergency: "#F0302A",
 };
 const TYPE_LABEL: Record<string, string> = {
   estimate: "Estimate",
@@ -197,8 +197,8 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
       {logoUrl ? (
-        <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
-          <img src={logoUrl} alt="" className="w-4/5 max-w-[380px] object-contain opacity-[0.07]" />
+        <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center p-2">
+          <img src={logoUrl} alt="" className="h-full w-full object-contain opacity-[0.09]" />
         </div>
       ) : null}
       <div className="relative z-10">
@@ -262,7 +262,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                           <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: TYPE_COLOR[e.event_type] || "#94a3b8" }} />
                           <span className="text-sm font-semibold" style={{ color: TYPE_COLOR[e.event_type] || "#cbd5e1" }}>{e.title}</span>
                         </div>
-                        <div className="text-xs text-slate-400 mt-1">{e.event_time ? e.event_time + " · " : ""}{e.duration_hours ? e.duration_hours + "h · " : ""}{TYPE_LABEL[e.event_type] || e.event_type}{e.assigned_to ? " · " + nameFor(e.assigned_to) : ""}</div>
+                        <div className="text-xs text-slate-400 mt-1">{e.event_time ? e.event_time + " - " : ""}{e.duration_hours ? e.duration_hours + "h - " : ""}{TYPE_LABEL[e.event_type] || e.event_type}{e.assigned_to ? " - " + nameFor(e.assigned_to) : ""}</div>
                         {e.address ? <div className="text-xs text-slate-500 break-words mt-0.5">{e.address}</div> : null}
                       </div>
                       {canEdit ? (
