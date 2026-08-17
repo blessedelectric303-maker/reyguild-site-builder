@@ -20,10 +20,14 @@ const WORKDAY = 8; // hours a tech can be booked per day. Change this to cap it 
 const TYPE_COLOR: Record<string, string> = {
   estimate: "#3b82f6",
   service_call: "#22c55e",
+  warranty_call: "#f59e0b",
+  emergency: "#ef4444",
 };
 const TYPE_LABEL: Record<string, string> = {
   estimate: "Estimate",
   service_call: "Service Call",
+  warranty_call: "Warranty Call",
+  emergency: "Emergency",
 };
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -230,9 +234,11 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
         })}
       </div>
 
-      <div className="mt-3 flex items-center gap-4 text-[11px] text-slate-400">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.service_call }} /> Service Call</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.estimate }} /> Estimate</span>
+        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.warranty_call }} /> Warranty</span>
+        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.emergency }} /> Emergency</span>
       </div>
       <div className="mt-2 text-center text-xs text-slate-500">{canEdit ? "Tap a day to open it and add jobs." : "Tap a day to see the jobs."}</div>
 
@@ -270,9 +276,11 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
               {canEdit ? (
                 <div className="mt-4 border-t border-slate-800 pt-4 space-y-2">
                   <div className="text-sm font-semibold text-white">Add a job</div>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {typeToggle("service_call", "Service Call")}
                     {typeToggle("estimate", "Estimate")}
+                    {typeToggle("warranty_call", "Warranty")}
+                    {typeToggle("emergency", "Emergency")}
                   </div>
                   <input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="Job / customer name" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <input value={fAddr} onChange={(e) => setFAddr(e.target.value)} placeholder="Address" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
