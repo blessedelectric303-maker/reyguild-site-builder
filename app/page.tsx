@@ -24,7 +24,7 @@ function daysLeft(iso: string | null): number | null {
 // Only these two apps show now (one on each side of the calendar).
 const LIVE_APPS: Record<string, { href: string; external?: boolean }> = {
   estimating: { href: "/apps/estimating" },
-  time_material: { href: "https://tm.serviceopspro.com", external: true },
+  time_material: { href: "/tm/enter" },
 };
 
 export default async function Home() {

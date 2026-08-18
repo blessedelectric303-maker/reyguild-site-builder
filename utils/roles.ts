@@ -17,7 +17,7 @@ export const ROLE_HOME: Record<string, string> = {
   supervisor: "/",
   estimator: "/apps/estimating",
   sales_rep: "/apps/field-log",
-  tech: "https://tm.serviceopspro.com",
+  tech: "/tm/enter",
 };
 
 // Which app_keys each employee role may open (owner/admin/supervisor get all).
