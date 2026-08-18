@@ -1,0 +1,538 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Organization {
+  id                      String   @id
+  name                    String
+  tradeType               String   @default("electrical")
+  businessAddress         String?
+  city                    String?
+  state                   String?
+  zip                     String?
+  phone                   String?
+  ownerName               String?
+  twilioFromNumber        String?
+  defaultGeofenceMiles    Float    @default(1.0)
+  costAlertThresholdPct   Float    @default(60.0)
+
+  // Subscription / trial state (used in later sessions)
+  subscriptionStatus      String   @default("trial")
+  trialEndsAt             DateTime?
+  subscriptionStartedAt   DateTime?
+  stripeCustomerId        String?
+  stripeSubscriptionId    String?
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @default(now())
+
+  users                   User[]
+  jobs                    Job[]
+  auditLogs               AuditLog[]
+  emailVerificationTokens EmailVerificationToken[]
+}
+
+model User {
+  id                  String   @id
+  orgId               String
+  email               String
+  name                String
+  passwordHash        String
+  role                String   @default("technician")
+  phone               String?
+  isActive            Boolean  @default(true)
+  marginViewLocked    Boolean  @default(false)
+  emailVerifiedAt     DateTime?
+  hourlyCost              Decimal? @db.Decimal(10, 2)
+  hourlyWage              Decimal? @db.Decimal(10, 2)
+  canLogMaterialPurchases Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now())
+  org                   Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  sessions              Session[]
+  createdJobs           Job[]             @relation("JobCreatedBy")
+  jobAssignments        JobAssignment[]
+  passwordResetTokens  PasswordResetToken[]
+  timeOffRequests       TimeOffRequest[] @relation("TimeOffRequester")
+  timeOffDecisions      TimeOffRequest[] @relation("TimeOffDecidedBy")
+  emailVerificationTokens EmailVerificationToken[]
+  timeEntries           TimeEntry[]
+  gpsCheckIns           GpsCheckIn[]
+  jobStatusUpdates      JobStatusUpdate[]
+  customerNotifications CustomerNotification[]
+  lateNotices           LateNotice[]
+  absenceNotices        AbsenceNotice[]
+  acknowledgedLates     LateNotice[]      @relation("LateAcknowledgedBy")
+  acknowledgedAbsences  AbsenceNotice[]   @relation("AbsenceAcknowledgedBy")
+  auditLogs             AuditLog[]
+  materialRequests      MaterialRequest[] @relation("MaterialRequestedBy")
+  approvedRequests      MaterialRequest[] @relation("MaterialApprovedBy")
+  materialPurchases     MaterialPurchase[]
+  otherJobCosts         OtherJobCost[]    @relation("OtherJobCostLogger")
+  uploadedPhotos        JobPhoto[]        @relation("PhotoUploader")
+  timeRequestsCreated   TimeRequest[]     @relation("TimeRequestRequester")
+  timeRequestsApproved  TimeRequest[]     @relation("TimeRequestApprover")
+  @@unique([orgId, email])
+  @@index([orgId])
+  @@index([role])
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Job {
+  id                String    @id
+  orgId             String
+  createdById       String
+  customerName      String
+  customerPhone     String?
+  customerEmail     String?
+  jobAddress        String
+  city              String?
+  state             String? 
+  zip               String?
+  lat               Float?
+  lng               Float?
+  salePrice         Decimal?  @db.Decimal(12, 2)
+  geofenceMiles     Float     @default(1.0)
+  jobType           String?
+  jobDescription    String?
+  estimatedHours    Float?
+  scheduledStart    DateTime?
+  scheduledEnd      DateTime?
+  status            String    @default("scheduled")
+  notes             String?
+  costAlertSentAt   DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now())
+
+  org                   Organization           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdBy             User                   @relation("JobCreatedBy", fields: [createdById], references: [id])
+  assignments           JobAssignment[]
+  timeEntries           TimeEntry[]
+  gpsCheckIns           GpsCheckIn[]
+  statusUpdates         JobStatusUpdate[]
+  customerNotifications CustomerNotification[]
+  lateNotices           LateNotice[]
+materialRequests      MaterialRequest[]
+  materialPurchases     MaterialPurchase[]
+  otherJobCosts         OtherJobCost[]
+  billing               JobBilling?
+  photos                JobPhoto[]
+  timeRequests          TimeRequest[]
+
+  @@index([orgId])
+  @@index([status])
+  @@index([scheduledStart])
+}
+
+model JobAssignment {
+  id                  String   @id
+  jobId               String
+  userId              String
+  assignedAt          DateTime @default(now())
+  isPrimary           Boolean  @default(true)
+  hourlyRateOverride  Decimal? @db.Decimal(10, 2)
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+  @@index([jobId])
+  @@index([userId])
+}
+
+model TimeEntry {
+  id                    String    @id
+  jobId                 String
+  userId                String
+  clockInAt             DateTime
+  clockOutAt            DateTime?
+  totalMinutes          Int?
+  clockInLat            Float?
+  clockInLng            Float?
+  clockOutLat           Float?
+  clockOutLng           Float?
+  distanceFromJobMiles  Float?
+  wasGeofenceOverridden Boolean   @default(false)
+  overrideReason        String?
+  notes                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @default(now())
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([userId])
+  @@index([clockInAt])
+}
+
+model GpsCheckIn {
+  id                   String   @id
+  jobId                String
+  userId               String
+  checkInType          String
+  lat                  Float
+  lng                  Float
+  accuracy             Float?
+  distanceFromJobMiles Float?
+  wasWithinGeofence    Boolean  @default(false)
+  createdAt            DateTime @default(now())
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model JobStatusUpdate {
+  id         String   @id
+  jobId      String
+  userId     String
+  updateType String
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([updateType])
+}
+
+model CustomerNotification {
+  id               String    @id
+  jobId            String
+  userId           String
+  notificationType String
+  channel          String    @default("sms")
+  toPhone          String?
+  toEmail          String?
+  messageBody      String
+  status           String    @default("queued")
+  twilioSid        String?
+  errorMessage     String?
+  sentAt           DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([jobId])
+  @@index([status])
+}
+
+model LateNotice {
+  id                    String    @id
+  userId                String
+  jobId                 String?
+  minutesLate           Int
+  reason                String?
+  submittedAt           DateTime  @default(now())
+  acknowledgedByAdminId String?
+  acknowledgedAt        DateTime?
+
+  user           User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job            Job?  @relation(fields: [jobId], references: [id])
+  acknowledgedBy User? @relation("LateAcknowledgedBy", fields: [acknowledgedByAdminId], references: [id])
+
+  @@index([userId])
+  @@index([submittedAt])
+}
+
+model AbsenceNotice {
+  id                    String    @id
+  userId                String
+  absenceDate           DateTime  @db.Date
+  reason                String?
+  submittedAt           DateTime  @default(now())
+  acknowledgedByAdminId String?
+  acknowledgedAt        DateTime?
+
+  user           User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  acknowledgedBy User? @relation("AbsenceAcknowledgedBy", fields: [acknowledgedByAdminId], references: [id])
+
+  @@index([userId])
+  @@index([absenceDate])
+}
+
+model AuditLog {
+  id           String   @id
+  orgId        String
+  actorUserId  String
+  actorRole    String
+  actionType   String
+  targetTable  String
+  targetId     String
+  fieldChanged String?
+  oldValue     String?
+  newValue     String?
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  actor User         @relation(fields: [actorUserId], references: [id])
+
+  @@index([orgId])
+  @@index([actorUserId])
+  @@index([targetTable, targetId])
+  @@index([createdAt])
+}
+
+model MaterialRequest {
+  id                String    @id
+  jobId             String
+  requestedByUserId String
+  itemName          String
+  qty               Float     @default(1)
+  unit              String?
+  urgency           String    @default("normal")
+  notes             String?
+  status            String    @default("pending")
+  approvedByUserId  String?
+  approvedAt        DateTime?
+  deniedReason      String?
+  fulfillmentNotes  String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now())
+
+  job           Job                    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  requestedBy   User                   @relation("MaterialRequestedBy", fields: [requestedByUserId], references: [id])
+  approvedBy    User?                  @relation("MaterialApprovedBy", fields: [approvedByUserId], references: [id])
+  purchaseItems MaterialPurchaseItem[]
+  photos        JobPhoto[]
+
+  @@index([jobId])
+  @@index([status])
+  @@index([requestedByUserId])
+}
+
+model MaterialPurchase {
+  id                String   @id
+  jobId             String
+  purchasedByUserId String
+  vendor            String?
+  invoiceNumber     String?
+  totalAmount       Float    @default(0)
+  purchaseDate      DateTime @db.Date
+  receiptImageUrl   String?
+  notes             String?
+  fulfillmentNotes  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
+
+  job         Job                    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  purchasedBy User                   @relation(fields: [purchasedByUserId], references: [id])
+  items       MaterialPurchaseItem[]
+  photos      JobPhoto[]
+
+  @@index([jobId])
+  @@index([purchaseDate])
+}
+
+model MaterialPurchaseItem {
+  id            String  @id
+  purchaseId    String
+  fromRequestId String?
+  itemName      String
+  qty           Float   @default(1)
+  unit          String?
+  unitCost      Float   @default(0)
+  lineTotal     Float   @default(0)
+
+  purchase    MaterialPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  fromRequest MaterialRequest? @relation(fields: [fromRequestId], references: [id])
+
+  @@index([purchaseId])
+}
+
+model OtherJobCost {
+  id                String   @id
+  orgId             String
+  jobId             String
+  loggedByUserId    String
+  description       String
+  amount            Decimal  @db.Decimal(12, 2)
+  receiptImageUrl   String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
+
+  job      Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  loggedBy User     @relation("OtherJobCostLogger", fields: [loggedByUserId], references: [id])
+  photos   JobPhoto[]
+
+  @@index([jobId])
+  @@index([orgId])
+  @@index([createdAt])
+}
+
+model JobBilling {
+  id                 String    @id
+  jobId              String    @unique
+  billingType        String    @default("flat")
+  flatPrice          Float?
+  hourlyRate         Float?
+  materialsMarkupPct Float     @default(0)
+  totalBilled        Float?
+  invoiceNumber      String?
+  paidAt             DateTime?
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([billingType])
+}
+
+model JobPhoto {
+  id                   String    @id
+  jobId                String
+  uploadedByUserId     String
+  materialRequestId    String?
+  materialPurchaseId   String?
+  otherJobCostId       String?
+  photoCategory        String
+  photoType            String
+  imageUrl             String
+  thumbnailUrl         String?
+  caption              String?
+  notes                String?
+  lat                  Float?
+  lng                  Float?
+  distanceFromJobMiles Float?
+  wasWithinGeofence    Boolean   @default(false)
+  takenAt              DateTime?
+  fileSize             Int?
+  mimeType             String?
+  createdAt            DateTime  @default(now())
+
+ job                Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  uploadedBy         User              @relation("PhotoUploader", fields: [uploadedByUserId], references: [id])
+  materialRequest    MaterialRequest?  @relation(fields: [materialRequestId], references: [id], onDelete: SetNull)
+  materialPurchase   MaterialPurchase? @relation(fields: [materialPurchaseId], references: [id], onDelete: SetNull)
+  otherJobCost       OtherJobCost?     @relation(fields: [otherJobCostId], references: [id], onDelete: SetNull)
+  primaryForTimeRequests TimeRequest[] @relation("PrimaryTimeRequestPhoto")
+  @@index([jobId])
+  @@index([uploadedByUserId])
+  @@index([photoCategory])
+  @@index([materialRequestId])
+  @@index([materialPurchaseId])
+  @@index([otherJobCostId])
+  @@index([createdAt])
+}
+
+model TimeRequest {
+  id                   String    @id
+  jobId                String
+  requestedByUserId    String
+  primaryPhotoId       String
+  extraTimeMinutes     Int
+  reason               String
+  urgency              String    @default("normal")
+  status               String    @default("pending")
+  submittedFromLat     Float
+  submittedFromLng     Float
+  distanceFromJobMiles Float
+  approvedByUserId     String?
+  approvedAt           DateTime?
+  deniedReason         String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @default(now())
+
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  requestedBy  User     @relation("TimeRequestRequester", fields: [requestedByUserId], references: [id])
+  primaryPhoto JobPhoto @relation("PrimaryTimeRequestPhoto", fields: [primaryPhotoId], references: [id])
+  approvedBy   User?    @relation("TimeRequestApprover", fields: [approvedByUserId], references: [id])
+
+  @@index([jobId])
+  @@index([requestedByUserId])
+  @@index([status])
+  @@index([createdAt])
+}
+model PasswordResetToken {
+  id        String    @id
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+model TimeOffRequest {
+  id              String    @id
+  orgId           String
+  requesterUserId String
+  requester       User      @relation("TimeOffRequester", fields: [requesterUserId], references: [id], onDelete: Cascade)
+
+  startDate       DateTime
+  endDate         DateTime
+  duration        String
+  startTime       String?
+  endTime         String?
+  hoursRequested  Decimal   @db.Decimal(6, 2)
+  isMultiDay      Boolean   @default(false)
+
+  type            String
+  reason          String
+
+  status          String    @default("pending")
+  decidedAt       DateTime?
+  decidedByUserId String?
+  decidedBy       User?     @relation("TimeOffDecidedBy", fields: [decidedByUserId], references: [id], onDelete: SetNull)
+  decisionReason  String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([orgId])
+  @@index([requesterUserId])
+  @@index([status])
+  @@index([startDate])
+}
+
+model EmailVerificationToken {
+  id              String       @id
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgId           String
+  org             Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  tokenHash       String       @unique
+  expiresAt       DateTime
+  consumedAt      DateTime?
+  createdAt       DateTime     @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}model RateLimitAttempt {
+  id        String   @id
+  scope     String
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([scope, key, createdAt])
+}
