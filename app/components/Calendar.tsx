@@ -235,10 +235,10 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
+        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.emergency }} /> Emergency</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.service_call }} /> Service Call</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.estimate }} /> Proposal</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.warranty_call }} /> Warranty</span>
-        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: TYPE_COLOR.emergency }} /> Emergency</span>
       </div>
       <div className="mt-2 text-center text-xs text-slate-500">{canEdit ? "Tap a day to open it and add jobs." : "Tap a day to see the jobs."}</div>
 
