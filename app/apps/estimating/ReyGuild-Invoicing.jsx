@@ -1292,29 +1292,33 @@ export default function ReyGuild() {
       </nav>
 
       {page === "dashboard" && (
-        <div className="fl-dash">
-          <button type="button" className="fl-dashcard" onClick={() => setPage("estimates")}>
-            <span className="fl-dashnum">{myEstimates.length}</span>
-            <span className="fl-dashlbl">Estimates</span>
-          </button>
-          <button type="button" className="fl-dashcard" onClick={() => setPage("invoices")}>
-            <span className="fl-dashnum">{myInvoices.length}</span>
-            <span className="fl-dashlbl">Invoices</span>
-          </button>
-          {isAdmin && (
-            <button type="button" className={"fl-dashcard" + ((pendingPayouts.length + lateFollowups.length + collectionsDue.length + approvalNotices.length) ? " alert" : "")} onClick={() => setPage("alerts")}>
-              <span className="fl-dashnum">{pendingPayouts.length + lateFollowups.length + collectionsDue.length + approvalNotices.length}</span>
-              <span className="fl-dashlbl">Approvals</span>
+        <div className="fl-dashwrap">
+          <h1 className="fl-dashhello">Welcome back{myName ? ", " + myName.split(" ")[0] : ""}</h1>
+          <p className="fl-dashdate">{new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+          <div className="fl-dash">
+            <button type="button" className="fl-dashcard" onClick={() => setPage("estimates")}>
+              <span className="fl-dashlbl">Estimates</span>
+              <span className="fl-dashnum">{myEstimates.length}</span>
             </button>
-          )}
-          <button type="button" className={"fl-dashcard" + (fuDueList.length ? " due" : "")} onClick={() => setPage("followups")}>
-            <span className="fl-dashnum">{fuDueList.length}</span>
-            <span className="fl-dashlbl">Follow-ups</span>
-          </button>
-          <button type="button" className={"fl-dashcard" + (unreadMsgs ? " alert" : "")} onClick={() => setPage("messages")}>
-            <span className="fl-dashnum">{unreadMsgs}</span>
-            <span className="fl-dashlbl">Messages</span>
-          </button>
+            <button type="button" className="fl-dashcard" onClick={() => setPage("invoices")}>
+              <span className="fl-dashlbl">Invoices</span>
+              <span className="fl-dashnum">{myInvoices.length}</span>
+            </button>
+            {isAdmin && (
+              <button type="button" className={"fl-dashcard" + ((pendingPayouts.length + lateFollowups.length + collectionsDue.length + approvalNotices.length) ? " alert" : "")} onClick={() => setPage("alerts")}>
+                <span className="fl-dashlbl">Approvals</span>
+                <span className="fl-dashnum">{pendingPayouts.length + lateFollowups.length + collectionsDue.length + approvalNotices.length}</span>
+              </button>
+            )}
+            <button type="button" className={"fl-dashcard" + (fuDueList.length ? " due" : "")} onClick={() => setPage("followups")}>
+              <span className="fl-dashlbl">Follow-ups</span>
+              <span className="fl-dashnum">{fuDueList.length}</span>
+            </button>
+            <button type="button" className={"fl-dashcard" + (unreadMsgs ? " alert" : "")} onClick={() => setPage("messages")}>
+              <span className="fl-dashlbl">Messages</span>
+              <span className="fl-dashnum">{unreadMsgs}</span>
+            </button>
+          </div>
         </div>
       )}
 

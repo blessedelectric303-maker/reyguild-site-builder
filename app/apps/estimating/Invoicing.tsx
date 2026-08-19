@@ -126,18 +126,21 @@ const STYLE_FIX = `
 /* The name selector already says who you are. Drop the second copy. */
 .fl-rolebadge { display: none !important; }
 
-/* Dashboard cards */
-.fl-dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; padding: 4px 0 8px; }
+/* Dashboard: greeting, then big cards two to a row. */
+.fl-dashwrap { padding-top: 30px; }
+.fl-dashhello { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 34px; color: #16243F; margin: 0; letter-spacing: -0.01em; }
+.fl-dashdate { font-family: 'Inter', sans-serif; font-size: 15px; color: #39415a; margin: 6px 0 26px; }
+.fl-dash { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .fl-dashcard {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-  background: #fff; border: 1px solid #E4DECF; border-left: 5px solid #34507A;
-  border-radius: 4px; padding: 20px 18px; cursor: pointer; font-family: inherit; text-align: left;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  background: #fff; border: 1px solid #E4DECF; border-radius: 8px;
+  padding: 30px 28px; min-height: 140px; cursor: pointer; font-family: inherit; text-align: left;
 }
-.fl-dashcard:hover { border-color: #C68A1E; border-left-color: #C68A1E; }
-.fl-dashcard.due { border-left-color: #C68A1E; }
-.fl-dashcard.alert { border-left-color: #BC4A3C; }
-.fl-dashnum { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; color: #16243F; }
-.fl-dashlbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #39415a; }
+.fl-dashcard:hover { border-color: #C68A1E; }
+.fl-dashcard.due { border-color: #C68A1E; box-shadow: inset 0 0 0 1px #C68A1E; }
+.fl-dashcard.alert { border-color: #BC4A3C; box-shadow: inset 0 0 0 1px #BC4A3C; }
+.fl-dashlbl { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: #39415a; }
+.fl-dashnum { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 46px; line-height: 1; color: #16243F; }
 
 /* Phones: sidebar becomes a normal stacked header again. */
 @media (max-width: 860px) {
@@ -148,6 +151,8 @@ const STYLE_FIX = `
     flex-direction: row !important; flex-wrap: wrap !important; padding: 10px !important;
   }
   .fl-sideback { width: 100%; }
+  .fl-dash { grid-template-columns: minmax(0, 1fr); }
+  .fl-dashhello { font-size: 26px; }
   .fl-sidelink { width: auto; }
   .fl-stats .fl-chip { display: flex !important; }
 }
