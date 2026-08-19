@@ -19,7 +19,7 @@ const INFO: Record<CallKey, { label: string; color: string; text: string; blurb:
   estimate: { label: "Proposal", color: "#1BBF55", text: "#0b1220", blurb: "Price on new or larger work. Small = phone quote, medium = photos required, large = in-person job walk." },
   service_call: { label: "Service Call", color: "#2183E8", text: "#ffffff", blurb: "Something is broken. Runs the six-question safety triage first, then schedules a 2/4/8 block." },
   warranty_call: { label: "Warranty", color: "#FF9012", text: "#0b1220", blurb: "Problem with paid work under 12 months. Supervisor only, booked within 7 days." },
-  concern: { label: "Concerns / Complaints", color: "#F2BE00", text: "#0b1220", blurb: "Customer is unhappy. Guided five-step response; auto-escalates to the owner when needed." },
+  concern: { label: "Concern / Complaint", color: "#F2BE00", text: "#0b1220", blurb: "Customer is unhappy. Guided five-step response; auto-escalates to the owner when needed." },
   question: { label: "Question", color: "#9B44CE", text: "#ffffff", blurb: "Info or comparing prices. Treated as a lead; every call ends with an offered next step." },
   material: { label: "Material", color: "#6E6E6E", text: "#ffffff", blurb: "Purchasing workflow. Tech lists it, admin approves and buys, a pickup code is issued." },
   absence: { label: "Absence", color: "#FF2E9A", text: "#ffffff", blurb: "Call-in or schedule change. Auto-classified by time; tracks the 90-day absence count." },
