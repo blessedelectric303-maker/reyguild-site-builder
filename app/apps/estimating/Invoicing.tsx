@@ -79,18 +79,61 @@ async function migrateLegacy(companyId: string) {
 // then center them (Follow-ups, Royalties, Numbers, Help, SOPs, Audit + pills).
 // Plus wrap the top stat cards on phones.
 const STYLE_FIX = `
-.fl-actas { background: #FFFFFF !important; }
-.fl-actas select { color: #34507A !important; font-weight: 700 !important; }
-.fl-rolebadge { background: #e0a82e !important; color: #FFFFFF !important; }
-.fl-noprint { display: flex !important; flex-direction: column !important; }
-.fl-header, .fl-nav3 { width: 100% !important; }
-.fl-weekly { margin-left: auto !important; margin-right: auto !important; }
-.fl-grid { margin-left: auto !important; margin-right: auto !important; }
-.so-subnav { width: 100% !important; max-width: 880px !important; margin-left: auto !important; margin-right: auto !important; }
-@media (max-width: 620px) {
-  .fl-stats { flex-wrap: wrap !important; row-gap: 8px !important; }
-  .fl-stats > .fl-actas { flex: 1 1 100% !important; }
-  .fl-stats > .fl-chip { flex: 1 1 28% !important; min-width: 0 !important; }
+/* Reshape the invoicing app into the same dark-sidebar layout as T&M&P&L.
+   The app's own markup is untouched; this positions it. */
+.fl-root { background: #f8fafc; }
+.fl-noprint { display: block !important; padding-left: 250px; min-height: 100vh; }
+
+/* Sidebar: brand block on top, nav beneath, both fixed to the left edge. */
+.fl-header {
+  position: fixed !important; top: 0; left: 0; width: 250px; height: 132px;
+  background: #0f172a !important; border-bottom: 1px solid #1e293b !important;
+  display: flex !important; flex-direction: column !important; align-items: flex-start !important;
+  justify-content: center !important; gap: 10px !important; padding: 0 18px !important; margin: 0 !important; z-index: 40;
+}
+.fl-header .fl-guild, .fl-header .fl-tagline, .fl-header .fl-brandname { color: #f1f5f9 !important; }
+.fl-header .fl-tagline { letter-spacing: .18em !important; }
+.fl-stats { flex-wrap: wrap !important; gap: 6px !important; }
+.fl-stats .fl-chip { display: none !important; }
+.fl-actas { background: #1e293b !important; border-radius: 6px !important; padding: 4px 8px !important; }
+.fl-actas select { color: #f1f5f9 !important; background: transparent !important; font-weight: 700 !important; border: 0 !important; }
+.fl-rolebadge { background: #e0a82e !important; color: #0f172a !important; }
+
+.fl-nav3 {
+  position: fixed !important; top: 132px; left: 0; width: 250px; bottom: 0;
+  background: #0f172a !important; border: 0 !important; margin: 0 !important;
+  display: flex !important; flex-direction: column !important; align-items: stretch !important;
+  gap: 2px !important; padding: 14px 10px !important; overflow-y: auto; z-index: 40;
+}
+.fl-sideback {
+  display: block; text-align: center; background: #e0a82e; color: #0f172a;
+  font-weight: 800; font-size: 13px; border-radius: 6px; padding: 9px 10px;
+  text-decoration: none; margin-bottom: 12px;
+}
+.fl-sidelink {
+  display: block; width: 100%; text-align: left; background: transparent; border: 0;
+  color: #cbd5e1; font-size: 14px; font-weight: 600; padding: 9px 12px;
+  border-radius: 6px; cursor: pointer; font-family: inherit;
+}
+.fl-sidelink:hover { background: #1e293b; color: #fff; }
+.fl-sidelink.on { background: #e0a82e; color: #0f172a; font-weight: 800; }
+
+/* Content column */
+.fl-noprint > *:not(.fl-header):not(.fl-nav3) { max-width: 1100px; margin-left: auto; margin-right: auto; }
+.fl-grid, .fl-weekly, .so-subnav { margin-left: auto !important; margin-right: auto !important; }
+.so-subnav { width: 100% !important; max-width: 880px !important; }
+
+/* Phones: sidebar becomes a normal stacked header again. */
+@media (max-width: 860px) {
+  .fl-noprint { padding-left: 0; }
+  .fl-header { position: static !important; width: auto; height: auto; padding: 14px 16px !important; }
+  .fl-nav3 {
+    position: static !important; width: auto; bottom: auto;
+    flex-direction: row !important; flex-wrap: wrap !important; padding: 10px !important;
+  }
+  .fl-sideback { width: 100%; }
+  .fl-sidelink { width: auto; }
+  .fl-stats .fl-chip { display: flex !important; }
 }
 `;
 

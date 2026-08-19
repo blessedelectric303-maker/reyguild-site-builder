@@ -1282,27 +1282,12 @@ export default function ReyGuild() {
       )}
 
       <nav className="fl-nav3">
-        {(() => {
-          const menuTabs = TABS.filter((t) => t.key !== "messages" && t.key !== "settings");
-          const here = menuTabs.find((t) => t.key === page);
-          return (
-            <div className="fl-menuwrap">
-              <button className={"fl-menubtn" + (here ? " on" : "")} onClick={() => setNavOpen(!navOpen)}>
-                <span className="fl-menu-ic">☰</span> {here ? here.label : "Menu"} <span className="fl-menu-car">▾</span>
-              </button>
-              {navOpen && <div className="fl-menu-overlay" onClick={() => setNavOpen(false)} />}
-              {navOpen && (
-                <div className="fl-menu">
-                  {menuTabs.map((t) => (
-                    <button key={t.key} className={"fl-menu-item" + (page === t.key ? " on" : "")} onClick={() => { setPage(t.key); setQuery(""); setNavOpen(false); }}>{t.label}</button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })()}
-        <button className={"fl-midtab" + (page === "messages" ? " on" : "")} onClick={() => { setPage("messages"); setNavOpen(false); }}>Messages{unreadMsgs ? " (" + unreadMsgs + ")" : ""}</button>
-        <button className={"fl-righttab" + (page === "settings" ? " on" : "")} onClick={() => { setPage("settings"); setQuery(""); setNavOpen(false); }}>Settings</button>
+        <a className="fl-sideback" href="/">&larr; Command center</a>
+        {TABS.map((t) => (
+          <button key={t.key} className={"fl-sidelink" + (page === t.key ? " on" : "")} onClick={() => { setPage(t.key); setQuery(""); setNavOpen(false); }}>
+            {t.label}{t.key === "messages" && unreadMsgs ? " (" + unreadMsgs + ")" : ""}
+          </button>
+        ))}
       </nav>
 
       {/* ════════════════════ ESTIMATES ════════════════════ */}
