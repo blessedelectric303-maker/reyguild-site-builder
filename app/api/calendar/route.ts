@@ -1,0 +1,154 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+
+// The calendar talks to jobs through here. A scheduled job IS the calendar
+// entry, so the description and material typed here are the same ones the
+// tech reads in Time and Material. No second list to keep in step.
+
+export const dynamic = "force-dynamic";
+
+// The command center has a ReyGuild session but not always a T and M cookie,
+// so fall back to matching by email the way the bridge does.
+async function whoami() {
+  try {
+    const tm = await getCurrentUser();
+    if (tm) return tm;
+  } catch (e) {
+    // fall through
+  }
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const email = (user?.email || "").trim().toLowerCase();
+    if (!email) return null;
+    return await prisma.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" }, isActive: true },
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+function localDay(d: Date): string {
+  const p = (n: number) => (n < 10 ? "0" + n : "" + n);
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+function clock(d: Date): string {
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return h + ":" + (m < 10 ? "0" + m : "" + m) + " " + ampm;
+}
+
+export async function GET(req: Request) {
+  const me = await whoami();
+  if (!me) return NextResponse.json({ events: [] });
+
+  const url = new URL(req.url);
+  const from = url.searchParams.get("from") || "";
+  const to = url.searchParams.get("to") || "";
+  if (!from || !to) return NextResponse.json({ events: [] });
+
+  const start = new Date(from + "T00:00:00");
+  const end = new Date(to + "T23:59:59");
+
+  const jobs = await prisma.job.findMany({
+    where: {
+      orgId: me.orgId,
+      status: { not: "archived" },
+      scheduledStart: { gte: start, lte: end },
+    },
+    include: { assignments: { include: { user: true } } },
+    orderBy: { scheduledStart: "asc" },
+  });
+
+  const events = jobs.map((j) => {
+    const s = j.scheduledStart as Date;
+    const hours =
+      j.estimatedHours ||
+      (j.scheduledEnd ? Math.round(((j.scheduledEnd as Date).getTime() - s.getTime()) / 3600000) : 2);
+    const primary = j.assignments.find((a) => a.isPrimary) || j.assignments[0];
+    return {
+      id: j.id,
+      title: j.customerName,
+      address: j.jobAddress || null,
+      event_type: j.jobType || "proposal",
+      event_date: localDay(s),
+      event_time: clock(s),
+      assigned_to: primary ? primary.userId : null,
+      assigned_name: primary ? primary.user.name || primary.user.email : null,
+      duration_hours: hours,
+      job_description: j.jobDescription || null,
+      material: j.notes || null,
+    };
+  });
+
+  return NextResponse.json({ events });
+}
+
+export async function POST(req: Request) {
+  const me = await whoami();
+  if (!me) return NextResponse.json({ error: "Could not find your Time and Material account." }, { status: 401 });
+
+  const b = await req.json().catch(() => ({}));
+  const title = String(b.title || "").trim();
+  const date = String(b.date || "");
+  if (!title || !date) return NextResponse.json({ error: "Name and date are required." }, { status: 400 });
+
+  const hours = Number(b.hours) || 2;
+  const time = String(b.time || "08:00");
+  const start = new Date(date + "T" + time + ":00");
+  if (isNaN(start.getTime())) return NextResponse.json({ error: "That start time did not make sense." }, { status: 400 });
+  const end = new Date(start.getTime() + hours * 3600000);
+
+  const job = await prisma.job.create({
+    data: {
+      id: crypto.randomUUID(),
+      orgId: me.orgId,
+      createdById: me.id,
+      customerName: title,
+      jobAddress: String(b.address || "").trim(),
+      jobType: String(b.jobType || "service_call"),
+      jobDescription: String(b.jobDescription || "").trim() || null,
+      notes: String(b.material || "").trim() || null,
+      estimatedHours: hours,
+      scheduledStart: start,
+      scheduledEnd: end,
+      status: "scheduled",
+      updatedAt: new Date(),
+    },
+  });
+
+  if (b.techId) {
+    await prisma.jobAssignment.upsert({
+      where: { jobId_userId: { jobId: job.id, userId: String(b.techId) } },
+      create: { id: crypto.randomUUID(), jobId: job.id, userId: String(b.techId), isPrimary: true },
+      update: { isPrimary: true },
+    });
+  }
+
+  return NextResponse.json({ ok: true, id: job.id });
+}
+
+export async function DELETE(req: Request) {
+  const me = await whoami();
+  if (!me) return NextResponse.json({ error: "Not allowed." }, { status: 401 });
+  const id = new URL(req.url).searchParams.get("id") || "";
+  if (!id) return NextResponse.json({ error: "Missing id." }, { status: 400 });
+
+  const job = await prisma.job.findFirst({ where: { id, orgId: me.orgId } });
+  if (!job) return NextResponse.json({ error: "Job not found." }, { status: 404 });
+
+  // Take it off the calendar rather than destroying the record.
+  await prisma.job.update({
+    where: { id },
+    data: { scheduledStart: null, scheduledEnd: null, updatedAt: new Date() },
+  });
+  return NextResponse.json({ ok: true });
+}
