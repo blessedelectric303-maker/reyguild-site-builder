@@ -15,10 +15,10 @@ jobs:
       - name: Unpack into place
         run: |
           set -e
-          test -f proposals-layout.zip
-          unzip -qo proposals-layout.zip -d .__unpack
-          cp -r .__unpack/proposals-layout/. .
-          rm -rf .__unpack proposals-layout.zip
+          test -f proposals-dash.zip
+          unzip -qo proposals-dash.zip -d .__unpack
+          cp -r .__unpack/proposals-dash/. .
+          rm -rf .__unpack proposals-dash.zip
 
       - name: Commit
         run: |
