@@ -11,7 +11,11 @@ type Ev = {
   event_date: string;
   event_time: string | null;
   assigned_to: string | null;
+  assigned_name?: string | null;
   duration_hours: number;
+  job_description?: string | null;
+  material?: string | null;
+  legacy?: boolean;
 };
 type Member = { user_id: string; role: string; email: string };
 
@@ -19,14 +23,18 @@ const WORKDAY = 8; // hours a tech can be booked per day. Change this to cap it 
 
 const TYPE_COLOR: Record<string, string> = {
   estimate: "#1BBF55",
+  proposal: "#1BBF55",
   service_call: "#2183E8",
   warranty_call: "#FF9012",
+  warranty: "#FF9012",
   emergency: "#F0302A",
 };
 const TYPE_LABEL: Record<string, string> = {
   estimate: "Proposal",
+  proposal: "Proposal",
   service_call: "Service Call",
   warranty_call: "Warranty Call",
+  warranty: "Warranty Call",
   emergency: "Emergency",
 };
 
@@ -57,6 +65,8 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
   const [fTime, setFTime] = useState("");
   const [fTech, setFTech] = useState<string>("");
   const [fDur, setFDur] = useState(2);
+  const [fDesc, setFDesc] = useState("");
+  const [fMat, setFMat] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -78,8 +88,19 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
     if (!companyId) return;
     const from = dayKey(y, m, 1);
     const to = dayKey(y, m, daysInMonth);
+    // Jobs are the real calendar now. The old table is still read so nothing
+    // you scheduled before this change disappears.
+    let jobEvents: Ev[] = [];
+    try {
+      const res = await fetch("/api/calendar?from=" + from + "&to=" + to);
+      const payload = await res.json();
+      jobEvents = (payload.events as Ev[]) || [];
+    } catch (e) {
+      jobEvents = [];
+    }
     const { data } = await supabase.schema("suite").from("calendar_events").select("id,title,address,event_type,event_date,event_time,assigned_to,duration_hours").gte("event_date", from).lte("event_date", to).order("event_date");
-    setEvents((data as Ev[]) || []);
+    const legacy = ((data as Ev[]) || []).map((e) => ({ ...e, legacy: true }));
+    setEvents(jobEvents.concat(legacy));
   }, [companyId, y, m, daysInMonth, supabase]);
 
   useEffect(() => {
@@ -111,6 +132,8 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
     setFTime("");
     setFTech("");
     setFDur(2);
+    setFDesc("");
+    setFMat("");
     setFType("service_call");
   }
 
@@ -141,32 +164,60 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
       return;
     }
     setSaving(true);
-    const { error } = await supabase.schema("suite").from("calendar_events").insert({
-      company_id: companyId,
-      title,
-      address: fAddr.trim() || null,
-      event_type: fType,
-      event_date: selDay,
-      event_time: fTime.trim() || null,
-      assigned_to: fTech || null,
-      duration_hours: fDur,
-    });
-    setSaving(false);
-    if (error) {
-      setErr("Couldn't add that job: " + error.message);
+    try {
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          address: fAddr.trim(),
+          jobType: fType,
+          date: selDay,
+          time: fTime.trim() || "08:00",
+          hours: fDur,
+          techId: fTech || "",
+          jobDescription: fDesc.trim(),
+          material: fMat.trim(),
+        }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      setSaving(false);
+      if (!res.ok) {
+        setErr(payload.error || "Could not add that job.");
+        return;
+      }
+    } catch (e) {
+      setSaving(false);
+      setErr("Could not reach the server.");
       return;
     }
     setFTitle("");
     setFAddr("");
     setFTime("");
     setFTech("");
+    setFDesc("");
+    setFMat("");
     load();
   }
 
-  async function removeEvent(id: string) {
-    const { error } = await supabase.schema("suite").from("calendar_events").delete().eq("id", id);
-    if (error) {
-      setErr("Couldn't remove that: " + error.message);
+  async function removeEvent(ev: Ev) {
+    if (ev.legacy) {
+      const { error } = await supabase.schema("suite").from("calendar_events").delete().eq("id", ev.id);
+      if (error) {
+        setErr("Couldn't remove that: " + error.message);
+        return;
+      }
+      load();
+      return;
+    }
+    try {
+      const res = await fetch("/api/calendar?id=" + encodeURIComponent(ev.id), { method: "DELETE" });
+      if (!res.ok) {
+        setErr("Could not take that off the calendar.");
+        return;
+      }
+    } catch (e) {
+      setErr("Could not reach the server.");
       return;
     }
     load();
@@ -262,11 +313,13 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                           <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: TYPE_COLOR[e.event_type] || "#94a3b8" }} />
                           <span className="text-sm font-semibold" style={{ color: TYPE_COLOR[e.event_type] || "#cbd5e1" }}>{e.title}</span>
                         </div>
-                        <div className="text-xs text-slate-400 mt-1">{e.event_time ? e.event_time + " - " : ""}{e.duration_hours ? e.duration_hours + "h - " : ""}{TYPE_LABEL[e.event_type] || e.event_type}{e.assigned_to ? " - " + nameFor(e.assigned_to) : ""}</div>
+                        <div className="text-xs text-slate-400 mt-1">{e.event_time ? e.event_time + " - " : ""}{e.duration_hours ? e.duration_hours + "h - " : ""}{TYPE_LABEL[e.event_type] || e.event_type}{e.assigned_to ? " - " + (e.assigned_name || nameFor(e.assigned_to)) : ""}</div>
                         {e.address ? <div className="text-xs text-slate-500 break-words mt-0.5">{e.address}</div> : null}
+                        {e.job_description ? <div className="mt-1 text-xs text-slate-300 break-words">{e.job_description}</div> : null}
+                        {e.material ? <div className="mt-1 text-xs text-amber-300 break-words">Material: {e.material}</div> : null}
                       </div>
                       {canEdit ? (
-                        <button type="button" onClick={() => removeEvent(e.id)} aria-label="Remove" className="shrink-0 text-slate-500 hover:text-red-400">&times;</button>
+                        <button type="button" onClick={() => removeEvent(e)} aria-label="Remove" className="shrink-0 text-slate-500 hover:text-red-400">&times;</button>
                       ) : null}
                     </div>
                   ))
@@ -285,6 +338,8 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                   <input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="Job / customer name" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <input value={fAddr} onChange={(e) => setFAddr(e.target.value)} placeholder="Address" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <input value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="Start time (e.g. 9:00 AM)" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
+                  <textarea value={fDesc} onChange={(e) => setFDesc(e.target.value)} rows={2} placeholder="Job description - what is happening on this job" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
+                  <textarea value={fMat} onChange={(e) => setFMat(e.target.value)} rows={2} placeholder="Material - what to pick up and where" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
 
                   <div>
                     <div className="text-xs text-slate-500 mb-1">How long?</div>
