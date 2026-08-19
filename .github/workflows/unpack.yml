@@ -15,11 +15,10 @@ jobs:
       - name: Unpack into place
         run: |
           set -e
-          test -f reyguild-tm-merge.zip
-          rm -f AuditExportButton.tsx Footer.tsx HelpButton.tsx HelpSearch.tsx HelpWidget.tsx Logo.tsx roles.ts schema.prisma
-          unzip -qo reyguild-tm-merge.zip -d .__unpack
-          cp -r .__unpack/reyguild-tm-merge/. .
-          rm -rf .__unpack reyguild-tm-merge.zip
+          test -f proposals-layout.zip
+          unzip -qo proposals-layout.zip -d .__unpack
+          cp -r .__unpack/proposals-layout/. .
+          rm -rf .__unpack proposals-layout.zip
 
       - name: Commit
         run: |
