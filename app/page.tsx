@@ -133,9 +133,9 @@ export default async function Home() {
         : "text-slate-400 border-slate-700";
 
     return (
-      <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col items-center text-center h-full">
+      <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col items-center text-center h-full min-h-[250px]">
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeColor}>{badge}</span>
-        <h2 className="mt-3 text-lg font-semibold text-white">{app.name}</h2>
+        <h2 className="mt-3 whitespace-nowrap text-base font-semibold text-white">{app.name}</h2>
         <p className="mt-1 text-sm text-slate-400 flex-1">{app.description}</p>
         <div className="mt-4">
           {canOpen && live ? (
