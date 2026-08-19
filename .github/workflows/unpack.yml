@@ -15,10 +15,10 @@ jobs:
       - name: Unpack into place
         run: |
           set -e
-          test -f proposals-dash.zip
-          unzip -qo proposals-dash.zip -d .__unpack
-          cp -r .__unpack/proposals-dash/. .
-          rm -rf .__unpack proposals-dash.zip
+          Z=$(ls *.zip | head -1)
+          unzip -qo "$Z" -d .__unpack
+          cp -r .__unpack/*/. .
+          rm -rf .__unpack "$Z"
 
       - name: Commit
         run: |
