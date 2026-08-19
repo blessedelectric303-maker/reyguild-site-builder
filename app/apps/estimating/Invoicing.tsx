@@ -118,10 +118,26 @@ const STYLE_FIX = `
 .fl-sidelink:hover { background: #1e293b; color: #fff; }
 .fl-sidelink.on { background: #e0a82e; color: #0f172a; font-weight: 800; }
 
-/* Content column */
-.fl-noprint > *:not(.fl-header):not(.fl-nav3) { max-width: 1100px; margin-left: auto; margin-right: auto; }
-.fl-grid, .fl-weekly, .so-subnav { margin-left: auto !important; margin-right: auto !important; }
-.so-subnav { width: 100% !important; max-width: 880px !important; }
+/* Content fills the page next to the sidebar. */
+.fl-noprint > *:not(.fl-header):not(.fl-nav3) { max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; width: auto !important; }
+.fl-grid, .fl-weekly { max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }
+.so-subnav { width: 100% !important; max-width: none !important; margin-left: 0 !important; }
+
+/* The name selector already says who you are. Drop the second copy. */
+.fl-rolebadge { display: none !important; }
+
+/* Dashboard cards */
+.fl-dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; padding: 4px 0 8px; }
+.fl-dashcard {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  background: #fff; border: 1px solid #E4DECF; border-left: 5px solid #34507A;
+  border-radius: 4px; padding: 20px 18px; cursor: pointer; font-family: inherit; text-align: left;
+}
+.fl-dashcard:hover { border-color: #C68A1E; border-left-color: #C68A1E; }
+.fl-dashcard.due { border-left-color: #C68A1E; }
+.fl-dashcard.alert { border-left-color: #BC4A3C; }
+.fl-dashnum { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; color: #16243F; }
+.fl-dashlbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #39415a; }
 
 /* Phones: sidebar becomes a normal stacked header again. */
 @media (max-width: 860px) {

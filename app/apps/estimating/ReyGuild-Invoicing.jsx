@@ -483,7 +483,7 @@ const NET_DAYS = 15;
 
 export default function ReyGuild() {
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState("estimates");
+  const [page, setPage] = useState("dashboard");
 
   const [people, setPeople] = useState([]);
   const [clients, setClients] = useState([]);
@@ -647,6 +647,7 @@ export default function ReyGuild() {
   };
 
   const TABS = [
+    { key: "dashboard", label: "Dashboard", show: true },
     { key: "estimates", label: "Estimates", show: true },
     { key: "invoices", label: "Invoices", show: true },
     { key: "followups", label: "Follow-ups", show: true },
@@ -661,7 +662,7 @@ export default function ReyGuild() {
     { key: "settings", label: "Settings", show: true },
   ].filter((t) => t.show);
 
-  useEffect(() => { if (!TABS.some((t) => t.key === page)) setPage("estimates"); }, [role]);
+  useEffect(() => { if (!TABS.some((t) => t.key === page)) setPage("dashboard"); }, [role]);
   useEffect(() => { if (page === "messages") save(STORAGE.msgSeen, { ...msgSeen, [actorKey]: Date.now() }, setMsgSeen); }, [page]);
 
   // estimators always create under their own name
@@ -1289,6 +1290,33 @@ export default function ReyGuild() {
           </button>
         ))}
       </nav>
+
+      {page === "dashboard" && (
+        <div className="fl-dash">
+          <button type="button" className="fl-dashcard" onClick={() => setPage("estimates")}>
+            <span className="fl-dashnum">{myEstimates.length}</span>
+            <span className="fl-dashlbl">Estimates</span>
+          </button>
+          <button type="button" className="fl-dashcard" onClick={() => setPage("invoices")}>
+            <span className="fl-dashnum">{myInvoices.length}</span>
+            <span className="fl-dashlbl">Invoices</span>
+          </button>
+          {isAdmin && (
+            <button type="button" className={"fl-dashcard" + ((pendingPayouts.length + lateFollowups.length + collectionsDue.length + approvalNotices.length) ? " alert" : "")} onClick={() => setPage("alerts")}>
+              <span className="fl-dashnum">{pendingPayouts.length + lateFollowups.length + collectionsDue.length + approvalNotices.length}</span>
+              <span className="fl-dashlbl">Approvals</span>
+            </button>
+          )}
+          <button type="button" className={"fl-dashcard" + (fuDueList.length ? " due" : "")} onClick={() => setPage("followups")}>
+            <span className="fl-dashnum">{fuDueList.length}</span>
+            <span className="fl-dashlbl">Follow-ups</span>
+          </button>
+          <button type="button" className={"fl-dashcard" + (unreadMsgs ? " alert" : "")} onClick={() => setPage("messages")}>
+            <span className="fl-dashnum">{unreadMsgs}</span>
+            <span className="fl-dashlbl">Messages</span>
+          </button>
+        </div>
+      )}
 
       {/* ════════════════════ ESTIMATES ════════════════════ */}
       {page === "estimates" && (
