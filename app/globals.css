@@ -3,8 +3,9 @@
 :root {
   --rey-gold: #e0a82e;
   --rey-navy: #0f1b2d;
-  --rey-font-title: "Black Ops One", Impact, "Arial Black", sans-serif;
-  --rey-font-ui: "Oswald", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --rey-font-title: "Archivo", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --rey-font-ui: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --rey-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 body {
@@ -14,12 +15,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Military type. Black Ops One = titles only. Oswald = everything else. */
+/* Headings match Proposals and Invoicing: Archivo, heavy, wide tracking. */
 .mil,
 h1,
 h2 {
   font-family: var(--rey-font-title);
-  letter-spacing: 0.02em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 /* Light mode. Dark stays the default (no data-theme set = dark look).
