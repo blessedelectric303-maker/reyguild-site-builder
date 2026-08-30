@@ -136,7 +136,7 @@ export default function TimeOffRequestForm({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-3 rounded-xl"
+        className="w-full bg-white border-2 border-slate-900 hover:bg-slate-100 text-slate-900 font-bold px-4 py-3 rounded-xl"
       >
         + Request Time Off
       </button>

@@ -14,6 +14,8 @@ export type TechCard = {
   blurb: string;
   // Set only for cards that are not one of the eight call types.
   skin?: { bg: string; text: string };
+  // Renders a black and white checker instead of a flat colour.
+  checker?: boolean;
 };
 
 export const TECH_CARDS: TechCard[] = [
@@ -26,6 +28,7 @@ export const TECH_CARDS: TechCard[] = [
     label: "Clock In",
     blurb: "How the day runs. Read this one first.",
     skin: { bg: "#000000", text: "#ffffff" },
+    checker: true,
   },
   { key: "tech_emergency", mirrors: "emergency", label: "Emergency", blurb: "Safe first, diagnosed second." },
   { key: "tech_service_call", mirrors: "service_call", label: "Service Call", blurb: "The full run card. Truck to driveway." },

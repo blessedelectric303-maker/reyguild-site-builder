@@ -81,7 +81,7 @@ export default async function TechSettingsPage() {
             Switch to Proposals &amp; Invoicing
           </a>
         ) : <span />}
-        <LogoutButton />
+        <LogoutButton className="rounded-md border border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50" />
       </div>
     </div>
   );

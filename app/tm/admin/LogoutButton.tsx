@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-export default function LogoutButton() {
+export default function LogoutButton({ className }: { className?: string } = {}) {
   const router = useRouter();
 
   async function handleLogout() {
@@ -14,7 +14,7 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="w-full text-left text-sm text-slate-300 hover:text-white"
+      className={className || "w-full text-left text-sm text-slate-300 hover:text-white"}
     >
       Sign out
     </button>

@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+/* THE BRAND PALETTE.
+   The T and M app uses bg-brand-600, text-brand-600, ring-brand-500 and
+   bg-brand-50 in 58 places, but the colour was never defined anywhere - there
+   is no tailwind config file and nothing declared it here. Every one of those
+   classes produced nothing, which is why "Week total" was white text on a
+   white background and buttons came out unpainted.
+
+   Defined once, in ReyGuild navy so white text on it is legible. */
+@theme {
+  --color-brand-50: #eef2f8;
+  --color-brand-100: #d6e0ee;
+  --color-brand-200: #adc0dc;
+  --color-brand-300: #7e99c4;
+  --color-brand-400: #4f6da5;
+  --color-brand-500: #2c4a80;
+  --color-brand-600: #16243f;
+  --color-brand-700: #101a2f;
+  --color-brand-800: #0b1220;
+  --color-brand-900: #070c16;
+}
+
+
 :root {
   --rey-gold: #e0a82e;
   --rey-navy: #0f1b2d;

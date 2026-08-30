@@ -25,10 +25,23 @@ export default async function TechProceduresPage() {
               key={c.key}
               href={"/tm/tech/procedures/" + c.key}
               className={"flex min-h-[92px] flex-col justify-between rounded-xl p-3 shadow-sm hover:brightness-110" + (c.key === "tech_clockin" ? " col-span-2" : "")}
-              style={{ background: skin.bg, color: skin.text }}
+              style={
+                c.checker
+                  ? {
+                      // Start line. 16px squares, offset on the second row.
+                      backgroundColor: "#ffffff",
+                      backgroundImage:
+                        "linear-gradient(45deg,#000 25%,transparent 25%,transparent 75%,#000 75%)," +
+                        "linear-gradient(45deg,#000 25%,transparent 25%,transparent 75%,#000 75%)",
+                      backgroundSize: "32px 32px",
+                      backgroundPosition: "0 0, 16px 16px",
+                      color: "#000000",
+                    }
+                  : { background: skin.bg, color: skin.text }
+              }
             >
-              <span className="text-sm font-extrabold uppercase tracking-wide">{c.label}</span>
-              <span className="text-[11px] leading-snug opacity-90">{c.blurb}</span>
+              <span className="text-sm font-extrabold uppercase tracking-wide" style={c.checker ? { WebkitTextStroke: "3px #ffffff", paintOrder: "stroke fill" } : undefined}>{c.label}</span>
+              <span className="text-[11px] leading-snug opacity-90" style={c.checker ? { WebkitTextStroke: "3px #ffffff", paintOrder: "stroke fill" } : undefined}>{c.blurb}</span>
             </Link>
           );
         })}
