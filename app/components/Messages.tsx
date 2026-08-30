@@ -23,7 +23,7 @@ function timeLabel(iso: string): string {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-export default function Messages({ userId, companyId }: { userId: string; companyId?: string }) {
+export default function Messages({ userId, companyId, triggerClassName }: { userId: string; companyId?: string; triggerClassName?: string }) {
   const supabase = createClient();
   const [open, setOpen] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -129,9 +129,9 @@ export default function Messages({ userId, companyId }: { userId: string; compan
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Messages" className="relative inline-flex items-center gap-1.5 rounded-md border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800">
-        {mailIcon}
-        <span className="hidden sm:inline">Messages</span>
+      <button type="button" onClick={() => setOpen(true)} aria-label="Messages" className={triggerClassName ? "relative " + triggerClassName : "relative inline-flex items-center gap-1.5 rounded-md border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"}>
+        {triggerClassName ? null : mailIcon}
+        <span className={triggerClassName ? "" : "hidden sm:inline"}>Messages</span>
         {totalUnread > 0 ? <span className="absolute -top-1.5 -right-1.5 min-w-[18px] rounded-full px-1 text-center text-[11px] font-bold text-slate-900" style={{ background: "#e0a82e" }}>{totalUnread}</span> : null}
       </button>
 

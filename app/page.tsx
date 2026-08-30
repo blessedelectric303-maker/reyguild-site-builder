@@ -152,6 +152,10 @@ export default async function Home() {
     );
   }
 
+  // Every button in the row under the calendar uses this and nothing else.
+  const tileCls =
+    "flex h-full min-h-[60px] w-full items-center justify-center rounded-lg border border-slate-700 bg-slate-900/50 px-2 py-3 text-center text-sm text-slate-200 hover:bg-slate-800";
+
   return (
     <main className="min-h-screen flex flex-col p-6 md:p-10">
       <header className="flex items-center justify-end mb-6">
@@ -175,7 +179,7 @@ export default async function Home() {
           {/* STEP ONE. Every call starts here and leaves pointed at a colour.
               White on purpose - it is not one of the eight call colours. */}
           <div className="mt-3 text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500">Step One</div>
-          <Link href="/procedures/answering" className="mt-1.5 w-full max-w-xs rounded-lg bg-white px-3 py-3.5 text-center text-sm font-extrabold uppercase tracking-wide text-slate-900 shadow hover:brightness-95">The Answering Kit</Link>
+          <Link href="/procedures/answering" className="mt-1.5 w-full max-w-xs rounded-lg bg-white px-3 py-3.5 text-center text-sm font-extrabold uppercase tracking-wide text-slate-900 shadow hover:brightness-95">New Call</Link>
         </div>
 
         <div className="grid gap-4 md:grid-cols-[minmax(0,200px)_minmax(0,1fr)_minmax(0,200px)] md:items-start">
@@ -194,16 +198,16 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="mt-6 max-w-2xl mx-auto grid grid-cols-2 gap-2 sm:grid-cols-5">
-          <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3 text-center text-sm text-slate-200 hover:bg-slate-800">Email</a>
-          <span className="rounded-lg border border-slate-800 bg-slate-900/30 px-3 py-3 text-center text-sm text-slate-500">Contacts<span className="block text-[10px]">coming next</span></span>
-          <div className="flex items-center justify-center">
-            <Messages userId={user.id} companyId={companyId} />
-          </div>
-          {/* Two reference shelves. Neutral, because their CONTENTS carry the
-              eight colours - a coloured button here would compete with them. */}
-          <Link href="/procedures/sops" className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3 text-center text-sm text-slate-200 hover:bg-slate-800">SOPs</Link>
-          <Link href="/procedures/replies" className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3 text-center text-sm text-slate-200 hover:bg-slate-800">Premade Replies</Link>
+        {/* One tile style for the whole row so nothing sits taller or wider
+            than its neighbour. auto-rows-fr keeps them equal when one wraps. */}
+        <div className="mt-6 max-w-2xl mx-auto grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-5">
+          <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" className={tileCls}>Email</a>
+          <span className={tileCls + " text-slate-500"}>
+            <span>Contacts<span className="block text-[10px]">coming next</span></span>
+          </span>
+          <Messages userId={user.id} companyId={companyId} triggerClassName={tileCls} />
+          <Link href="/procedures/sops" className={tileCls}>SOPs</Link>
+          <Link href="/procedures/replies" className={tileCls}>Premade Replies</Link>
         </div>
 
         <div className="text-center mt-8">

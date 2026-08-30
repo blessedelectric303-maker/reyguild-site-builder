@@ -162,7 +162,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
             </div>
 
             <div className="flex gap-1 border-b border-slate-800 p-2">
-              {tabBtn("guide", "Help With App")}
+              {tabBtn("guide", "Instructions")}
               {tabBtn("help", "Help")}
               {tabBtn("account", "Account")}
             </div>
@@ -199,7 +199,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                     {SUPPORT.phone ? <div className="text-slate-200">Call: {SUPPORT.phone}</div> : null}
                   </div>
                   {SUPPORT.note ? <p className="mt-3 text-xs text-slate-500">{SUPPORT.note}</p> : null}
-                  <p className="mt-4 text-xs text-slate-500">Tip: Help With App walks through the whole app, screen by screen.</p>
+                  <p className="mt-4 text-xs text-slate-500">Tip: Instructions walks through the whole app, screen by screen.</p>
                 </div>
               ) : null}
 

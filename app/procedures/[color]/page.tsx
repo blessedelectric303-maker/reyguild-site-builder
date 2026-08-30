@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { isStaff } from "@/utils/roles";
+import { isStaff, isOwnerOrAdmin } from "@/utils/roles";
 import ProcedureView from "./ProcedureView";
 import { buildTokenMap, fillTokens, hasUnfilled, type CompanyFacts } from "@/utils/tokens";
 import { CALL_COLORS, NON_CALL_COLORS } from "@/utils/callColors";
@@ -112,6 +112,8 @@ export default async function ProcedurePage({ params }: { params: Promise<{ colo
       skin={skin}
       companyId={companyId}
       userId={user.id}
+      settings={((co as any)?.settings as Record<string, any>) || null}
+      canEdit={isOwnerOrAdmin(role)}
     />
   );
 }

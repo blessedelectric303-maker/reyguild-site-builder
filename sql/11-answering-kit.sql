@@ -1,4 +1,4 @@
--- 11 - THE ANSWERING KIT (universal). Supersedes 09-answering-kit.sql.
+-- 11 - NEW CALL, the answering kit (universal). Supersedes 09-answering-kit.sql.
 -- Re-runnable. Safe to paste more than once.
 -- Paste into a FRESH Supabase SQL tab.
 
@@ -23,7 +23,7 @@ insert into suite.procedures
   (company_id, is_template, color, title, purpose, opening_script,
    may_not_say, one_pager, schedules_to_calendar, active)
 values
-  (null, true, $q$answering$q$, $q$The Answering Kit$q$,
+  (null, true, $q$answering$q$, $q$New Call$q$,
    $q$Press this when the phone rings. Work down it. It ends by telling you which colour the call is.
 
 Listen and recognize. Do not interrogate. Almost everybody tells you the category in their first two sentences - your job is to hear it, not to extract it. Questions come later, inside the procedure, where they are about the caller's actual problem and they make sense.

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CALL_COLORS, CALL_ORDER, type CallKey } from "@/utils/callColors";
+import SupplyHouses from "@/app/components/SupplyHouses";
 
 type Item = {
   id: string;
@@ -44,7 +45,7 @@ function ColorTag({ tag }: { tag: string }) {
 }
 
 export default function ProcedureView({
-  procedure, sections, items, skin, companyId, userId, unfilled,
+  procedure, sections, items, skin, companyId, userId, unfilled, settings, canEdit,
 }: {
   procedure: Proc;
   sections: Section[];
@@ -53,6 +54,8 @@ export default function ProcedureView({
   skin: { bg: string; text: string };
   companyId: string;
   userId: string;
+  settings?: Record<string, any> | null;
+  canEdit?: boolean;
 }) {
   const router = useRouter();
   const [pane, setPane] = useState<"none" | "checklist" | "onepage">("none");
@@ -301,6 +304,10 @@ export default function ProcedureView({
                 <div className="mb-1 text-xs font-bold uppercase tracking-widest text-red-300">Never</div>
                 <pre className="whitespace-pre-wrap font-sans text-sm text-red-100">{procedure.may_not_say}</pre>
               </div>
+            ) : null}
+
+            {procedure.color === "material" ? (
+              <SupplyHouses companyId={companyId} settings={settings || null} canEdit={canEdit === true} />
             ) : null}
 
             {libraryMode && sections.length ? (
