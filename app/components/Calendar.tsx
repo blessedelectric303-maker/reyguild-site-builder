@@ -23,18 +23,14 @@ const WORKDAY = 8; // hours a tech can be booked per day. Change this to cap it 
 
 const TYPE_COLOR: Record<string, string> = {
   estimate: "#1BBF55",
-  proposal: "#1BBF55",
   service_call: "#2183E8",
   warranty_call: "#FF9012",
-  warranty: "#FF9012",
   emergency: "#F0302A",
 };
 const TYPE_LABEL: Record<string, string> = {
   estimate: "Proposal",
-  proposal: "Proposal",
   service_call: "Service Call",
   warranty_call: "Warranty Call",
-  warranty: "Warranty Call",
   emergency: "Emergency",
 };
 
@@ -337,7 +333,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                   </div>
                   <input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="Job / customer name" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <input value={fAddr} onChange={(e) => setFAddr(e.target.value)} placeholder="Address" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
-                  <input value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="Start time (e.g. 9:00 AM)" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
+                  <input value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="Start time - 9:00 AM or 09:00" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <textarea value={fDesc} onChange={(e) => setFDesc(e.target.value)} rows={2} placeholder="Job description - what is happening on this job" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <textarea value={fMat} onChange={(e) => setFMat(e.target.value)} rows={2} placeholder="Material - what to pick up and where" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
 

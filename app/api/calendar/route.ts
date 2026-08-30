@@ -46,6 +46,34 @@ function clock(d: Date): string {
   return h + ":" + (m < 10 ? "0" + m : "" + m) + " " + ampm;
 }
 
+// People type "9:00 AM", "9am", "0900" or "09:00". Accept all of them rather
+// than rejecting a start time that reads perfectly well to a human.
+function parseStart(date: string, raw: string): Date | null {
+  const t = raw.trim().toLowerCase().replace(/\s+/g, "");
+  if (!t) return build(date, 8, 0);
+
+  const m = t.match(/^(\d{1,2})(?::?(\d{2}))?(am|pm)?$/);
+  if (!m) return null;
+
+  let h = parseInt(m[1], 10);
+  const min = m[2] ? parseInt(m[2], 10) : 0;
+  const ampm = m[3];
+
+  if (h > 23 || min > 59) return null;
+  if (ampm === "pm" && h < 12) h += 12;
+  if (ampm === "am" && h === 12) h = 0;
+  // "930" means 9:30, not hour 930
+  if (!m[2] && !ampm && m[1].length > 2) return null;
+
+  return build(date, h, min);
+}
+
+function build(date: string, h: number, min: number): Date | null {
+  const p = (n: number) => (n < 10 ? "0" + n : "" + n);
+  const d = new Date(date + "T" + p(h) + ":" + p(min) + ":00");
+  return isNaN(d.getTime()) ? null : d;
+}
+
 export async function GET(req: Request) {
   const me = await whoami();
   if (!me) return NextResponse.json({ events: [] });
@@ -102,9 +130,8 @@ export async function POST(req: Request) {
   if (!title || !date) return NextResponse.json({ error: "Name and date are required." }, { status: 400 });
 
   const hours = Number(b.hours) || 2;
-  const time = String(b.time || "08:00");
-  const start = new Date(date + "T" + time + ":00");
-  if (isNaN(start.getTime())) return NextResponse.json({ error: "That start time did not make sense." }, { status: 400 });
+  const start = parseStart(date, String(b.time || ""));
+  if (!start) return NextResponse.json({ error: "That start time did not make sense." }, { status: 400 });
   const end = new Date(start.getTime() + hours * 3600000);
 
   const job = await prisma.job.create({
