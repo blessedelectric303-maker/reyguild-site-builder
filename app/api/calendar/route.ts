@@ -152,15 +152,37 @@ export async function POST(req: Request) {
     },
   });
 
-  if (b.techId) {
-    await prisma.jobAssignment.upsert({
-      where: { jobId_userId: { jobId: job.id, userId: String(b.techId) } },
-      create: { id: crypto.randomUUID(), jobId: job.id, userId: String(b.techId), isPrimary: true },
-      update: { isPrimary: true },
-    });
+  // ReyGuild and Time and Material give the same person different ids, so the
+  // calendar sends an email address and we resolve it here. If nobody matches,
+  // the job is still created - losing an assignment beats losing the job.
+  const techEmail = String(b.techEmail || "").trim().toLowerCase();
+  let assignedTo: string | null = null;
+  if (techEmail) {
+    try {
+      const tech = await prisma.user.findFirst({
+        where: { orgId: me.orgId, email: { equals: techEmail, mode: "insensitive" }, isActive: true },
+      });
+      if (tech) {
+        await prisma.jobAssignment.upsert({
+          where: { jobId_userId: { jobId: job.id, userId: tech.id } },
+          create: { id: crypto.randomUUID(), jobId: job.id, userId: tech.id, isPrimary: true },
+          update: { isPrimary: true },
+        });
+        assignedTo = tech.id;
+      }
+    } catch (e) {
+      // assignment is best effort
+    }
   }
 
-  return NextResponse.json({ ok: true, id: job.id });
+  return NextResponse.json({
+    ok: true,
+    id: job.id,
+    assigned: assignedTo !== null,
+    note: techEmail && assignedTo === null
+      ? "Job saved, but that person has no Time and Material account yet, so nobody was assigned."
+      : undefined,
+  });
 }
 
 export async function DELETE(req: Request) {

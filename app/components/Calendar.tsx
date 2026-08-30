@@ -73,6 +73,12 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
   if (userId) techOptions.push({ user_id: userId, role: "me", email: userEmail || "Me" });
   members.forEach((mm) => techOptions.push(mm));
 
+  function emailFor(id: string): string {
+    if (id === userId) return userEmail || "";
+    const mm = members.find((x) => x.user_id === id);
+    return mm ? mm.email : "";
+  }
+
   function nameFor(id: string | null): string {
     if (!id) return "";
     if (id === userId) return "Me";
@@ -171,7 +177,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
           date: selDay,
           time: fTime.trim() || "08:00",
           hours: fDur,
-          techId: fTech || "",
+          techEmail: fTech ? emailFor(fTech) : "",
           jobDescription: fDesc.trim(),
           material: fMat.trim(),
         }),
@@ -182,6 +188,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
         setErr(payload.error || "Could not add that job.");
         return;
       }
+      if (payload.note) setErr(payload.note);
     } catch (e) {
       setSaving(false);
       setErr("Could not reach the server.");
