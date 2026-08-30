@@ -481,7 +481,20 @@ const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Dat
 const PAY_METHODS = ["Card", "Online deposit", "Check", "Cash", "Other"];
 const NET_DAYS = 15;
 
-export default function ReyGuild() {
+// suiteRole comes from suite.memberships, scoped to this user, and is the
+// ONLY thing that decides what you can do in here. It used to default to
+// "Owner" and be switchable from a menu, which meant a tech could see cost,
+// margin, the price list and export every client.
+const SUITE_TO_EST = {
+  owner: "Owner",
+  admin: "Admin",
+  supervisor: "Estimator",
+  tech: "Estimator",
+  apprentice: "Estimator",
+};
+
+export default function ReyGuild({ suiteRole = "tech" }) {
+  const lockedRole = SUITE_TO_EST[String(suiteRole).toLowerCase()] || "Estimator";
   const [loading, setLoading] = useState(true);
   // A link can open a tab directly - the command center's Client Contacts
   // tile uses ?tab=clients. Falls back to the dashboard for anything unknown,
@@ -617,7 +630,11 @@ export default function ReyGuild() {
 
   // ── who's using it + permissions ────────────────────────────────────────────
   const currentUser = people.find((p) => p.id === currentUserId) || null;
-  const role = currentUser ? currentUser.role : "Owner"; // default to Owner until someone is picked
+  // An owner or an admin may PREVIEW the app as somebody else, which is
+  // genuinely useful for them. Everybody else is pinned to their own role and
+  // the menu is not rendered at all.
+  const canPreview = lockedRole === "Owner" || lockedRole === "Admin";
+  const role = canPreview ? (currentUser ? currentUser.role : lockedRole) : lockedRole;
   const myName = currentUser ? currentUser.name : "";
   const isAdmin = role === "Owner" || role === "Admin";
   function logAudit(action, detail) {
@@ -659,10 +676,10 @@ export default function ReyGuild() {
   };
 
   const TABS = [
-    { key: "dashboard", label: "Dashboard", show: true },
+    { key: "dashboard", label: "Dashboard", show: isAdmin },
     { key: "estimates", label: "Estimates", show: true },
     { key: "invoices", label: "Invoices", show: true },
-    { key: "followups", label: "Follow-ups", show: true },
+    { key: "followups", label: "Follow-ups", show: isAdmin },
     { key: "clients", label: "Clients", show: true },
     { key: "prices", label: "Price List", show: true },
     { key: "mypay", label: "My pay", show: !can.seeNumbers },
@@ -674,7 +691,7 @@ export default function ReyGuild() {
     { key: "settings", label: "Settings", show: true },
   ].filter((t) => t.show);
 
-  useEffect(() => { if (!TABS.some((t) => t.key === page)) setPage("dashboard"); }, [role]);
+  useEffect(() => { if (!TABS.some((t) => t.key === page)) setPage(TABS[0] ? TABS[0].key : "estimates"); }, [role]);
   useEffect(() => { if (page === "messages") save(STORAGE.msgSeen, { ...msgSeen, [actorKey]: Date.now() }, setMsgSeen); }, [page]);
 
   // estimators always create under their own name
@@ -1274,10 +1291,14 @@ export default function ReyGuild() {
         </div>
         <div className="fl-stats">
           <label className="fl-actas">
-            <select value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)}>
-              <option value="">{profile.name || "Owner"}</option>
-              {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            {canPreview ? (
+              <select value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)}>
+                <option value="">{profile.name || "Owner"}</option>
+                {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            ) : (
+              <span className="fl-whoami">{myName || profile.name || ""}</span>
+            )}
             <span className="fl-rolebadge" style={{ "--accent": ROLE_COLOR[role] || "var(--ink-2)" }}>{role}</span>
           </label>
           <div className="fl-chip" onClick={() => setPage("estimates")} style={{ cursor: "pointer" }}><span className="fl-chip-num">{myEstimates.length}</span><span className="fl-chip-lbl">estimates</span></div>
@@ -1992,13 +2013,26 @@ export default function ReyGuild() {
 
       {/* ════════════════════ SETTINGS HUB sub-nav ════════════════════ */}
       {page === "settings" && (
-        <div className="so-subnav">
-          <button className={"fl-pill" + (settingsSub === "help" ? " active" : "")} onClick={() => setSettingsSub("help")}>Help</button>
-          <button className={"fl-pill" + (settingsSub === "sops" ? " active" : "")} onClick={() => setSettingsSub("sops")}>SOPs</button>
-          {can.editProfile && <button className={"fl-pill" + (settingsSub === "account" ? " active" : "")} onClick={() => setSettingsSub("account")}>Account</button>}
-          {can.managePeople && <button className={"fl-pill" + (settingsSub === "audit" ? " active" : "")} onClick={() => setSettingsSub("audit")}>Audit log</button>}
-          <button className={"fl-pill" + (settingsSub === "preferences" ? " active" : "")} onClick={() => setSettingsSub("preferences")}>Preferences</button>
-        </div>
+        <>
+          <div className="so-subnav">
+            <button className={"fl-pill" + (settingsSub === "help" ? " active" : "")} onClick={() => setSettingsSub("help")}>Help</button>
+            <button className={"fl-pill" + (settingsSub === "preferences" ? " active" : "")} onClick={() => setSettingsSub("preferences")}>Preferences</button>
+            {/* SOPs, Account and the audit log are office work. A tech in a
+                truck has Help and Preferences, the same two the T and M side
+                gives him, and nothing else to scroll past. */}
+            {isAdmin && <button className={"fl-pill" + (settingsSub === "sops" ? " active" : "")} onClick={() => setSettingsSub("sops")}>SOPs</button>}
+            {can.editProfile && <button className={"fl-pill" + (settingsSub === "account" ? " active" : "")} onClick={() => setSettingsSub("account")}>Account</button>}
+            {can.managePeople && <button className={"fl-pill" + (settingsSub === "audit" ? " active" : "")} onClick={() => setSettingsSub("audit")}>Audit log</button>}
+          </div>
+
+          {/* Switch on the left, sign out on the right - so the thing you press
+              often is nowhere near the thing you press by accident. Same
+              arrangement, same colours, as the T and M tech settings. */}
+          <div className="fl-footactions">
+            <a href="/tm/enter" className="fl-switchbtn">Switch to T&amp;M &amp; P&amp;L</a>
+            <a href="/auth/signout" className="fl-signoutbtn">Sign out</a>
+          </div>
+        </>
       )}
 
       {/* ════════════════════ SOPs ════════════════════ */}

@@ -142,7 +142,55 @@ const STYLE_FIX = `
 .fl-dashlbl { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: #39415a; }
 .fl-dashnum { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 46px; line-height: 1; color: #16243F; }
 
-/* Phones: sidebar becomes a normal stacked header again. */
+/* Phones: the same chrome as the T and M tech view. Dark slate bar, the
+   crest, the name with the role under it, then ONE row of tabs. Everything
+   below is a white card with a hairline border, same as the other side. */
+@media (max-width: 860px) {
+  .fl-header {
+    background: #0f172a !important; color: #fff !important;
+    display: flex !important; align-items: center !important;
+    justify-content: space-between !important; gap: 8px;
+  }
+  .fl-header, .fl-header * { border-color: #1e293b !important; }
+  .fl-tagline { color: #94a3b8 !important; font-size: 11px !important; }
+  .fl-stats { gap: 6px !important; }
+  /* The five counters were five full-width cards before any content. They
+     are a desk screen, not a truck screen. */
+  .fl-stats .fl-chip { display: none !important; }
+  .fl-actas { margin: 0 !important; }
+  .fl-nav3 {
+    background: #0f172a !important; gap: 0 !important;
+    justify-content: space-between !important; padding: 0 4px 8px !important;
+  }
+  .fl-nav3 .fl-sidelink, .fl-nav3 button {
+    background: transparent !important; border: none !important;
+    color: #94a3b8 !important; font-size: 13px !important;
+    padding: 8px 6px !important; font-weight: 600 !important;
+  }
+  .fl-nav3 .fl-sidelink.active, .fl-nav3 button.active {
+    color: #fff !important; border-bottom: 2px solid #e0a82e !important;
+    border-radius: 0 !important;
+  }
+  .fl-dashwrap { padding-top: 16px; }
+}
+
+/* Settings footer: gold switch on the left, white box with red lettering on
+   the right. Identical to the T and M tech settings, deliberately. */
+.fl-footactions {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin: 24px 0 8px;
+}
+.fl-switchbtn {
+  background: #e0a82e; color: #0f172a; font-weight: 700; font-size: 14px;
+  padding: 10px 16px; border-radius: 6px; text-decoration: none;
+}
+.fl-signoutbtn {
+  background: #fff; color: #dc2626; border: 1px solid #fca5a5;
+  font-weight: 700; font-size: 14px; padding: 10px 16px; border-radius: 6px;
+  text-decoration: none;
+}
+.fl-whoami { font-weight: 700; color: inherit; }
+
 @media (max-width: 860px) {
   .fl-noprint { padding-left: 0; }
   .fl-header { position: static !important; width: auto; height: auto; padding: 14px 16px !important; }
@@ -167,6 +215,7 @@ const InvoicingApp = dynamic(() => import("./ReyGuild-Invoicing"), {
 
 export default function Invoicing() {
   const [ready, setReady] = useState(false);
+  const [role, setRole] = useState("tech");
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -182,18 +231,23 @@ export default function Invoicing() {
         const { data: mem } = await supabase
           .schema("suite")
           .from("memberships")
-          .select("company_id")
+          .select("company_id,role")
           .eq("user_id", su?.id || "")
           .limit(1)
           .maybeSingle();
         const companyId = (mem as any)?.company_id || "";
+        // THE ROLE COMES FROM THE MEMBERSHIP, NOT FROM A DROPDOWN.
+        // Before this, the estimating app defaulted every visitor to "Owner"
+        // and let them pick anybody from an "Acting as" menu - which handed a
+        // tech cost, margin, the price list and CSV export of every client.
+        const suiteRole = (mem as any)?.role || "tech";
         if (!companyId) {
           if (alive) setErr("No company found for this account. Open Settings and set up your company first.");
           return;
         }
         installStorage(companyId);
         await migrateLegacy(companyId);
-        if (alive) setReady(true);
+        if (alive) { setRole(suiteRole); setReady(true); }
       } catch (e: any) {
         if (alive) setErr("Could not reach your company data. Check your connection and reload.");
       }
@@ -213,7 +267,7 @@ export default function Invoicing() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLE_FIX }} />
-      <InvoicingApp />
+      <InvoicingApp suiteRole={role} />
     </>
   );
 }
