@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { ROLE_ORDER, ROLE_LABELS, normalizeRole } from "@/utils/roles";
 
 type Member = { id: string; user_id: string; role: string };
 type Invite = {
@@ -12,17 +13,10 @@ type Invite = {
   status: string;
 };
 
-const ROLES = [
-  { key: "admin", label: "Admin" },
-  { key: "supervisor", label: "Supervisor" },
-  { key: "estimator", label: "Estimator" },
-  { key: "sales_rep", label: "Sales Rep" },
-  { key: "tech", label: "Tech" },
-];
+const ROLES = ROLE_ORDER.map((k) => ({ key: k, label: ROLE_LABELS[k] }));
 
 function roleLabel(r: string) {
-  const m = ROLES.find((x) => x.key === r);
-  return m ? m.label : r.charAt(0).toUpperCase() + r.slice(1);
+  return ROLE_LABELS[normalizeRole(r)] || r;
 }
 
 export default function TeamManager({
@@ -42,7 +36,7 @@ export default function TeamManager({
 }) {
   const supabase = createClient();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("sales_rep");
+  const [role, setRole] = useState("tech");
   const [invites, setInvites] = useState<Invite[]>(initialInvites);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState("");
@@ -102,10 +96,10 @@ export default function TeamManager({
     <main className="min-h-screen p-6 md:p-10">
       <div className="max-w-2xl mx-auto">
         <a href="/" className="text-sm text-slate-400 hover:text-white">
-          ← Back to command center
+          &larr; Back to command center
         </a>
         <h1 className="mt-4 text-2xl font-bold text-white">
-          {companyName} · Team
+          {companyName} &middot; Team
         </h1>
         <p className="text-slate-400 text-sm mt-1">
           Add people and send them an invite link. The moment someone joins, your
@@ -156,7 +150,7 @@ export default function TeamManager({
               className="rounded-md px-4 py-2 text-sm font-semibold text-slate-900"
               style={{ background: "#e0a82e" }}
             >
-              {busy ? "…" : "Create invite"}
+              {busy ? "..." : "Create invite"}
             </button>
           </div>
         </div>

@@ -8,7 +8,9 @@ import TechTextSize from "./TechTextSize";
 export default async function TechLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.role !== ROLES.TECHNICIAN) {
+  // The phone view is for everybody who is not office tier: technicians,
+  // apprentices, and supervisors (who are mapped to technician on this side).
+  if (user.role !== ROLES.TECHNICIAN && user.role !== ROLES.APPRENTICE) {
     redirect("/tm/admin");
   }
   const locked = isOrgLocked(user.org);

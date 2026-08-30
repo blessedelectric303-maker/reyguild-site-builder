@@ -107,7 +107,7 @@ export function isOrgLocked(org: {
 // Combines role check + org trial-lock so a locked org goes read-only:
 // reads still work, writes throw ORG_LOCKED. Pass roles to enforce role in
 // the same call; omit roles to lock writes for any logged-in user (tech
-// write endpoints). Prisma-backed — route handlers ONLY, never Edge middleware.
+// write endpoints). Prisma-backed  -  route handlers ONLY, never Edge middleware.
 export async function requireUnlocked(roles?: string[]) {
   const user = roles ? await requireRole(roles) : await requireUser();
   if (isOrgLocked(user.org)) throw new Error("ORG_LOCKED");
@@ -119,6 +119,7 @@ export const ROLES = {
   ADMIN: "admin",
   ESTIMATOR: "estimator",
   TECHNICIAN: "technician",
+  APPRENTICE: "apprentice",
 } as const;
 
 export const ADMIN_ROLES = [ROLES.OWNER, ROLES.ADMIN];
