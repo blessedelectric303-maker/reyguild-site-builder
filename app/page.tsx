@@ -6,6 +6,7 @@ import SettingsMenu from "@/app/components/SettingsMenu";
 import Messages from "@/app/components/Messages";
 import Calendar from "@/app/components/Calendar";
 import CallLinks from "@/app/components/CallLinks";
+import { webmailFor } from "@/utils/webmail";
 
 type AppRow = {
   key: string;
@@ -47,6 +48,8 @@ export default async function Home() {
 
   let companyName = "";
   let companyLogo = "";
+  let companyEmail = "";
+  let webmailOverride = "";
   let companyId = "";
   let myRole = "owner";
   let armyMode = false;
@@ -66,11 +69,13 @@ export default async function Home() {
       const { data: co } = await supabase
         .schema("suite")
         .from("companies")
-        .select("name,army_mode,owner_is_admin,logo")
+        .select("name,army_mode,owner_is_admin,logo,email,settings")
         .eq("id", companyId)
         .maybeSingle();
       companyName = (co as any)?.name || "";
       companyLogo = (co as any)?.logo || "";
+      companyEmail = (co as any)?.email || "";
+      webmailOverride = (((co as any)?.settings || {}) as any).webmail_url || "";
       armyMode = (co as any)?.army_mode === true;
       ownerIsAdmin = (co as any)?.owner_is_admin !== false;
     }
@@ -154,6 +159,9 @@ export default async function Home() {
   }
 
   // Every button in the row under the calendar uses this and nothing else.
+  // The company inbox - the address customers actually write to.
+  const mailHref = webmailFor(companyEmail, webmailOverride) || "https://mail.google.com";
+
   const tileCls =
     "flex h-full min-h-[60px] w-full items-center justify-center rounded-lg border border-slate-700 bg-slate-900/50 px-2 py-3 text-center text-sm text-slate-200 hover:bg-slate-800";
 
@@ -220,13 +228,13 @@ export default async function Home() {
         </div>
 
         <div className="mt-6 max-w-2xl mx-auto grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-5">
-          <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" className={tileCls}>Email</a>
+          <Link href="/procedures/replies" className={tileCls}>Scripts</Link>
           <span className={tileCls + " text-slate-500"}>
             <span>Contacts<span className="block text-[10px]">coming next</span></span>
           </span>
           <Messages userId={user.id} companyId={companyId} triggerClassName={tileCls} />
           <Link href="/procedures/sops" className={tileCls}>SOPs</Link>
-          <Link href="/procedures/replies" className={tileCls + " col-span-2 mx-auto w-[calc(50%-0.25rem)] sm:col-span-1 sm:mx-0 sm:w-full"}>Scripts</Link>
+          <a href={mailHref} target="_blank" rel="noopener noreferrer" className={tileCls + " col-span-2 mx-auto w-[calc(50%-0.25rem)] sm:col-span-1 sm:mx-0 sm:w-full"}>Email</a>
         </div>
 
         <div className="text-center mt-8">

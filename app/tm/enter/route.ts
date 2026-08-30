@@ -18,8 +18,14 @@ function homeForRole(role: string): string {
 }
 
 export async function GET(req: Request) {
-  const origin = new URL(req.url).origin;
-  const go = (path: string) => NextResponse.redirect(new URL(path, origin));
+  const url = new URL(req.url);
+  const origin = url.origin;
+  // A link can say where it wants to land. Only same-site paths, so this
+  // cannot be used to bounce somebody off to another website.
+  const wanted = url.searchParams.get("next") || "";
+  const safeNext = wanted.startsWith("/") && !wanted.startsWith("//") ? wanted : "";
+  const go = (path: string) =>
+    NextResponse.redirect(new URL(safeNext || path, origin));
   const problem = (reason: string, detail?: string) => {
     const u = new URL("/tm/no-access", origin);
     u.searchParams.set("reason", reason);

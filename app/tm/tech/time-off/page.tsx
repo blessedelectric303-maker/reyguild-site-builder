@@ -21,8 +21,11 @@ function formatDateRange(start: Date, end: Date): string {
   if (start.getTime() === end.getTime()) {
     return formatDate(start);
   }
-  return formatDate(start) + " – " + formatDate(end);
+  return formatDate(start) + " - " + formatDate(end);
 }
+
+const ABSENCE_WINDOW_DAYS = 90;
+const ABSENCE_THRESHOLD = 3;
 
 export default async function TechTimeOffPage() {
   const user = await getCurrentUser();
@@ -68,6 +71,22 @@ export default async function TechTimeOffPage() {
     personal: "Personal",
   };
 
+  // Your own attendance record. Shown to you because you should never learn
+  // about this from a conversation you were not expecting.
+  const absSince = new Date();
+  absSince.setDate(absSince.getDate() - ABSENCE_WINDOW_DAYS);
+  let myAbsences: { id: string; absenceDate: Date; excused: boolean }[] = [];
+  try {
+    myAbsences = await prisma.absenceNotice.findMany({
+      where: { userId: user.id, absenceDate: { gte: absSince } },
+      orderBy: { absenceDate: "desc" },
+      select: { id: true, absenceDate: true, excused: true },
+    });
+  } catch (e) {
+    myAbsences = [];
+  }
+  const unexcused = myAbsences.filter((a) => !a.excused).length;
+
   return (
     <div className="space-y-5">
       <div>
@@ -75,6 +94,36 @@ export default async function TechTimeOffPage() {
         <p className="text-sm text-slate-500 mt-1">
           Request time off and view your history.
         </p>
+      </div>
+
+      <div className={"rounded-xl border p-4 " + (unexcused >= ABSENCE_THRESHOLD ? "border-red-300 bg-red-50" : "bg-white border-slate-200")}>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-semibold text-slate-900 text-sm">Attendance</h2>
+          <span className={"rounded-full px-2.5 py-1 text-xs font-bold " + (unexcused >= ABSENCE_THRESHOLD ? "bg-red-100 text-red-800" : unexcused > 0 ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600")}>
+            {unexcused} unexcused
+          </span>
+        </div>
+        <p className="mt-1 text-xs text-slate-500">
+          Last {ABSENCE_WINDOW_DAYS} days. Time off taken properly is never
+          held against you - only absences recorded as unexcused count here.
+        </p>
+        {myAbsences.length ? (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {myAbsences.slice(0, 12).map((a) => (
+              <span key={a.id} className={"rounded px-2 py-0.5 text-[11px] " + (a.excused ? "bg-slate-100 text-slate-600" : "bg-red-100 text-red-800")}>
+                {a.absenceDate.toISOString().slice(0, 10)}{a.excused ? "" : " - unexcused"}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-slate-500">Nothing recorded. Good.</p>
+        )}
+        {unexcused >= ABSENCE_THRESHOLD ? (
+          <p className="mt-2 text-xs text-red-800">
+            If you think any of these is wrong, talk to the office. It is much
+            easier to sort out now than months from now.
+          </p>
+        ) : null}
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
@@ -108,7 +157,7 @@ export default async function TechTimeOffPage() {
         <div className="text-xs text-slate-500 pt-1 border-t border-slate-100">
           Sick leave accrues 1h per 30h worked, max 48h/yr (rolling 12 months).
           You have {sick.available.toFixed(1)}h available
-          ({sick.accrued.toFixed(1)}h earned − {sick.used.toFixed(1)}h used).
+          ({sick.accrued.toFixed(1)}h earned - {sick.used.toFixed(1)}h used).
         </div>
       </div>
 
@@ -130,14 +179,14 @@ export default async function TechTimeOffPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-slate-900">
-                      {typeLabel[r.type] || r.type} · {Number(r.hoursRequested).toFixed(1)}h
+                      {typeLabel[r.type] || r.type} &middot; {Number(r.hoursRequested).toFixed(1)}h
                     </div>
                     <div className="text-xs text-slate-600 mt-0.5">
                       {formatDateRange(r.startDate, r.endDate)}
                       {r.duration === "custom" && r.startTime && r.endTime
-                        ? " · " + r.startTime + "–" + r.endTime
+                        ? " &middot; " + r.startTime + "-" + r.endTime
                         : r.duration === "half_day"
-                        ? " · half days"
+                        ? " &middot; half days"
                         : ""}
                     </div>
                     <div className="text-xs text-slate-600 mt-1">{r.reason}</div>

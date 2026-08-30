@@ -266,6 +266,11 @@ model AbsenceNotice {
   absenceDate           DateTime  @db.Date
   reason                String?
   submittedAt           DateTime  @default(now())
+  // Excused defaults to TRUE. An absence only counts against somebody when an
+  // administrator deliberately marks it unexcused - never by a gap in data.
+  excused               Boolean   @default(true)
+  markedByAdminId       String?
+  notes                 String?
   acknowledgedByAdminId String?
   acknowledgedAt        DateTime?
 

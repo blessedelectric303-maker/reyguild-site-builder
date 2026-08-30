@@ -306,6 +306,12 @@ export default function ProcedureView({
               </div>
             ) : null}
 
+            {procedure.color === "absence" && canEdit ? (
+              <a href="/tm/enter?next=/tm/admin/absences" className="block rounded-xl border p-4 text-center text-sm font-bold uppercase tracking-wide" style={{ background: skin.bg, color: skin.text }}>
+                Mark an employee absent
+              </a>
+            ) : null}
+
             {procedure.color === "material" ? (
               <SupplyHouses companyId={companyId} settings={settings || null} canEdit={canEdit === true} />
             ) : null}
