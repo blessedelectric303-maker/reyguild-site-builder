@@ -4,7 +4,9 @@ import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { ROLE_ORDER, ROLE_LABELS, normalizeRole } from "@/utils/roles";
 
-type Member = { id: string; user_id: string; role: string };
+type Member = {
+  email?: string;
+  is_me?: boolean; id: string; user_id: string; role: string };
 type Invite = {
   id: string;
   email: string;
@@ -38,6 +40,21 @@ export default function TeamManager({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("tech");
   const [invites, setInvites] = useState<Invite[]>(initialInvites);
+  const [team, setTeam] = useState<any[]>(members as any[]);
+  const [saving, setSaving] = useState<string | null>(null);
+
+  async function changeRole(userId: string, next: string) {
+    setSaving(userId);
+    const { error } = await supabase
+      .schema("suite")
+      .rpc("set_member_role", { target_user: userId, new_role: next });
+    setSaving(null);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setTeam(team.map((t) => (t.user_id === userId ? { ...t, role: next } : t)));
+  }
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState("");
   const [army, setArmy] = useState(armyMode);
@@ -192,19 +209,28 @@ export default function TeamManager({
 
         <div className="mt-6">
           <h2 className="text-white font-semibold mb-3">
-            Your team ({members.length})
+            Your team ({team.length})
           </h2>
           <div className="flex flex-col gap-2">
-            {members.map((m) => (
-              <div
-                key={m.id}
-                className="rounded-lg border border-slate-700 bg-slate-900/40 p-3 flex items-center justify-between"
-              >
-                <span className="text-slate-100 text-sm">
-                  {roleLabel(m.role)}
-                </span>
-                {m.role === "owner" && (
-                  <span className="text-slate-500 text-xs">you</span>
+            {team.map((m) => (
+              <div key={m.id} className="rounded-lg border border-slate-700 bg-slate-900/40 p-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="truncate text-sm text-slate-100">{m.email || "(no email)"}</div>
+                  {m.is_me ? <div className="text-xs text-slate-500">you</div> : null}
+                </div>
+                {m.is_me ? (
+                  <span className="rounded-md border border-slate-700 px-3 py-1.5 text-xs text-slate-400">{roleLabel(m.role)}</span>
+                ) : (
+                  <select
+                    value={m.role}
+                    disabled={saving === m.user_id}
+                    onChange={(e) => changeRole(m.user_id, e.target.value)}
+                    className="rounded-md bg-slate-800 border border-slate-600 px-3 py-1.5 text-slate-100 text-sm disabled:opacity-50"
+                  >
+                    {ROLES.map((r) => (
+                      <option key={r.key} value={r.key}>{r.label}</option>
+                    ))}
+                  </select>
                 )}
               </div>
             ))}

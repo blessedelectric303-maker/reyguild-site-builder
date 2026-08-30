@@ -30,12 +30,17 @@ export default async function TeamPage() {
     .eq("id", companyId)
     .maybeSingle();
 
-  const { data: members } = await supabase
-    .schema("suite")
-    .from("memberships")
-    .select("id,user_id,role,created_at")
-    .eq("company_id", companyId)
-    .order("created_at");
+  // Emails live in auth.users, which the browser cannot read. company_members
+  // is a function that joins them for owners and admins only.
+  const { data: roster } = await supabase.schema("suite").rpc("company_members");
+  const members = ((roster as any[]) || []).map((r) => ({
+    id: r.membership_id,
+    user_id: r.user_id,
+    role: r.role,
+    email: r.email,
+    is_me: r.is_me,
+    created_at: r.joined_at,
+  }));
 
   const { data: invites } = await supabase
     .schema("suite")
