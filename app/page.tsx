@@ -207,7 +207,7 @@ export default async function Home() {
           </span>
           <Messages userId={user.id} companyId={companyId} triggerClassName={tileCls} />
           <Link href="/procedures/sops" className={tileCls}>SOPs</Link>
-          <Link href="/procedures/replies" className={tileCls}>Premade Replies</Link>
+          <Link href="/procedures/replies" className={tileCls}>Scripts</Link>
         </div>
 
         <div className="text-center mt-8">

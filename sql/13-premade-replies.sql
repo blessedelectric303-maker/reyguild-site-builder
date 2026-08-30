@@ -1,4 +1,4 @@
--- 13 - PREMADE REPLIES (universal). The scripts, colour coded.
+-- 13 - SCRIPTS (universal). What to say, colour coded.
 -- Re-runnable. Safe to paste more than once.
 -- Paste into a FRESH Supabase SQL tab.
 
@@ -23,7 +23,7 @@ insert into suite.procedures
   (company_id, is_template, color, title, purpose, opening_script,
    may_not_say, one_pager, schedules_to_calendar, active)
 values
-  (null, true, $q$replies$q$, $q$Premade Replies$q$,
+  (null, true, $q$replies$q$, $q$Scripts$q$,
    $q$What to say, word for word, for the calls this desk takes every day.
 
 A script is a floor, not a ceiling. It stops somebody freezing, forgetting the important line, or promising something the company cannot do. Nobody should sound like they are reading. They should sound like somebody who has done this before.

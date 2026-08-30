@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { APP_GUIDE, SUPPORT } from "@/utils/sops";
+import { APP_GUIDE, COMMON_QUESTIONS, SUPPORT } from "@/utils/sops";
 
 type Props = {
   email: string;
@@ -16,7 +16,7 @@ type Props = {
   ownerIsAdmin?: boolean;
 };
 
-type Tab = "guide" | "help" | "account";
+type Tab = "help" | "account";
 
 function roleLabel(role: string): string {
   if (role === "sales_rep") return "Sales Rep";
@@ -27,7 +27,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
   const router = useRouter();
   const supabase = createClient();
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<Tab>("guide");
+  const [tab, setTab] = useState<Tab>("help");
   const [army, setArmy] = useState(armyMode === true);
   const [ownerAdmin, setOwnerAdmin] = useState(ownerIsAdmin !== false);
   const [savingMode, setSavingMode] = useState(false);
@@ -162,16 +162,19 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
             </div>
 
             <div className="flex gap-1 border-b border-slate-800 p-2">
-              {tabBtn("guide", "Instructions")}
               {tabBtn("help", "Help")}
               {tabBtn("account", "Account")}
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto p-4">
-              {tab === "guide" ? (
+              {/* One tab. Read down it: how the app works, then the
+                  questions people actually ask, then how to reach a human if
+                  neither answered it. */}
+              {tab === "help" ? (
                 <div>
                   <h3 className="text-base font-semibold text-white">How this app works</h3>
-                  <p className="mt-1 text-xs text-slate-500">Your own company SOPs live on the command center under the SOPs button. This is how to drive the software.</p>
+                  <p className="mt-1 text-xs text-slate-500">Your own company SOPs and scripts live on the command center. This is how to drive the software.</p>
+
                   <div className="mt-4 space-y-5">
                     {APP_GUIDE.map((sec) => (
                       <div key={sec.heading}>
@@ -187,19 +190,32 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                       </div>
                     ))}
                   </div>
-                </div>
-              ) : null}
 
-              {tab === "help" ? (
-                <div className="text-sm text-slate-300">
-                  <h3 className="text-base font-semibold text-white">Need a hand?</h3>
-                  <p className="mt-2">We are here to help you get the most out of ReyGuild.</p>
-                  <div className="mt-4 space-y-1">
-                    <div className="text-slate-200">Email: {SUPPORT.email}</div>
-                    {SUPPORT.phone ? <div className="text-slate-200">Call: {SUPPORT.phone}</div> : null}
+                  <div className="mt-7 border-t border-slate-800 pt-5">
+                    <h3 className="text-base font-semibold text-white">Common questions</h3>
+                    <p className="mt-1 text-xs text-slate-500">Tap one to open the answer.</p>
+                    <div className="mt-3 space-y-2">
+                      {COMMON_QUESTIONS.map((qa) => (
+                        <details key={qa.q} className="rounded-lg border border-slate-700 bg-slate-800/40 p-3">
+                          <summary className="cursor-pointer text-sm font-medium text-slate-100">{qa.q}</summary>
+                          <p className="mt-2 text-sm text-slate-300">{qa.a}</p>
+                        </details>
+                      ))}
+                    </div>
                   </div>
-                  {SUPPORT.note ? <p className="mt-3 text-xs text-slate-500">{SUPPORT.note}</p> : null}
-                  <p className="mt-4 text-xs text-slate-500">Tip: Instructions walks through the whole app, screen by screen.</p>
+
+                  <div className="mt-7 border-t border-slate-800 pt-5">
+                    <h3 className="text-base font-semibold text-white">Still stuck?</h3>
+                    <p className="mt-2 text-sm text-slate-300">If none of the above sorted it, send us a message and we will pick it up.</p>
+                    <div className="mt-3 space-y-2">
+                      <a href={"mailto:" + SUPPORT.email} className="block rounded-md px-3 py-2 text-center text-sm font-bold text-slate-900" style={{ background: "#e0a82e" }}>Email {SUPPORT.email}</a>
+                      {SUPPORT.phone ? (
+                        <a href={"tel:" + SUPPORT.phone} className="block rounded-md border border-slate-600 px-3 py-2 text-center text-sm text-slate-200 hover:bg-slate-800">Call {SUPPORT.phone}</a>
+                      ) : null}
+                    </div>
+                    {SUPPORT.note ? <p className="mt-3 text-xs text-slate-500">{SUPPORT.note}</p> : null}
+                    <p className="mt-2 text-xs text-slate-500">Tell us which screen you were on and what you expected to happen. It saves a round trip.</p>
+                  </div>
                 </div>
               ) : null}
 

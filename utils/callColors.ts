@@ -48,7 +48,7 @@ export const CALL_ORDER: CallKey[] = [
 export const NON_CALL_COLORS: Record<string, CallColor> = {
   answering: { label: "The Answering Kit", bg: "#FFFFFF", text: "#0b1220" },
   sops: { label: "SOPs", bg: "#1E293B", text: "#ffffff" },
-  replies: { label: "Premade Replies", bg: "#1E293B", text: "#ffffff" },
+  replies: { label: "Scripts", bg: "#1E293B", text: "#ffffff" },
 };
 
 export function colorFor(key: string): CallColor | null {
