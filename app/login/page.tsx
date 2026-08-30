@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -44,6 +45,11 @@ export default function LoginPage() {
     }
 
     if (mode === "signup") {
+      if (!agreed) {
+        setError("Tick the box to agree to the terms before creating an account.");
+        setBusy(false);
+        return;
+      }
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -58,6 +64,17 @@ export default function LoginPage() {
         return;
       }
       if (data.session) {
+        // Record the acceptance as three separate signatures - terms, privacy
+        // and cookies - rather than one "agreed to everything" row, which is
+        // worth very little later. Best effort: if it fails, the onboarding
+        // page asks again rather than the sign up dying here.
+        try {
+          await fetch("/api/documents/accept-platform", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: fullName }),
+          });
+        } catch {}
         window.location.href = next;
       } else {
         setNotice("Account created. Check your email to confirm it, then you'll be signed in.");
@@ -112,7 +129,25 @@ export default function LoginPage() {
             <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none" />
           )}
 
-          <button type="button" onClick={handleSubmit} disabled={busy} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-60" style={{ background: "#e0a82e" }}>{buttonLabel}</button>
+          {mode === "signup" && (
+            <label className="flex items-start gap-2 pt-1 text-xs leading-snug text-slate-400">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 flex-none accent-amber-500"
+              />
+              <span>
+                I agree to the{" "}
+                <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-slate-200 underline">Terms of Service</a>,{" "}
+                <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-slate-200 underline">Privacy Policy</a>{" and "}
+                <a href="/legal/cookies" target="_blank" rel="noopener noreferrer" className="text-slate-200 underline">Cookie Policy</a>.
+                Ticking this box and creating an account is my electronic signature on all three.
+              </span>
+            </label>
+          )}
+
+          <button type="button" onClick={handleSubmit} disabled={busy || (mode === "signup" && !agreed)} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-60" style={{ background: "#e0a82e" }}>{buttonLabel}</button>
 
           {mode === "signin" ? (
             <button type="button" onClick={() => { setMode("reset"); setError(null); setNotice(null); }} className="w-full text-center text-xs text-slate-400 hover:text-slate-200">Forgot password?</button>

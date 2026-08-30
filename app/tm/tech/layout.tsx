@@ -25,6 +25,33 @@ export default async function TechLayout({ children }: { children: React.ReactNo
   }
   const locked = isOrgLocked(user.org);
 
+  // PAPERWORK GATE. Nobody on the phone gets into the app with unsigned
+  // agreements or missing forms. Owners and administrators are deliberately
+  // NOT walled off - they are the ones who load the documents in the first
+  // place, and locking the boss out of his own command center to sign his own
+  // booklet is how a launch day goes wrong. They get told, not blocked.
+  //
+  // Fails OPEN on any error. A deployment where SQL 27 has not been run yet
+  // returns nothing, which counts as nothing outstanding, and the app carries
+  // on exactly as it does today.
+  // NOTE: redirect() works by throwing, so it must NOT be called inside the
+  // try - the catch would swallow it and the gate would silently do nothing.
+  let needsPaperwork = false;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user: su },
+    } = await supabase.auth.getUser();
+    if (su) {
+      const { data: st } = await supabase.schema("suite").rpc("my_onboarding");
+      const row: any = st && st.length ? st[0] : null;
+      needsPaperwork = !!row && row.complete === false;
+    }
+  } catch (e) {
+    needsPaperwork = false;
+  }
+  if (needsPaperwork) redirect("/onboarding");
+
   // The title under the name, and the watermark, both come from the ReyGuild
   // side. The T and M role cannot tell a supervisor from a tech - both are
   // "technician" over here - so the real title has to come from the

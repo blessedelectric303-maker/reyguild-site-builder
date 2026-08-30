@@ -23,6 +23,12 @@ const ENTRIES = [
     title: "Preferences",
     blurb: "Text size, and your own account details.",
   },
+  {
+    href: "/tm/tech/documents",
+    title: "Company Documents",
+    blurb:
+      "Everything you have signed, the safety procedures, your forms, and the app's terms. Always here.",
+  },
 ];
 
 export default async function TechSettingsPage() {
