@@ -24,6 +24,7 @@ type Proc = {
   may_say: string | null;
   may_not_say: string | null;
   one_pager: string | null;
+  schedules_to_calendar?: boolean;
 };
 
 export default function ProcedureView({
@@ -86,6 +87,12 @@ export default function ProcedureView({
     timer.current = setTimeout(() => persist(next), 600);
   }
 
+  // Office-only procedures (material, absence, question) must never offer to
+  // create work. PURPLE's own spec is explicit: it links, it never creates a
+  // job. The flag lives on the procedure so a company can change its mind
+  // without a code change.
+  const schedulable = procedure.schedules_to_calendar !== false;
+
   const blockers = items.filter(
     (i) => i.required_to_dispatch && i.field_key && !answers[i.field_key]
   );
@@ -134,9 +141,11 @@ export default function ProcedureView({
             <button type="button" onClick={() => setPane(pane === "checklist" ? "none" : "checklist")} className="rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: skin.text }}>Checklist</button>
           </div>
           <div className="mx-auto px-2 text-center text-sm font-extrabold uppercase tracking-widest" style={{ color: skin.text }}>{procedure.title}</div>
-          <button type="button" onClick={estimateToSchedule} disabled={busy} className="ml-auto rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide disabled:opacity-60" style={{ color: skin.text }}>{busy ? "Working..." : "Estimate to schedule"}</button>
+          {schedulable ? (
+            <button type="button" onClick={estimateToSchedule} disabled={busy} className="ml-auto rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide disabled:opacity-60" style={{ color: skin.text }}>{busy ? "Working..." : "Estimate to schedule"}</button>
+          ) : null}
         </div>
-        {blockers.length ? (
+        {schedulable && blockers.length ? (
           <div className="bg-black/30 px-4 py-1.5 text-center text-[11px]" style={{ color: skin.text }}>Still needed before dispatch: {blockers.map((b) => b.label).join(", ")}</div>
         ) : null}
       </div>
