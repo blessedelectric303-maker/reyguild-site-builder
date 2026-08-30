@@ -48,6 +48,31 @@ export async function POST(req: Request) {
         ? distanceMiles(lat, lng, active.job.lat, active.job.lng)
         : null;
 
+    // YOU CLOCK OUT AT THE JOB.
+    //
+    // The day ends where the work ended, so the last clock-out has to happen
+    // at the address. Applying it to every clock-out is the same rule and
+    // simpler to follow - you finish a job standing at it, so you are already
+    // there. Nobody has to think about which job was the last one.
+    //
+    // If somebody drives off without clocking out, they cannot do it from the
+    // road. That is deliberate. They go back, or the office corrects the time
+    // - which is already recorded with who authorized it.
+    if (dist !== null && dist > active.job.geofenceMiles) {
+      return NextResponse.json(
+        {
+          error:
+            "You are " +
+            dist.toFixed(2) +
+            " miles from the job. You have to be within " +
+            active.job.geofenceMiles +
+            " mile(s) of it to clock out. If you have already left, call the " +
+            "office and they will correct your time.",
+        },
+        { status: 403 }
+      );
+    }
+
     // Calculate labor cost for THIS entry using effective rate
     // (JobAssignment.hourlyRateOverride if set, else user.hourlyCost)
     const effectiveRate = await getEffectiveHourlyRate(user.id, active.jobId);

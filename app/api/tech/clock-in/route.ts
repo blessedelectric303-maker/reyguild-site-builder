@@ -36,16 +36,36 @@ export async function POST(req: Request) {
     }
     if (job.lat === null || job.lng === null) {
       return NextResponse.json({ error: "Job has no location set. Contact admin." }, { status: 400 });
-    }const dist = distanceMiles(lat, lng, job.lat, job.lng);
-    if (dist > job.geofenceMiles) {
+    }
+
+    const dist = distanceMiles(lat, lng, job.lat, job.lng);
+
+    // THE GEOFENCE APPLIES TO THE FIRST JOB OF THE DAY ONLY.
+    //
+    // The first job starts when you get there, so being at the address is the
+    // whole point. Every job after that is clocked in on the way, from wherever
+    // you happen to be - travel between jobs is paid time, and a geofence would
+    // make that impossible.
+    //
+    // Distance is still recorded on every clock-in either way, so the office
+    // can see where somebody actually was.
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const earlierToday = await prisma.timeEntry.count({
+      where: { userId: user.id, clockInAt: { gte: startOfDay } },
+    });
+    const isFirstJobOfDay = earlierToday === 0;
+
+    if (isFirstJobOfDay && dist > job.geofenceMiles) {
       return NextResponse.json(
         {
           error:
             "You are " +
             dist.toFixed(2) +
-            " miles from the job. Must be within " +
+            " miles from the job. The first job of the day has to be clocked in " +
+            "at the address - within " +
             job.geofenceMiles +
-            " mile(s) to clock in.",
+            " mile(s). After this one you can clock in on the way.",
         },
         { status: 403 }
       );

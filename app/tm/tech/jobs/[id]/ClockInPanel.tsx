@@ -113,16 +113,9 @@ export default function ClockInPanel({
       setError("Waiting for GPS. Try refreshing location.");
       return;
     }
-    if (!gps.withinGeofence) {
-      setError(
-        "You are " +
-          gps.distanceMiles.toFixed(2) +
-          " miles from the job. Get within " +
-          geofenceMiles +
-          " mile(s) of the job site to clock in."
-      );
-      return;
-    }
+    // Distance is NOT checked here. The geofence applies only to the first job
+    // of the day, and the server is the only side that knows which job that is.
+    // It will refuse with a clear message if this is the first one.
     await callApi(
       "/api/tech/clock-in",
       { jobId, lat: gps.lat, lng: gps.lng, accuracy: gps.accuracy },
@@ -188,14 +181,16 @@ export default function ClockInPanel({
             </span>
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            Accuracy: ±{Math.round(gps.accuracy)}m ·{" "}
+            Accuracy: -{Math.round(gps.accuracy)}m  - {" "}
             <button onClick={refreshGps} className="underline">
               refresh
             </button>
           </div>
           {!gps.withinGeofence && (
             <div className="text-xs text-red-700 mt-2">
-              You must be within {geofenceMiles} mile{geofenceMiles === 1 ? "" : "s"} of the job to clock in.
+              You are outside the {geofenceMiles} mile radius. That is fine on any job
+              except the first of the day - the first one has to be clocked in at
+              the address. Either way your distance is recorded.
             </div>
           )}
         </div>
@@ -245,7 +240,7 @@ export default function ClockInPanel({
             <button
               onClick={handleClockIn}
               disabled={
-                busy !== null || gps.status !== "ready" || (gps.status === "ready" && !gps.withinGeofence)
+                busy !== null || gps.status !== "ready"
               }
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg disabled:opacity-50"
             >
