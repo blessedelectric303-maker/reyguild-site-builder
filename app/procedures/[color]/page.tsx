@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { isStaff } from "@/utils/roles";
 import ProcedureView from "./ProcedureView";
+import { buildTokenMap, fillTokens, hasUnfilled, type CompanyFacts } from "@/utils/tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,13 @@ export default async function ProcedurePage({ params }: { params: Promise<{ colo
   const companyId = (mem as any)?.company_id || "";
   if (!isStaff(role)) redirect("/");
 
+  const { data: co } = await supabase
+    .schema("suite")
+    .from("companies")
+    .select("name,phone,email,website,address,city,state,zip,owner_name,trade,settings")
+    .eq("id", companyId)
+    .maybeSingle();
+
   const { data: proc } = await supabase
     .schema("suite")
     .from("procedures")
@@ -70,11 +78,39 @@ export default async function ProcedurePage({ params }: { params: Promise<{ colo
     .eq("procedure_id", pid)
     .order("sort_order");
 
+  // Fill the bracketed placeholders from this company's own details.
+  const tokens = buildTokenMap((co || {}) as CompanyFacts);
+  const p = proc as any;
+  const filled = {
+    ...p,
+    purpose: fillTokens(p.purpose, tokens),
+    qualifies: fillTokens(p.qualifies, tokens),
+    opening_script: fillTokens(p.opening_script, tokens),
+    may_say: fillTokens(p.may_say, tokens),
+    may_not_say: fillTokens(p.may_not_say, tokens),
+    one_pager: fillTokens(p.one_pager, tokens),
+  };
+  const filledSections = ((sections as any[]) || []).map((s) => ({
+    ...s,
+    heading: fillTokens(s.heading, tokens),
+    body: fillTokens(s.body, tokens),
+  }));
+  const filledItems = ((items as any[]) || []).map((i) => ({
+    ...i,
+    label: fillTokens(i.label, tokens),
+  }));
+
+  const missing =
+    hasUnfilled(p.one_pager, tokens) ||
+    hasUnfilled(p.opening_script, tokens) ||
+    ((sections as any[]) || []).some((s) => hasUnfilled(s.body, tokens));
+
   return (
     <ProcedureView
-      procedure={proc as any}
-      sections={(sections as any[]) || []}
-      items={(items as any[]) || []}
+      procedure={filled}
+      sections={filledSections}
+      items={filledItems}
+      unfilled={missing}
       skin={skin}
       companyId={companyId}
       userId={user.id}

@@ -27,11 +27,12 @@ type Proc = {
 };
 
 export default function ProcedureView({
-  procedure, sections, items, skin, companyId, userId,
+  procedure, sections, items, skin, companyId, userId, unfilled,
 }: {
   procedure: Proc;
   sections: Section[];
   items: Item[];
+  unfilled?: boolean;
   skin: { bg: string; text: string };
   companyId: string;
   userId: string;
@@ -140,6 +141,9 @@ export default function ProcedureView({
         ) : null}
       </div>
 
+      {unfilled ? (
+        <p className="mx-auto mt-4 max-w-4xl rounded-md border border-amber-800 bg-amber-950/40 px-3 py-2 text-xs text-amber-200">Some details in square brackets are not filled in yet. Add them under Settings and they will fill in everywhere at once.</p>
+      ) : null}
       {err ? <p className="mx-auto mt-4 max-w-4xl rounded-md bg-red-950 px-3 py-2 text-sm text-red-300">{err}</p> : null}
 
       <div className="mx-auto max-w-4xl px-4 py-6">
