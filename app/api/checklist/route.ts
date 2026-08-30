@@ -16,6 +16,7 @@ async function me() {
     .schema("suite")
     .from("memberships")
     .select("company_id,role")
+    .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();
   const companyId = (mem as any)?.company_id || "";

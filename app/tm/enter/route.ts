@@ -63,6 +63,7 @@ export async function GET(req: Request) {
         .schema("suite")
         .from("memberships")
         .select("role")
+        .eq("user_id", user.id)
         .limit(1)
         .maybeSingle();
       const suiteRole = normalizeRole((mem as any)?.role);

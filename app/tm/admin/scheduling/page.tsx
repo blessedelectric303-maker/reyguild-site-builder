@@ -22,10 +22,14 @@ export default async function SchedulingPage() {
   let proposals: PendingProposal[] = [];
   try {
     const supabase = await createClient();
+    const {
+      data: { user: su },
+    } = await supabase.auth.getUser();
     const { data: mem } = await supabase
       .schema("suite")
       .from("memberships")
       .select("company_id")
+      .eq("user_id", su?.id || "")
       .limit(1)
       .maybeSingle();
     const cid = ((mem as any) || {}).company_id || "";

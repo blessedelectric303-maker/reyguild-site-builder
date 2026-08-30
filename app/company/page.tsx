@@ -15,6 +15,7 @@ export default async function CompanyPage() {
     .schema("suite")
     .from("memberships")
     .select("role,company_id")
+    .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();
 

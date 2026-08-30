@@ -25,6 +25,7 @@ export default async function TechMessagesPage() {
         .schema("suite")
         .from("memberships")
         .select("company_id")
+        .eq("user_id", su?.id || "")
         .limit(1)
         .maybeSingle();
       companyId = ((mem as any) || {}).company_id || "";

@@ -12,10 +12,17 @@ const LINKS_KEY = "so_job_links"; // { estimateId: jobId }
 
 async function companyId(): Promise<string> {
   const supabase = await createClient();
+  // Scoped to THIS user. Without the filter, row security returns every
+  // member of the company and limit(1) picks one at random.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return "";
   const { data } = await supabase
     .schema("suite")
     .from("memberships")
     .select("company_id")
+    .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();
   return ((data as any) || {}).company_id || "";

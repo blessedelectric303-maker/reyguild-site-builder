@@ -174,10 +174,16 @@ export default function Invoicing() {
     (async () => {
       try {
         const supabase = createClient();
+        // Scoped to THIS user. Without the filter, row security returns any
+        // member of the company and limit(1) picks one at random.
+        const {
+          data: { user: su },
+        } = await supabase.auth.getUser();
         const { data: mem } = await supabase
           .schema("suite")
           .from("memberships")
           .select("company_id")
+          .eq("user_id", su?.id || "")
           .limit(1)
           .maybeSingle();
         const companyId = (mem as any)?.company_id || "";

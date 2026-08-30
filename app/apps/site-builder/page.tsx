@@ -23,6 +23,7 @@ export default async function SiteBuilderPage() {
     .schema("suite")
     .from("memberships")
     .select("role")
+    .eq("user_id", user?.id || "")
     .limit(1)
     .maybeSingle();
   const role = (mem as any)?.role || "owner";

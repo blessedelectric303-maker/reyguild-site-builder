@@ -57,6 +57,7 @@ export default async function Home() {
       .schema("suite")
       .from("memberships")
       .select("role,company_id")
+      .eq("user_id", user.id)
       .limit(1)
       .maybeSingle();
     if (mem) {
@@ -133,7 +134,7 @@ export default async function Home() {
         : "text-slate-400 border-slate-700";
 
     return (
-      <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-5 flex flex-col items-center text-center h-full min-h-[250px]">
+      <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 md:p-5 flex flex-col items-center text-center md:h-full md:min-h-[250px]">
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeColor}>{badge}</span>
         <h2 className="mt-3 whitespace-nowrap text-base font-semibold text-white">{app.name}</h2>
         <p className="mt-1 text-sm text-slate-400 flex-1">{app.description}</p>
@@ -157,7 +158,7 @@ export default async function Home() {
     "flex h-full min-h-[60px] w-full items-center justify-center rounded-lg border border-slate-700 bg-slate-900/50 px-2 py-3 text-center text-sm text-slate-200 hover:bg-slate-800";
 
   return (
-    <main className="min-h-screen flex flex-col p-6 md:p-10">
+    <main className="min-h-screen flex flex-col p-4 md:p-10">
       <header className="flex items-center justify-end mb-6">
         <div className="flex items-center gap-3">
           <SettingsMenu email={user.email || ""} role={myRole} companyName={companyName} isStaff={isStaff(myRole)} companyId={companyId} armyMode={armyMode} ownerIsAdmin={ownerIsAdmin} />
@@ -182,7 +183,27 @@ export default async function Home() {
           <Link href="/procedures/answering" className="mt-1.5 w-full max-w-xs rounded-lg bg-white px-3 py-3.5 text-center text-sm font-extrabold uppercase tracking-wide text-slate-900 shadow hover:brightness-95">New Call</Link>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[minmax(0,200px)_minmax(0,1fr)_minmax(0,200px)] md:items-start">
+        {/* PHONE. The three column grid below collapses to a single column on
+            a narrow screen, which put a tile, four colours, the calendar, a
+            tile and four more colours in a vertical pile - and the fixed tile
+            height made the rows overlap. On a phone the order is the one that
+            matches how the job actually goes: calendar, then all eight
+            colours together, then the apps. */}
+        <div className="md:hidden">
+          <Calendar companyId={companyId} canEdit={isStaff(myRole)} userId={user.id} userEmail={user.email || ""} logoUrl={companyLogo} />
+
+          <div className="mt-4">
+            <CallLinks keys={["emergency", "estimate", "service_call", "warranty_call", "concern", "question", "material", "absence"]} companyId={companyId} userId={user.id} />
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {tile(tmApp)}
+            {tile(estimatingApp)}
+          </div>
+        </div>
+
+        {/* DESKTOP. Unchanged - apps and colours flanking the calendar. */}
+        <div className="hidden md:grid gap-4 md:grid-cols-[minmax(0,200px)_minmax(0,1fr)_minmax(0,200px)] md:items-start">
           <div>
             {tile(tmApp)}
             <div className="mt-3"><CallLinks keys={["emergency", "estimate", "service_call", "warranty_call"]} companyId={companyId} userId={user.id} /></div>
@@ -198,8 +219,6 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* One tile style for the whole row so nothing sits taller or wider
-            than its neighbour. auto-rows-fr keeps them equal when one wraps. */}
         <div className="mt-6 max-w-2xl mx-auto grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-5">
           <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" className={tileCls}>Email</a>
           <span className={tileCls + " text-slate-500"}>

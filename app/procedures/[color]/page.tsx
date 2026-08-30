@@ -30,6 +30,7 @@ export default async function ProcedurePage({ params }: { params: Promise<{ colo
     .schema("suite")
     .from("memberships")
     .select("role,company_id")
+    .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();
   const role = (mem as any)?.role || "owner";
