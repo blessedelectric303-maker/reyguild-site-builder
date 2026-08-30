@@ -227,14 +227,17 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="mt-6 max-w-2xl mx-auto grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-5">
-          <Link href="/procedures/replies" className={tileCls}>Scripts</Link>
-          <span className={tileCls + " text-slate-500"}>
-            <span>Contacts<span className="block text-[10px]">coming next</span></span>
-          </span>
+        {/* Six tiles, so they sit evenly two across on a phone and three on a
+            tablet - no odd one stranded on its own row. */}
+        <div className="mt-6 max-w-3xl mx-auto grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <a href={mailHref} target="_blank" rel="noopener noreferrer" className={tileCls}>Email</a>
+          <Link href="/team" className={tileCls}>Employees</Link>
           <Messages userId={user.id} companyId={companyId} triggerClassName={tileCls} />
           <Link href="/procedures/sops" className={tileCls}>SOPs</Link>
-          <a href={mailHref} target="_blank" rel="noopener noreferrer" className={tileCls + " col-span-2 mx-auto w-[calc(50%-0.25rem)] sm:col-span-1 sm:mx-0 sm:w-full"}>Email</a>
+          <Link href="/procedures/replies" className={tileCls}>Scripts</Link>
+          {/* Opens the Clients tab in Proposals & Invoicing, where the CSV
+              import already lives. One list of customers, not two. */}
+          <Link href="/apps/estimating?tab=clients" className={tileCls}>Client Contacts</Link>
         </div>
 
         <div className="text-center mt-8">

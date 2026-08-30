@@ -40,7 +40,7 @@ export const APP_GUIDE: GuideSection[] = [
       "NEW CALL is the white button under your company name. Every call starts there.",
       "The eight colour buttons sit down both sides - four that can be scheduled on the left, four office-only ones on the right.",
       "The two tiles are your apps: T&M&P&L on the left, Proposals and Invoicing on the right. The badge shows Active, Free trial, or Locked.",
-      "The row under the calendar is Email, Contacts, Messages, SOPs and Scripts.",
+      "The row under the calendar is Email, Employees, Messages, SOPs, Scripts and Client Contacts.",
     ],
   },
   {
@@ -70,6 +70,16 @@ export const APP_GUIDE: GuideSection[] = [
       "Both are colour coded to match the eight call buttons. A red tag means it belongs to an emergency call, orange to a warranty, and so on.",
       "Use the colour chips along the top to show only one colour, or the search box to find a phrase.",
       "COPY on any card puts that wording on your clipboard, ready to paste into an email or a text.",
+    ],
+  },
+  {
+    heading: "Client Contacts",
+    steps: [
+      "CLIENT CONTACTS opens your customer list inside Proposals and Invoicing. One list, not a second copy.",
+      "Each client holds company, contact name, phone, email, address and notes.",
+      "IMPORT CSV brings a whole list in at once. It matches your column headings up itself, so an export from another system usually just works.",
+      "EXPORT CSV takes it back out, which is also how you keep a backup.",
+      "Importing and exporting is owner and admin only.",
     ],
   },
   {

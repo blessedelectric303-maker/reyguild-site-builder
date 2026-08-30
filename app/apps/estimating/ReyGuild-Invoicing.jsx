@@ -483,7 +483,19 @@ const NET_DAYS = 15;
 
 export default function ReyGuild() {
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState("dashboard");
+  // A link can open a tab directly - the command center's Client Contacts
+  // tile uses ?tab=clients. Falls back to the dashboard for anything unknown,
+  // so a stale or mistyped link never lands on a blank screen.
+  const [page, setPage] = useState(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get("tab") || "";
+      const allowed = ["dashboard", "estimates", "invoices", "followups",
+        "clients", "prices", "mypay", "team", "alerts"];
+      return allowed.indexOf(t) >= 0 ? t : "dashboard";
+    } catch (e) {
+      return "dashboard";
+    }
+  });
 
   const [people, setPeople] = useState([]);
   const [clients, setClients] = useState([]);
