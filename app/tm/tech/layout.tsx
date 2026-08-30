@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, ROLES, isOrgLocked } from "@/lib/auth";
 import Link from "next/link";
 import LogoutButton from "../admin/LogoutButton";
-import HelpButton from "@/components/HelpButton";
 import Footer from "@/components/Footer";
 import Logo from "@/components/Logo";
+import TechTextSize from "./TechTextSize";
 export default async function TechLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -14,6 +14,7 @@ export default async function TechLayout({ children }: { children: React.ReactNo
   const locked = isOrgLocked(user.org);
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <TechTextSize />
       <header className="bg-slate-900 text-white">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -23,7 +24,7 @@ export default async function TechLayout({ children }: { children: React.ReactNo
             {user.name}
           </div>
           <div className="flex-1 flex flex-col items-end gap-2">
-            <div><HelpButton href="/tm/tech/help" /></div>
+            <div><Link href="/tm/tech/settings" className="text-xs text-slate-400 hover:text-white underline">Settings</Link></div>
             <div><LogoutButton /></div>
           </div>
         </div>

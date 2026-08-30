@@ -53,6 +53,20 @@ export default async function TechProcedurePage({ params }: { params: Promise<{ 
         .maybeSingle();
       proc = p || null;
 
+      // Fall back to the universal template if this company has no copy of
+      // its own yet. The cards are identical until somebody edits them, so
+      // showing the template beats showing a tech an empty screen on a job.
+      if (!proc) {
+        const { data: t } = await supabase
+          .schema("suite")
+          .from("procedures")
+          .select("id,color,title,purpose,one_pager")
+          .is("company_id", null)
+          .eq("color", color)
+          .maybeSingle();
+        proc = t || null;
+      }
+
       if (proc) {
         const { data: rows } = await supabase
           .schema("suite")
