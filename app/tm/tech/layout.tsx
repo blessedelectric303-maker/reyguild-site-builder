@@ -23,12 +23,13 @@ export default async function TechLayout({ children }: { children: React.ReactNo
             {user.name}
           </div>
           <div className="flex-1 flex flex-col items-end gap-2">
-            <div><HelpButton /></div>
+            <div><HelpButton href="/tm/tech/help" /></div>
             <div><LogoutButton /></div>
           </div>
         </div>
         <nav className="max-w-2xl mx-auto px-2 flex">
           <Link href="/tm/tech" className="flex-1 text-center py-2.5 text-sm font-medium text-slate-300 hover:text-white border-b-2 border-transparent hover:border-slate-500">Jobs</Link>
+          <Link href="/tm/tech/procedures" className="flex-1 text-center py-2.5 text-sm font-medium text-slate-300 hover:text-white border-b-2 border-transparent hover:border-slate-500">Procedures</Link>
           <Link href="/tm/tech/my-hours" className="flex-1 text-center py-2.5 text-sm font-medium text-slate-300 hover:text-white border-b-2 border-transparent hover:border-slate-500">My Hours</Link>
           <Link href="/tm/tech/time-off" className="flex-1 text-center py-2.5 text-sm font-medium text-slate-300 hover:text-white border-b-2 border-transparent hover:border-slate-500">Time Off</Link>
         </nav>
@@ -36,7 +37,7 @@ export default async function TechLayout({ children }: { children: React.ReactNo
       {locked && (
         <div className="bg-red-600 text-white text-sm text-center px-4 py-2">
           Your company&apos;s subscription has lapsed. The app is read-only until
-          it&apos;s reactivated — please contact your manager.
+          it&apos;s reactivated - please contact your manager.
         </div>
       )}
       <main className="max-w-2xl mx-auto w-full px-4 py-4 flex-1">{children}</main>
