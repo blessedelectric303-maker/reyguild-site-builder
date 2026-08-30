@@ -1,15 +1,20 @@
-// Central Help + SOP content for the whole suite.
-// This is the ONE place to edit every guide. The command center and each app
-// have their own entry, looked up automatically by the Settings menu based on
-// which page you're on. To change any guide, edit the text below - nothing else.
+// HELP WITH APP - the single guide shown under Settings.
+//
+// This file used to hold a different SOP per screen, auto-selected from the
+// URL. That is gone. The company's real SOPs now live in the app itself,
+// under the SOPs button on the command center, where they belong.
+//
+// What is left here is the thing Settings is actually for: how to drive the
+// software. One guide, the whole app, in the order somebody would meet it.
+// To change any wording, edit the text below - nothing else.
 
-export type Sop = {
-  title: string; // shown as the heading on the SOPs tab
-  steps: string[]; // short, plain-language points
+export type GuideSection = {
+  heading: string;
+  steps: string[];
 };
 
-// Support details shown on the Help tab everywhere.
-// >>> EDIT THESE to your real support email / phone. 
+// Support details shown on the Help tab.
+// >>> EDIT THESE to your real support email / phone.
 // Leave phone as "" to hide the phone line.
 export const SUPPORT = {
   email: "support@reyguild.com",
@@ -17,67 +22,90 @@ export const SUPPORT = {
   note: "We usually reply within one business day.",
 };
 
-// SOPs keyed by "context". The Settings menu picks the right one from the URL.
-export const SOPS: Record<string, Sop> = {
-  "command-center": {
-    title: "Your Command Center - how it works",
+export const APP_GUIDE: GuideSection[] = [
+  {
+    heading: "The shape of the whole thing",
     steps: [
-      "This is home base. Each tile is one of your apps.",
-      "The badge on a tile shows your access: green Active, amber Free trial, or gray Locked.",
-      "Tap Open on any unlocked app to jump in.",
-      "Your company logo sits in the center once you add it under Settings -> Account -> Company.",
-      '"One Man Army" means solo; "Army Mode" means you have a team. Switch this and invite people under Team.',
-      "Settings (this menu) sits in the top bar of every app, so it works the same everywhere.",
+      "A call comes in. You press THE ANSWERING KIT at the top and work down it. It ends by telling you which colour the call is.",
+      "You press that colour. Its procedure opens - what to say, what to capture, what not to promise.",
+      "If the procedure can create work, a Schedule button sits in its top right corner. It carries everything you already typed into Proposals so nobody gets asked twice.",
+      "The customer approves. That becomes a T&M job. You add a date and a worker, and it lands on the calendar.",
+      "The calendar in the middle of the command center is the same calendar the whole company sees.",
     ],
   },
-  "site-builder": {
-    title: "Site Builder - how to use it",
+  {
+    heading: "The command center",
     steps: [
-      "Build a simple website for your business - no coding.",
-      "Fill in your business details, then pick the sections you want to show.",
-      "Use the preview to see how it looks before you share it.",
-      "Your company info flows in from your Company Profile, so you only type it once.",
-      "Your work saves on this device. Use the same browser to pick up where you left off.",
+      "THE ANSWERING KIT is the white button under your company name. Every call starts there.",
+      "The eight colour buttons sit down both sides - four that can be scheduled on the left, four office-only ones on the right.",
+      "The two tiles are your apps: T&M&P&L on the left, Proposals and Invoicing on the right. The badge shows Active, Free trial, or Locked.",
+      "The row under the calendar is Email, Contacts, Messages, SOPs and Premade Replies.",
     ],
   },
-  estimating: {
-    title: "Proposals - how to use it",
+  {
+    heading: "The eight colours",
     steps: [
-      "Create estimates and invoices for your jobs.",
-      "Add line items with quantities and prices - totals add up for you.",
-      "Save, print, or send the finished estimate or invoice to your customer.",
-      "Turn an approved estimate into an invoice when the work is done.",
-      "Your work saves on this device. Use the same browser to keep your history.",
+      "RED Emergency, GREEN Proposal, BLUE Service Call and ORANGE Warranty can all be scheduled.",
+      "YELLOW Concern, PURPLE Question, GRAY Material and PINK Absence are office work. They never create a job, so they have no Schedule button - that is deliberate, not a bug.",
+      "A call can change colour halfway through. That is the system working. Back out to the command center and press the right one.",
+      "Sort by what the caller describes, not by what they call it.",
     ],
   },
-  "field-log": {
-    title: "Client Outreach - how to use it",
+  {
+    heading: "Inside a procedure",
     steps: [
-      "Keep track of the clients and leads you're working.",
-      "Log each visit or call so nothing slips through the cracks.",
-      "Set follow-ups so you always know who to contact next.",
-      "Review your list before the week starts to plan your outreach.",
-      "Your work saves on this device. Use the same browser to keep your log.",
+      "ONE PAGE is the short version - the whole procedure on a single card. Press Print to pin it by the phone.",
+      "CHECKLIST is the live version. Tick it while the caller is talking.",
+      "The checklist saves by itself as you type. You can close the tab and come back hours later and it will still be there.",
+      "Anything marked BEFORE DISPATCH has to be filled in before the job can go out.",
+      "Wording in [SQUARE BRACKETS] fills itself in from your company profile. If you see brackets still showing, that value has not been set yet.",
     ],
   },
-  default: {
-    title: "How to use this app",
+  {
+    heading: "SOPs and Premade Replies",
     steps: [
-      "Everything you need is on this screen.",
-      "Your work saves on this device - use the same browser to keep it.",
-      "Use the Help tab in this menu if you get stuck.",
+      "SOPs is how the office runs - the administrator's day, scheduling, material, absences, invoicing, and the daily run cards.",
+      "PREMADE REPLIES is what to say, word for word, for every kind of call.",
+      "Both are colour coded to match the eight call buttons. A red tag means it belongs to an emergency call, orange to a warranty, and so on.",
+      "Use the colour chips along the top to show only one colour, or the search box to find a phrase.",
+      "COPY on any card puts that wording on your clipboard, ready to paste into an email or a text.",
     ],
   },
-};
-
-// Map a page path to a context key. Add future apps here.
-export function contextFromPath(pathname: string): string {
-  if (pathname.startsWith("/apps/site-builder")) return "site-builder";
-  if (pathname.startsWith("/apps/estimating")) return "estimating";
-  if (pathname === "/" || pathname === "") return "estimating";
-  return "default";
-}
-
-export function sopFor(context: string): Sop {
-  return SOPS[context] || SOPS.default;
-}
+  {
+    heading: "Proposals and Invoicing",
+    steps: [
+      "Open it from the tile on the right of the calendar, or let a procedure carry you into it with the Schedule button.",
+      "Arriving from a call prefills the customer's name, address, phone and email, and shows a gold banner saying which call it came from.",
+      "Prices come from your price book, so the numbers stay the same no matter who builds the proposal.",
+      "Internal labour hours, your hourly cost, material cost and margin never appear on anything a customer sees.",
+      "When a proposal is approved, create the job from it. One record - never build a second one by hand.",
+    ],
+  },
+  {
+    heading: "T&M&P&L",
+    steps: [
+      "Open it from the tile on the left. It signs you in automatically using the email you are already logged in with.",
+      "Workers clock in and out on the job, with GPS on the clock-in.",
+      "Timesheets, materials and costs all roll up per job, so you can see wages and margin on work you have actually done.",
+      "Time off and the audit log live here too.",
+    ],
+  },
+  {
+    heading: "Settings and your company",
+    steps: [
+      "Settings is the gear in the top right, and it is the same menu on every screen.",
+      "Account is where you sign out, switch light and dark, and reach Company and Army / Employees.",
+      "Company is your name, logo, phone, address and trade. It fills in the [BRACKETS] everywhere at once, so type it once and it is done.",
+      "One Man Army means it is just you. Army Mode means you have a team and can invite them.",
+      "Roles: Owner and Admin see everything. Supervisor sees messages, the team and the calendar, but not HR documents. Estimators and techs see only their own work.",
+    ],
+  },
+  {
+    heading: "If something looks wrong",
+    steps: [
+      "Check the address bar first. The app lives at reyguild-site-builder.vercel.app - a web address with a random string of letters in it is a frozen old copy and will never update.",
+      "A screen saying a procedure has not been set up yet means the wording has not been loaded for that colour. Nothing is broken.",
+      "If a change you were told about is not showing, try a private or incognito window before assuming it failed.",
+    ],
+  },
+];

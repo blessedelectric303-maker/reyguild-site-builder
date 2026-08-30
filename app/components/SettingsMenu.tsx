@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { contextFromPath, sopFor, SUPPORT } from "@/utils/sops";
+import { APP_GUIDE, SUPPORT } from "@/utils/sops";
 
 type Props = {
   email: string;
@@ -16,7 +16,7 @@ type Props = {
   ownerIsAdmin?: boolean;
 };
 
-type Tab = "help" | "sops" | "account";
+type Tab = "guide" | "help" | "account";
 
 function roleLabel(role: string): string {
   if (role === "sales_rep") return "Sales Rep";
@@ -24,18 +24,16 @@ function roleLabel(role: string): string {
 }
 
 export default function SettingsMenu({ email, role, companyName, isStaff, companyId, armyMode, ownerIsAdmin }: Props) {
-  const pathname = usePathname() || "/";
   const router = useRouter();
   const supabase = createClient();
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<Tab>("sops");
+  const [tab, setTab] = useState<Tab>("guide");
   const [army, setArmy] = useState(armyMode === true);
   const [ownerAdmin, setOwnerAdmin] = useState(ownerIsAdmin !== false);
   const [savingMode, setSavingMode] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [uid, setUid] = useState<string | null>(null);
 
-  const sop = sopFor(contextFromPath(pathname));
   const showMode = isStaff && !!companyId;
 
   useEffect(() => {
@@ -164,23 +162,31 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
             </div>
 
             <div className="flex gap-1 border-b border-slate-800 p-2">
-              {tabBtn("sops", "SOPs")}
+              {tabBtn("guide", "Help With App")}
               {tabBtn("help", "Help")}
               {tabBtn("account", "Account")}
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto p-4">
-              {tab === "sops" ? (
+              {tab === "guide" ? (
                 <div>
-                  <h3 className="text-base font-semibold text-white">{sop.title}</h3>
-                  <ol className="mt-3 space-y-2.5">
-                    {sop.steps.map((step, i) => (
-                      <li key={i} className="flex gap-3 text-sm text-slate-300">
-                        <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] font-bold text-slate-900" style={{ background: "#e0a82e" }}>{i + 1}</span>
-                        <span>{step}</span>
-                      </li>
+                  <h3 className="text-base font-semibold text-white">How this app works</h3>
+                  <p className="mt-1 text-xs text-slate-500">Your own company SOPs live on the command center under the SOPs button. This is how to drive the software.</p>
+                  <div className="mt-4 space-y-5">
+                    {APP_GUIDE.map((sec) => (
+                      <div key={sec.heading}>
+                        <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#e0a82e" }}>{sec.heading}</div>
+                        <ul className="mt-2 space-y-2">
+                          {sec.steps.map((step, i) => (
+                            <li key={i} className="flex gap-2.5 text-sm text-slate-300">
+                              <span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-slate-600" />
+                              <span>{step}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     ))}
-                  </ol>
+                  </div>
                 </div>
               ) : null}
 
@@ -193,7 +199,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                     {SUPPORT.phone ? <div className="text-slate-200">Call: {SUPPORT.phone}</div> : null}
                   </div>
                   {SUPPORT.note ? <p className="mt-3 text-xs text-slate-500">{SUPPORT.note}</p> : null}
-                  <p className="mt-4 text-xs text-slate-500">Tip: the SOPs tab has a quick guide for whichever screen you are on.</p>
+                  <p className="mt-4 text-xs text-slate-500">Tip: Help With App walks through the whole app, screen by screen.</p>
                 </div>
               ) : null}
 

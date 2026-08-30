@@ -3,18 +3,16 @@ import { createClient } from "@/utils/supabase/server";
 import { isStaff } from "@/utils/roles";
 import ProcedureView from "./ProcedureView";
 import { buildTokenMap, fillTokens, hasUnfilled, type CompanyFacts } from "@/utils/tokens";
+import { CALL_COLORS, NON_CALL_COLORS } from "@/utils/callColors";
 
 export const dynamic = "force-dynamic";
 
+// The eight call colours plus the three screens that are not call types.
+// One definition, in utils/callColors.ts - a colour missing from here is a
+// colour that redirects to "/" and looks broken.
 const COLOR: Record<string, { bg: string; text: string }> = {
-  emergency: { bg: "#F0302A", text: "#ffffff" },
-  estimate: { bg: "#1BBF55", text: "#000000" },
-  service_call: { bg: "#2183E8", text: "#ffffff" },
-  warranty_call: { bg: "#FF9012", text: "#000000" },
-  concern: { bg: "#F2BE00", text: "#000000" },
-  question: { bg: "#9B44CE", text: "#ffffff" },
-  material: { bg: "#6E6E6E", text: "#ffffff" },
-  absence: { bg: "#FF2E9A", text: "#ffffff" },
+  ...CALL_COLORS,
+  ...NON_CALL_COLORS,
 };
 
 export default async function ProcedurePage({ params }: { params: Promise<{ color: string }> }) {
@@ -67,7 +65,7 @@ export default async function ProcedurePage({ params }: { params: Promise<{ colo
   const { data: sections } = await supabase
     .schema("suite")
     .from("procedure_sections")
-    .select("id,heading,body,collapsed_by_default,sort_order")
+    .select("id,heading,body,collapsed_by_default,sort_order,color_tag")
     .eq("procedure_id", pid)
     .order("sort_order");
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CALL_COLORS, CALL_ORDER, type CallKey } from "@/utils/callColors";
 
 type Item = {
   id: string;
@@ -13,7 +14,13 @@ type Item = {
   required_to_dispatch: boolean;
   required_to_close: boolean;
 };
-type Section = { id: string; heading: string; body: string | null; collapsed_by_default: boolean };
+type Section = {
+  id: string;
+  heading: string;
+  body: string | null;
+  collapsed_by_default: boolean;
+  color_tag?: string | null;
+};
 type Proc = {
   id: string;
   color: string;
@@ -26,6 +33,15 @@ type Proc = {
   one_pager: string | null;
   schedules_to_calendar?: boolean;
 };
+
+// A small coloured tag saying which call type a section belongs to.
+function ColorTag({ tag }: { tag: string }) {
+  const c = (CALL_COLORS as Record<string, { label: string; bg: string; text: string }>)[tag];
+  if (!c) return null;
+  return (
+    <span className="rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide" style={{ background: c.bg, color: c.text }}>{c.label}</span>
+  );
+}
 
 export default function ProcedureView({
   procedure, sections, items, skin, companyId, userId, unfilled,
@@ -47,9 +63,17 @@ export default function ProcedureView({
   const [err, setErr] = useState<string | null>(null);
   const timer = useRef<any>(null);
 
+  // Reference shelves rather than procedures. Long, searchable, and every
+  // card is something somebody wants to paste into an email.
+  const libraryMode = procedure.color === "replies" || procedure.color === "sops";
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<string>("all");
+  const [copied, setCopied] = useState<string | null>(null);
+
   // Pick up an unfinished checklist for this color so closing the tab
   // never loses work. These run for hours by design.
   useEffect(() => {
+    if (libraryMode) return;
     (async () => {
       try {
         const res = await fetch("/api/checklist?color=" + procedure.color);
@@ -62,7 +86,7 @@ export default function ProcedureView({
         // starting fresh is fine
       }
     })();
-  }, [procedure.color]);
+  }, [procedure.color, libraryMode]);
 
   const persist = useCallback(async (next: Record<string, any>) => {
     try {
@@ -87,15 +111,61 @@ export default function ProcedureView({
     timer.current = setTimeout(() => persist(next), 600);
   }
 
+  async function copySection(s: Section) {
+    const text = s.body ? s.heading + "\n\n" + s.body : s.heading;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(s.id);
+      setTimeout(() => setCopied(null), 1500);
+    } catch (e) {
+      setErr("This browser would not let us reach the clipboard. Select the text and copy it by hand.");
+    }
+  }
+
   // Office-only procedures (material, absence, question) must never offer to
   // create work. PURPLE's own spec is explicit: it links, it never creates a
   // job. The flag lives on the procedure so a company can change its mind
   // without a code change.
   const schedulable = procedure.schedules_to_calendar !== false;
 
+  // Where a procedure cannot create work, the top right corner is free. The
+  // answering kit uses it to send you back to pick the colour, which is the
+  // whole point of the kit. Everything else gets a plain way home.
+  const backLabel =
+    procedure.color === "answering" ? "Back out to call type" : "Back to command center";
+
   const blockers = items.filter(
     (i) => i.required_to_dispatch && i.field_key && !answers[i.field_key]
   );
+
+  // Which colours actually appear in this shelf - no empty filter chips.
+  const presentTags = useMemo(() => {
+    const set = new Set<string>();
+    sections.forEach((s) => {
+      if (s.color_tag) set.add(s.color_tag);
+    });
+    return CALL_ORDER.filter((k) => set.has(k));
+  }, [sections]);
+
+  const hasUntagged = useMemo(
+    () => sections.some((s) => !s.color_tag),
+    [sections]
+  );
+
+  const visibleSections = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return sections.filter((s) => {
+      if (filter === "untagged" && s.color_tag) return false;
+      if (filter !== "all" && filter !== "untagged" && s.color_tag !== filter) return false;
+      if (!q) return true;
+      return (
+        s.heading.toLowerCase().includes(q) ||
+        (s.body || "").toLowerCase().includes(q)
+      );
+    });
+  }, [sections, query, filter]);
+
+  const searching = query.trim().length > 0 || filter !== "all";
 
   async function estimateToSchedule() {
     if (busy) return;
@@ -131,19 +201,27 @@ export default function ProcedureView({
     else grouped.push({ heading: h, rows: [i] });
   });
 
+  const chipBase = "rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide";
+
   return (
     <main className="min-h-screen pb-16">
-      {/* The three actions stay put. Reachable from anywhere in the procedure. */}
+      {/* The actions stay put. Reachable from anywhere in the procedure. */}
       <div className="sticky top-0 z-40 shadow-lg" style={{ background: skin.bg }}>
         <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-2 px-4 py-3">
           <div className="flex gap-2">
-            <button type="button" onClick={() => setPane(pane === "onepage" ? "none" : "onepage")} className="rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: skin.text }}>One page</button>
-            <button type="button" onClick={() => setPane(pane === "checklist" ? "none" : "checklist")} className="rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: skin.text }}>Checklist</button>
+            {procedure.one_pager ? (
+              <button type="button" onClick={() => setPane(pane === "onepage" ? "none" : "onepage")} className="rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: skin.text }}>One page</button>
+            ) : null}
+            {items.length ? (
+              <button type="button" onClick={() => setPane(pane === "checklist" ? "none" : "checklist")} className="rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: skin.text }}>Checklist</button>
+            ) : null}
           </div>
           <div className="mx-auto px-2 text-center text-sm font-extrabold uppercase tracking-widest" style={{ color: skin.text }}>{procedure.title}</div>
           {schedulable ? (
-            <button type="button" onClick={estimateToSchedule} disabled={busy} className="ml-auto rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide disabled:opacity-60" style={{ color: skin.text }}>{busy ? "Working..." : "Estimate to schedule"}</button>
-          ) : null}
+            <button type="button" onClick={estimateToSchedule} disabled={busy} className="ml-auto rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide disabled:opacity-60" style={{ color: skin.text }}>{busy ? "Working..." : "Schedule"}</button>
+          ) : (
+            <button type="button" onClick={() => router.push("/")} className="ml-auto rounded-md bg-black/25 px-3 py-2 text-xs font-bold uppercase tracking-wide" style={{ color: skin.text }}>{backLabel}</button>
+          )}
         </div>
         {schedulable && blockers.length ? (
           <div className="bg-black/30 px-4 py-1.5 text-center text-[11px]" style={{ color: skin.text }}>Still needed before dispatch: {blockers.map((b) => b.label).join(", ")}</div>
@@ -224,12 +302,47 @@ export default function ProcedureView({
                 <pre className="whitespace-pre-wrap font-sans text-sm text-red-100">{procedure.may_not_say}</pre>
               </div>
             ) : null}
-            {sections.map((s) => (
-              <details key={s.id} open={!s.collapsed_by_default} className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
-                <summary className="cursor-pointer text-sm font-semibold text-white">{s.heading}</summary>
+
+            {libraryMode && sections.length ? (
+              <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-3">
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search these..." className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100" />
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <button type="button" onClick={() => setFilter("all")} className={chipBase + (filter === "all" ? " bg-white text-slate-900" : " border border-slate-600 text-slate-300")}>All ({sections.length})</button>
+                  {presentTags.map((k) => {
+                    const c = CALL_COLORS[k as CallKey];
+                    const on = filter === k;
+                    return (
+                      <button type="button" key={k} onClick={() => setFilter(on ? "all" : k)} className={chipBase + (on ? "" : " opacity-60")} style={{ background: c.bg, color: c.text }}>{c.label}</button>
+                    );
+                  })}
+                  {hasUntagged ? (
+                    <button type="button" onClick={() => setFilter(filter === "untagged" ? "all" : "untagged")} className={chipBase + (filter === "untagged" ? " bg-white text-slate-900" : " border border-slate-600 text-slate-300")}>Every call</button>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {libraryMode && searching ? (
+              <p className="text-xs text-slate-500">{visibleSections.length} of {sections.length} shown</p>
+            ) : null}
+
+            {visibleSections.map((s) => (
+              <details key={s.id + (searching ? "-open" : "")} open={searching || !s.collapsed_by_default} className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-white">
+                  <span className="mr-2">{s.heading}</span>
+                  {s.color_tag ? <ColorTag tag={s.color_tag} /> : null}
+                </summary>
                 <pre className="mt-3 whitespace-pre-wrap font-sans text-sm text-slate-300">{s.body}</pre>
+                {libraryMode ? (
+                  <button type="button" onClick={() => copySection(s)} className="mt-3 rounded-md border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800">{copied === s.id ? "Copied" : "Copy"}</button>
+                ) : null}
               </details>
             ))}
+
+            {libraryMode && sections.length > 0 && visibleSections.length === 0 ? (
+              <p className="rounded-lg border border-slate-800 p-6 text-center text-sm text-slate-500">Nothing matches that. Clear the search or pick a different colour.</p>
+            ) : null}
+
             {sections.length === 0 && !procedure.opening_script ? (
               <p className="rounded-lg border border-slate-800 p-6 text-center text-sm text-slate-500">The wording for this procedure has not been added yet. The checklist and the links above still work.</p>
             ) : null}
