@@ -1,7 +1,26 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { TECH_CARDS, skinFor } from "@/utils/techProcedures";
+import { TECH_CARDS, skinFor, type TextPart } from "@/utils/techProcedures";
+
+
+// The white outline that keeps text legible on top of the checkerboard.
+// Everything else on the page is a flat colour and needs none of it.
+function strokeFor(checker?: boolean) {
+  return checker
+    ? ({ WebkitTextStroke: "3px #ffffff", paintOrder: "stroke fill" } as const)
+    : undefined;
+}
+
+// Draws a card's coloured runs. Kept dumb on purpose - the colours live in
+// utils/techProcedures.ts so there is exactly one place to change them.
+function paint(parts: TextPart[]) {
+  return parts.map((p, i) => (
+    <span key={i} style={p.c ? { color: p.c } : undefined}>
+      {p.t}
+    </span>
+  ));
+}
 
 export const dynamic = "force-dynamic";
 
@@ -40,8 +59,12 @@ export default async function TechProceduresPage() {
                   : { background: skin.bg, color: skin.text }
               }
             >
-              <span className="text-sm font-extrabold uppercase tracking-wide" style={c.checker ? { WebkitTextStroke: "3px #ffffff", paintOrder: "stroke fill" } : undefined}>{c.label}</span>
-              <span className="text-[11px] leading-snug opacity-90" style={c.checker ? { WebkitTextStroke: "3px #ffffff", paintOrder: "stroke fill" } : undefined}>{c.blurb}</span>
+              <span className="text-sm font-extrabold uppercase tracking-wide" style={strokeFor(c.checker)}>
+                {c.labelParts ? paint(c.labelParts) : c.label}
+              </span>
+              <span className="text-[11px] leading-snug" style={strokeFor(c.checker)}>
+                {c.blurbParts ? paint(c.blurbParts) : <span className="opacity-90">{c.blurb}</span>}
+              </span>
             </Link>
           );
         })}

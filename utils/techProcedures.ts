@@ -16,7 +16,25 @@ export type TechCard = {
   skin?: { bg: string; text: string };
   // Renders a black and white checker instead of a flat colour.
   checker?: boolean;
+  // Optional coloured pieces. When present these are drawn INSTEAD of the
+  // plain label / blurb string, one <span> per piece, in order. The plain
+  // strings stay filled in so that anything that reads card.label - search,
+  // the page title, the breadcrumb - keeps working untouched.
+  labelParts?: TextPart[];
+  blurbParts?: TextPart[];
 };
+
+// A run of text and the colour it wears. No colour means "inherit", which on
+// the checker card is black.
+export type TextPart = { t: string; c?: string };
+
+// The three inks used on the Clock In card. Kept here so the card and the
+// procedure header can never drift apart.
+export const INK = {
+  in: "#15803d",   // clock IN  - green
+  out: "#b91c1c",  // clock OUT - red
+  neutral: "#000000",
+} as const;
 
 export const TECH_CARDS: TechCard[] = [
   // First, and above the eight, because it is the first thing in the day.
@@ -25,10 +43,23 @@ export const TECH_CARDS: TechCard[] = [
   {
     key: "tech_clockin",
     mirrors: null,
-    label: "Clock In",
+    label: "Clock In / Clock Out",
     blurb: "How the day runs. Read this one first.",
     skin: { bg: "#000000", text: "#ffffff" },
     checker: true,
+    // Green in, red out, black slash. The slash is deliberately black rather
+    // than half-and-half: a two-tone slash at this size reads as a smudge on
+    // a phone, and the two words already carry the meaning.
+    labelParts: [
+      { t: "Clock In", c: INK.in },
+      { t: " / ", c: INK.neutral },
+      { t: "Clock Out", c: INK.out },
+    ],
+    blurbParts: [
+      { t: "How the day runs.", c: INK.in },
+      { t: " ", c: INK.neutral },
+      { t: "Read this one first.", c: INK.out },
+    ],
   },
   { key: "tech_emergency", mirrors: "emergency", label: "Emergency", blurb: "Safe first, diagnosed second." },
   { key: "tech_service_call", mirrors: "service_call", label: "Service Call", blurb: "The full run card. Truck to driveway." },
