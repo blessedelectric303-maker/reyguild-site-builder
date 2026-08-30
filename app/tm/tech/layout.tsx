@@ -76,7 +76,7 @@ export default async function TechLayout({ children }: { children: React.ReactNo
       <header className="relative z-10 bg-slate-900 text-white">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <Logo dark size={36} />
+            <Logo dark size={24} />
           </div>
           <div className="flex-1 min-w-0 text-center">
             <div className="text-sm font-medium text-slate-200 truncate">{user.name}</div>
