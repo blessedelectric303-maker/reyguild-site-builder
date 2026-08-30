@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import LogoutButton from "../../admin/LogoutButton";
+import { createClient } from "@/utils/supabase/server";
+import { canAccess } from "@/utils/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,29 @@ export default async function TechSettingsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  // Supervisors and tech/estimators work in both apps, so they need a way
+  // across. An apprentice does not - T and M and P and L is his whole job -
+  // so the link simply is not there for him.
+  let canSwitch = false;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user: su },
+    } = await supabase.auth.getUser();
+    if (su) {
+      const { data: mem } = await supabase
+        .schema("suite")
+        .from("memberships")
+        .select("role")
+        .eq("user_id", su.id)
+        .limit(1)
+        .maybeSingle();
+      canSwitch = canAccess(((mem as any) || {}).role || "", "estimating");
+    }
+  } catch (e) {
+    canSwitch = false;
+  }
+
   return (
     <div>
       <h1 className="text-lg font-semibold text-slate-900">Settings</h1>
@@ -48,7 +73,14 @@ export default async function TechSettingsPage() {
         ))}
       </div>
 
-      <div className="mt-6">
+      {/* Switch on the left, sign out on the right - so the thing you press
+          often is nowhere near the thing you press by accident. */}
+      <div className="mt-6 flex items-center justify-between gap-3">
+        {canSwitch ? (
+          <a href="/apps/estimating" className="rounded-md px-4 py-2.5 text-sm font-bold text-slate-900" style={{ background: "#e0a82e" }}>
+            Switch to Proposals &amp; Invoicing
+          </a>
+        ) : <span />}
         <LogoutButton />
       </div>
     </div>

@@ -24,7 +24,7 @@ export default async function TechProceduresPage() {
             <Link
               key={c.key}
               href={"/tm/tech/procedures/" + c.key}
-              className="flex min-h-[92px] flex-col justify-between rounded-xl p-3 shadow-sm hover:brightness-110"
+              className={"flex min-h-[92px] flex-col justify-between rounded-xl p-3 shadow-sm hover:brightness-110" + (c.key === "tech_clockin" ? " col-span-2" : "")}
               style={{ background: skin.bg, color: skin.text }}
             >
               <span className="text-sm font-extrabold uppercase tracking-wide">{c.label}</span>

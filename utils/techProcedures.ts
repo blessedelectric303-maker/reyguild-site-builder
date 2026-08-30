@@ -7,9 +7,26 @@
 
 import { CALL_COLORS, type CallKey } from "@/utils/callColors";
 
-export type TechCard = { key: string; mirrors: CallKey; label: string; blurb: string };
+export type TechCard = {
+  key: string;
+  mirrors: CallKey | null;
+  label: string;
+  blurb: string;
+  // Set only for cards that are not one of the eight call types.
+  skin?: { bg: string; text: string };
+};
 
 export const TECH_CARDS: TechCard[] = [
+  // First, and above the eight, because it is the first thing in the day.
+  // Black: distinct from all eight call colours and from the slate the
+  // reference shelves use, so it reads as its own thing at a glance.
+  {
+    key: "tech_clockin",
+    mirrors: null,
+    label: "Clock In",
+    blurb: "How the day runs. Read this one first.",
+    skin: { bg: "#000000", text: "#ffffff" },
+  },
   { key: "tech_emergency", mirrors: "emergency", label: "Emergency", blurb: "Safe first, diagnosed second." },
   { key: "tech_service_call", mirrors: "service_call", label: "Service Call", blurb: "The full run card. Truck to driveway." },
   { key: "tech_estimate", mirrors: "estimate", label: "Site Visit", blurb: "The walk is the sale." },
@@ -25,5 +42,6 @@ export function techCard(key: string): TechCard | null {
 }
 
 export function skinFor(card: TechCard) {
-  return CALL_COLORS[card.mirrors];
+  if (card.skin) return card.skin;
+  return CALL_COLORS[card.mirrors as CallKey];
 }

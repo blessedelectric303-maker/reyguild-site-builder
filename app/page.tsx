@@ -205,15 +205,15 @@ export default async function Home() {
           </div>
 
           <div className="mt-4 space-y-3">
-            {tile(tmApp)}
             {tile(estimatingApp)}
+            {tile(tmApp)}
           </div>
         </div>
 
         {/* DESKTOP. Unchanged - apps and colours flanking the calendar. */}
         <div className="hidden md:grid gap-4 md:grid-cols-[minmax(0,200px)_minmax(0,1fr)_minmax(0,200px)] md:items-start">
           <div>
-            {tile(tmApp)}
+            {tile(estimatingApp)}
             <div className="mt-3"><CallLinks keys={["emergency", "estimate", "service_call", "warranty_call"]} companyId={companyId} userId={user.id} /></div>
           </div>
 
@@ -222,7 +222,7 @@ export default async function Home() {
           </div>
 
           <div>
-            {tile(estimatingApp)}
+            {tile(tmApp)}
             <div className="mt-3"><CallLinks keys={["concern", "question", "material", "absence"]} companyId={companyId} userId={user.id} /></div>
           </div>
         </div>
@@ -231,7 +231,7 @@ export default async function Home() {
             tablet - no odd one stranded on its own row. */}
         <div className="mt-6 max-w-3xl mx-auto grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           <a href={mailHref} target="_blank" rel="noopener noreferrer" className={tileCls}>Email</a>
-          <Link href="/team" className={tileCls}>Employees</Link>
+          <Link href="/contacts" className={tileCls}>Company Contacts</Link>
           <Messages userId={user.id} companyId={companyId} triggerClassName={tileCls} />
           <Link href="/procedures/sops" className={tileCls}>SOPs</Link>
           <Link href="/procedures/replies" className={tileCls}>Scripts</Link>

@@ -40,7 +40,7 @@ export const APP_GUIDE: GuideSection[] = [
       "NEW CALL is the white button under your company name. Every call starts there.",
       "The eight colour buttons sit down both sides - four that can be scheduled on the left, four office-only ones on the right.",
       "The two tiles are your apps: T&M&P&L on the left, Proposals and Invoicing on the right. The badge shows Active, Free trial, or Locked.",
-      "The row under the calendar is Email, Employees, Messages, SOPs, Scripts and Client Contacts.",
+      "The row under the calendar is Email, Company Contacts, Messages, SOPs, Scripts and Client Contacts.",
     ],
   },
   {
@@ -70,6 +70,15 @@ export const APP_GUIDE: GuideSection[] = [
       "Both are colour coded to match the eight call buttons. A red tag means it belongs to an emergency call, orange to a warranty, and so on.",
       "Use the colour chips along the top to show only one colour, or the search box to find a phrase.",
       "COPY on any card puts that wording on your clipboard, ready to paste into an email or a text.",
+    ],
+  },
+  {
+    heading: "Company Contacts",
+    steps: [
+      "COMPANY CONTACTS is your own team - everybody who works for you, with their name, role, phone and email.",
+      "Nobody is added by hand. Somebody appears the moment they are invited, and their title updates when you change their role.",
+      "Names and phone numbers come from the employee record in T&M&P&L. Roles come from Settings, then Army / Employees.",
+      "CLIENT CONTACTS, further along the row, is the opposite - that is your customers.",
     ],
   },
   {
