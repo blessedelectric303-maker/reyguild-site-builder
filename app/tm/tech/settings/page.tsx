@@ -8,21 +8,13 @@ export const dynamic = "force-dynamic";
 // The tech's own settings. Deliberately separate from anything the office
 // sees - an admin has all of this on the command center already and should
 // never be routed in here.
+// Procedures and Messages moved up into the top navigation - they are daily
+// work, not settings. What is left here is the stuff you touch rarely.
 const ENTRIES = [
-  {
-    href: "/tm/tech/procedures",
-    title: "Procedures",
-    blurb: "Your eight truck cards. One page and a checklist for each kind of visit.",
-  },
   {
     href: "/tm/tech/help",
     title: "Help",
     blurb: "How the app works, the questions that come up most, and how to reach ReyGuild.",
-  },
-  {
-    href: "/tm/tech/messages",
-    title: "Messages",
-    blurb: "Message the office. Anything about a job, your hours or your schedule goes here.",
   },
   {
     href: "/tm/tech/preferences",
