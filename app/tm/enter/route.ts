@@ -68,17 +68,39 @@ export async function GET(req: Request) {
       const { data: mem } = await supabase
         .schema("suite")
         .from("memberships")
-        .select("role")
+        .select("role,company_id")
         .eq("user_id", user.id)
         .limit(1)
         .maybeSingle();
       const suiteRole = normalizeRole((mem as any)?.role);
+      const companyId = (mem as any)?.company_id || "";
 
-      // Which company in T and M. While there is exactly one it is
-      // unambiguous. A second company needs a real link between the two
-      // sides, so refuse rather than guess and put somebody in the wrong one.
-      const orgs = await prisma.organization.findMany({ take: 2, select: { id: true } });
-      if (orgs.length !== 1) return problem("nouser", email);
+      // Which company in T and M. This used to be a guess:
+      //
+      //     const orgs = await prisma.organization.findMany({ take: 2 });
+      //     if (orgs.length !== 1) return problem("nouser", email);
+      //
+      // Right every time while there was one customer, and a dead end the
+      // moment there were two. Now the company carries the answer.
+      let orgId = "";
+      if (companyId) {
+        const { data: co } = await supabase
+          .schema("suite")
+          .from("companies")
+          .select("tm_org_id")
+          .eq("id", companyId)
+          .maybeSingle();
+        orgId = ((co as any) || {}).tm_org_id || "";
+      }
+
+      // No link yet? Fall back to the old guess, but ONLY while a guess is
+      // still safe. Two organisations and no link means we would be putting
+      // somebody into another company's jobs and hours, so refuse instead.
+      if (!orgId) {
+        const orgs = await prisma.organization.findMany({ take: 2, select: { id: true } });
+        if (orgs.length !== 1) return problem("nolink", email);
+        orgId = orgs[0].id;
+      }
 
       const meta: any = (user as any).user_metadata || {};
       const name =
@@ -88,7 +110,7 @@ export async function GET(req: Request) {
       tmUser = await prisma.user.create({
         data: {
           id: "usr_" + crypto.randomUUID(),
-          orgId: orgs[0].id,
+          orgId,
           email,
           name,
           role: tmRoleFor(suiteRole),

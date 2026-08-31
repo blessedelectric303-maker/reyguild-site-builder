@@ -16,6 +16,10 @@ const MESSAGES: Record<string, { title: string; body: string }> = {
     title: "Could not start your session",
     body: "You were found, but the session could not be created. Try again in a moment.",
   },
+  nolink: {
+    title: "Your company is not linked yet",
+    body: "This company has no Time and Material workspace attached to it, and there is more than one to choose from - so we will not guess and risk putting you in somebody else's jobs. An owner or admin needs to link them under Settings.",
+  },
   nouser: {
     title: "No Time and Material account yet",
     body: "Nobody in Time and Material is using this email address. An owner or admin needs to add this person under Users first, using the same email.",
