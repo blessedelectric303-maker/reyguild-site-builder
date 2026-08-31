@@ -158,6 +158,9 @@ const STYLE_FIX = `
   /* The five counters were five full-width cards before any content. They
      are a desk screen, not a truck screen. */
   .fl-stats .fl-chip { display: none !important; }
+  .fl-sideback { margin: 8px 12px 0; }
+  .fl-nav3 { padding: 6px 8px 8px !important; }
+  .fl-navspacer { flex: 1 1 auto; }
   .fl-actas { margin: 0 !important; }
   .fl-nav3 {
     background: #0f172a !important; gap: 0 !important;
@@ -175,10 +178,21 @@ const STYLE_FIX = `
   .fl-dashwrap { padding-top: 16px; }
 }
 
+/* Command center: its own line under the logo. It leaves the app, so it does
+   not belong in the row of things that switch pages inside it. */
+.fl-sideback {
+  display: inline-block; margin: 10px 16px 0; font-size: 13px;
+  font-weight: 700; text-decoration: none;
+}
+
+/* The five links left, Settings pushed right by a spacer that eats the gap. */
+.fl-nav3 { display: flex !important; align-items: center; flex-wrap: wrap; }
+.fl-navspacer { flex: 1 1 auto; }
+
 /* Settings underneath the row, in lighter text - the same relationship it has
    on the T and M side. It is not one of the five you work from all day. */
 .fl-settingslink {
-  display: block; width: 100%; text-align: left;
+  display: inline-block; width: auto; text-align: right;
   background: none; border: none; cursor: pointer;
   font-size: 13px; color: #64748b; padding: 6px 10px; margin-top: 4px;
 }

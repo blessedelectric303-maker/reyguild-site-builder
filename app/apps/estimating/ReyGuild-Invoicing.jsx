@@ -1301,7 +1301,7 @@ export default function ReyGuild({ suiteRole = "tech" }) {
           <span className="fl-logo"><img src={LOGO} alt="ReyGuild" /></span>
           <span className="fl-brandtext">
             <span className="fl-brandname"><span className="fl-rey">Rey</span><span className="fl-guild">Guild</span></span>
-            <span className="fl-tagline">Estimating &amp; Invoicing</span>
+            <span className="fl-tagline">Proposals &amp; Invoicing</span>
           </span>
         </div>
         <div className="fl-stats">
@@ -1320,11 +1320,6 @@ export default function ReyGuild({ suiteRole = "tech" }) {
             )}
             <span className="fl-rolebadge" style={{ "--accent": ROLE_COLOR[role] || "var(--ink-2)" }}>{role}</span>
           </label>
-          <div className="fl-chip" onClick={() => setPage("estimates")} style={{ cursor: "pointer" }}><span className="fl-chip-num">{myEstimates.length}</span><span className="fl-chip-lbl">estimates</span></div>
-          <div className="fl-chip" onClick={() => setPage("invoices")} style={{ cursor: "pointer" }}><span className="fl-chip-num">{myInvoices.length}</span><span className="fl-chip-lbl">invoices</span></div>
-          <div className={"fl-chip" + (fuDueList.length ? " due" : "")} onClick={() => setPage("followups")} style={{ cursor: "pointer" }}><span className="fl-chip-num">{fuDueList.length}</span><span className="fl-chip-lbl">follow-ups</span></div>
-          {isAdmin && <div className={"fl-chip" + ((pendingPayouts.length + lateFollowups.length + collectionsDue.length + approvalNotices.length) ? " alert" : "")} onClick={() => setPage("alerts")} style={{ cursor: "pointer" }}><span className="fl-chip-num">{pendingPayouts.length + lateFollowups.length + collectionsDue.length + approvalNotices.length}</span><span className="fl-chip-lbl">approvals</span></div>}
-          <div className={"fl-chip" + (unreadMsgs ? " alert" : "")} onClick={() => setPage("messages")} style={{ cursor: "pointer" }}><span className="fl-chip-num">{unreadMsgs}</span><span className="fl-chip-lbl">messages</span></div>
         </div>
       </header>
 
@@ -1334,13 +1329,17 @@ export default function ReyGuild({ suiteRole = "tech" }) {
         </div>
       )}
 
+      {/* Command center sits on its own line directly under the logo, so it
+          reads as "leave this app" rather than as a sixth tab. */}
+      <a className="fl-sideback" href="/">&larr; Command center</a>
+
       <nav className="fl-nav3">
-        <a className="fl-sideback" href="/">&larr; Command center</a>
         {TABS.map((t) => (
           <button key={t.key} className={"fl-sidelink" + (page === t.key ? " on" : "")} onClick={() => { setPage(t.key); setQuery(""); setNavOpen(false); }}>
             {t.label}{t.key === "messages" && unreadMsgs ? " (" + unreadMsgs + ")" : ""}
           </button>
         ))}
+        <span className="fl-navspacer" />
         <button
           className={"fl-settingslink" + (page === "settings" ? " on" : "")}
           onClick={() => { setPage("settings"); setQuery(""); setNavOpen(false); }}
@@ -2622,8 +2621,9 @@ export default function ReyGuild({ suiteRole = "tech" }) {
               </div>
               <Field label="Which app are you asking about?">
                 <select value={supportForm.app} onChange={(e) => setSupportForm({ ...supportForm, app: e.target.value })}>
-                  <option>ReyGuild — Estimating &amp; Invoicing</option>
-                  <option>ReyGuild — Client Outreach &amp; Commissions</option>
+                  <option>ReyGuild - Proposals &amp; Invoicing</option>
+                  <option>ReyGuild - T&amp;M &amp; P&amp;L</option>
+                  <option>ReyGuild - Command center</option>
                   <option>Other / not sure</option>
                 </select>
               </Field>
