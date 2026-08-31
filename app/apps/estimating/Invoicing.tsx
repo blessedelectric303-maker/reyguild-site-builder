@@ -80,159 +80,18 @@ async function migrateLegacy(companyId: string) {
 // then center them (Follow-ups, Royalties, Numbers, Help, SOPs, Audit + pills).
 // Plus wrap the top stat cards on phones.
 const STYLE_FIX = `
-/* Reshape the invoicing app into the same dark-sidebar layout as T&M&P&L.
-   The app's own markup is untouched; this positions it. */
+/* The invoicing app used to be reshaped into a 250px fixed left sidebar.
+   The header is now built to the same shape as T&M&P&L - a dark bar across
+   the top - so the sidebar rules are gone. Leaving them behind is what
+   squeezed the whole app into a narrow column on the right: the elements
+   they positioned no longer existed, but the 250px padding-left survived. */
 .fl-root { background: #f8fafc; }
-.fl-noprint { display: block !important; padding-left: 250px; min-height: 100vh; }
+.fl-noprint { display: block !important; padding-left: 0 !important; min-height: 100vh; }
 
-/* Sidebar: brand block on top, nav beneath, both fixed to the left edge. */
-.fl-header {
-  position: fixed !important; top: 0; left: 0; width: 250px; height: 132px;
-  background: #0f172a !important; border-bottom: 1px solid #1e293b !important;
-  display: flex !important; flex-direction: column !important; align-items: flex-start !important;
-  justify-content: center !important; gap: 10px !important; padding: 0 18px !important; margin: 0 !important; z-index: 40;
-}
-.fl-header .fl-guild, .fl-header .fl-tagline, .fl-header .fl-brandname { color: #f1f5f9 !important; }
-.fl-header .fl-tagline { letter-spacing: .18em !important; }
-.fl-stats { flex-wrap: wrap !important; gap: 6px !important; }
-.fl-stats .fl-chip { display: none !important; }
-.fl-actas { background: #1e293b !important; border-radius: 6px !important; padding: 4px 8px !important; }
-.fl-actas select { color: #f1f5f9 !important; background: transparent !important; font-weight: 700 !important; border: 0 !important; }
-.fl-rolebadge { background: #e0a82e !important; color: #0f172a !important; }
-
-.fl-nav3 {
-  position: fixed !important; top: 132px; left: 0; width: 250px; bottom: 0;
-  background: #0f172a !important; border: 0 !important; margin: 0 !important;
-  display: flex !important; flex-direction: column !important; align-items: stretch !important;
-  gap: 2px !important; padding: 14px 10px !important; overflow-y: auto; z-index: 40;
-}
-.fl-sideback {
-  display: block; text-align: center; background: #e0a82e; color: #0f172a;
-  font-weight: 800; font-size: 13px; border-radius: 6px; padding: 9px 10px;
-  text-decoration: none; margin-bottom: 12px;
-}
-.fl-sidelink {
-  display: block; width: 100%; text-align: left; background: transparent; border: 0;
-  color: #cbd5e1; font-size: 14px; font-weight: 600; padding: 9px 12px;
-  border-radius: 6px; cursor: pointer; font-family: inherit;
-}
-.fl-sidelink:hover { background: #1e293b; color: #fff; }
-.fl-sidelink.on { background: #e0a82e; color: #0f172a; font-weight: 800; }
-
-/* Content fills the page next to the sidebar. */
-.fl-noprint > *:not(.fl-header):not(.fl-nav3) { max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; width: auto !important; }
-.fl-grid, .fl-weekly { max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }
-.so-subnav { width: 100% !important; max-width: none !important; margin-left: 0 !important; }
-
-/* The name selector already says who you are. Drop the second copy. */
-.fl-rolebadge { display: none !important; }
-
-/* Dashboard: greeting, then big cards two to a row. */
-.fl-dashwrap { padding-top: 30px; }
-.fl-dashhello { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 34px; color: #16243F; margin: 0; letter-spacing: -0.01em; }
-.fl-dashdate { font-family: 'Inter', sans-serif; font-size: 15px; color: #39415a; margin: 6px 0 26px; }
-.fl-dash { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-.fl-dashcard {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
-  background: #fff; border: 1px solid #E4DECF; border-radius: 8px;
-  padding: 30px 28px; min-height: 140px; cursor: pointer; font-family: inherit; text-align: left;
-}
-.fl-dashcard:hover { border-color: #C68A1E; }
-.fl-dashcard.due { border-color: #C68A1E; box-shadow: inset 0 0 0 1px #C68A1E; }
-.fl-dashcard.alert { border-color: #BC4A3C; box-shadow: inset 0 0 0 1px #BC4A3C; }
-.fl-dashlbl { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: #39415a; }
-.fl-dashnum { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 46px; line-height: 1; color: #16243F; }
-
-/* Phones: the same chrome as the T and M tech view. Dark slate bar, the
-   crest, the name with the role under it, then ONE row of tabs. Everything
-   below is a white card with a hairline border, same as the other side. */
-@media (max-width: 860px) {
-  .fl-header {
-    background: #0f172a !important; color: #fff !important;
-    display: flex !important; align-items: center !important;
-    justify-content: space-between !important; gap: 8px;
-  }
-  .fl-header, .fl-header * { border-color: #1e293b !important; }
-  .fl-tagline { color: #94a3b8 !important; font-size: 11px !important; }
-  .fl-stats { gap: 6px !important; }
-  /* The five counters were five full-width cards before any content. They
-     are a desk screen, not a truck screen. */
-  .fl-stats .fl-chip { display: none !important; }
-  .fl-sideback { margin: 8px 12px !important; }
-  .fl-topright { gap: 10px; }
-  .fl-toplink { font-size: 12px; }
-  .fl-nav3 { padding: 6px 8px 8px !important; }
-  .fl-navspacer { flex: 1 1 auto; }
-  .fl-actas { margin: 0 !important; }
-  .fl-nav3 {
-    background: #0f172a !important; gap: 0 !important;
-    justify-content: space-between !important; padding: 0 4px 8px !important;
-  }
-  .fl-nav3 .fl-sidelink, .fl-nav3 button {
-    background: transparent !important; border: none !important;
-    color: #94a3b8 !important; font-size: 13px !important;
-    padding: 8px 6px !important; font-weight: 600 !important;
-  }
-  .fl-nav3 .fl-sidelink.active, .fl-nav3 button.active {
-    color: #fff !important; border-bottom: 2px solid #e0a82e !important;
-    border-radius: 0 !important;
-  }
-  .fl-dashwrap { padding-top: 16px; }
-}
-
-
-/* ── Header, built to match T&M & P&L ───────────────────────────────────── */
-.fl-tmhead { background: #0f172a; color: #fff; }
-.fl-tmtop {
-  max-width: 42rem; margin: 0 auto; padding: 12px 16px;
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-}
-.fl-tmleft { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 8px; }
-.fl-tmleft .fl-logo img { height: 24px; width: auto; display: block; }
-.fl-tmleft .fl-brandname { font-size: 15px; font-weight: 800; letter-spacing: .02em; }
-.fl-tmleft .fl-rey { color: #e0a82e; }
-.fl-tmleft .fl-guild { color: #fff; }
-
-.fl-tmwho { flex: 1 1 0; min-width: 0; text-align: center; }
-.fl-tmname, .fl-tmselect {
-  display: block; width: 100%; font-size: 14px; font-weight: 500;
-  color: #e2e8f0; background: none; border: none; text-align: center;
-}
-.fl-tmselect { cursor: pointer; }
-.fl-tmselect option { color: #0f172a; }
-.fl-tmrole {
-  display: block; font-size: 11px; text-transform: uppercase;
-  letter-spacing: .08em; color: #94a3b8;
-}
-
-.fl-tmright { flex: 1 1 0; display: flex; justify-content: flex-end; }
-.fl-tmset {
-  background: none; border: none; cursor: pointer;
-  font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: underline;
-}
-.fl-tmset:hover, .fl-tmset.on { color: #fff; }
-
-/* Full width, edge to edge. It leaves the app - it is not one tab among the
-   others, and a half-width button read like one. */
-.fl-tmback {
-  display: block; max-width: 42rem; margin: 0 auto 8px;
-  padding: 9px 16px; text-align: center;
-  background: #e0a82e; color: #0f172a; font-weight: 700; font-size: 13px;
-  text-decoration: none; border-radius: 6px;
-  width: calc(100% - 32px);
-}
-
-/* One row, tabs share the width evenly, gold underline on the live one. */
-.fl-tmnav { max-width: 42rem; margin: 0 auto; padding: 0 4px; display: flex; }
-.fl-tmtab {
-  flex: 1 1 0; min-width: 0; background: none; border: none; cursor: pointer;
-  padding: 10px 2px; font-size: 12px; font-weight: 500; line-height: 1.2;
-  color: #cbd5e1; border-bottom: 2px solid transparent;
-}
-.fl-tmtab:hover { color: #fff; }
-.fl-tmtab.on { color: #fff; border-bottom-color: #e0a82e; }
-
-@media (min-width: 640px) { .fl-tmtab { font-size: 14px; } }
+/* Content is full width now. Nothing is pinned to a left edge. */
+.fl-noprint > *:not(.fl-tmhead) { max-width: 42rem; margin-left: auto !important; margin-right: auto !important; }
+.fl-grid, .fl-weekly { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
+.so-subnav { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
 
 /* The header, built to the same shape as T and M and P and L. */
 .fl-tmhead { background: #0f172a; color: #fff; }
@@ -248,8 +107,8 @@ const STYLE_FIX = `
 .fl-tmwho { flex: 1; min-width: 0; text-align: center; }
 .fl-tmname { display: block; font-size: 14px; font-weight: 600; color: #e2e8f0; }
 .fl-tmselect {
-  background: transparent; border: none; color: #e2e8f0;
-  font-size: 14px; font-weight: 600; text-align: center;
+  background: transparent; border: none; color: #e2e8f0; max-width: 100%;
+  font-size: 14px; font-weight: 600; text-align: center; font-family: inherit;
 }
 .fl-tmrole {
   display: block; font-size: 11px; text-transform: uppercase;
@@ -257,15 +116,16 @@ const STYLE_FIX = `
 }
 .fl-tmright { flex: 1; display: flex; justify-content: flex-end; }
 .fl-tmset {
-  background: none; border: none; cursor: pointer;
-  font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: underline;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  font-size: 12px; color: #94a3b8; text-decoration: underline;
 }
 .fl-tmset.on, .fl-tmset:hover { color: #fff; }
 .fl-tmnav { max-width: 42rem; margin: 0 auto; padding: 0 4px; display: flex; }
 .fl-tmtab {
   flex: 1; min-width: 0; background: none; border: none; cursor: pointer;
-  text-align: center; padding: 10px 2px; font-size: 13px; font-weight: 600;
+  text-align: center; padding: 10px 2px; font-size: 12px; font-weight: 600;
   line-height: 1.2; color: #cbd5e1; border-bottom: 2px solid transparent;
+  font-family: inherit;
 }
 .fl-tmtab:hover { color: #fff; border-bottom-color: #475569; }
 .fl-tmtab.on { color: #fff; border-bottom-color: #e0a82e; }
@@ -273,7 +133,7 @@ const STYLE_FIX = `
 /* Leaving the app: three buttons, in the app's own colours. */
 .fl-leaverow {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; margin: 24px 0 8px; flex-wrap: wrap;
+  gap: 10px; margin: 24px auto 8px; max-width: 42rem; flex-wrap: wrap;
 }
 .fl-btn-command, .fl-btn-swap, .fl-btn-signout {
   font-weight: 700; font-size: 13px; padding: 10px 14px;
@@ -283,87 +143,42 @@ const STYLE_FIX = `
 .fl-btn-swap    { background: #e0a82e; color: #16243F; }
 .fl-btn-signout { background: #fff; color: #dc2626; border: 1px solid #fca5a5; }
 
-/* Header: logo hard left, Messages and Settings hard right in the brand blue
-   that matches the wordmark. Nothing else lives up here. */
-.fl-topright { display: flex; align-items: center; gap: 14px; margin-left: auto; }
-.fl-toplink {
-  background: none; border: none; cursor: pointer; padding: 4px 2px;
-  font-size: 13px; font-weight: 700; color: #2183E8;
+/* Dashboard cards. */
+.fl-dashwrap { padding-top: 20px; }
+.fl-dashhello { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 26px; color: #16243F; margin: 0; }
+.fl-dashdate { font-family: 'Inter', sans-serif; font-size: 14px; color: #39415a; margin: 6px 0 20px; }
+.fl-dash { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fl-dashcard {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  background: #fff; border: 1px solid #E4DECF; border-radius: 8px;
+  padding: 18px 16px; min-height: 96px; cursor: pointer; font-family: inherit; text-align: left;
 }
-.fl-toplink.on { color: #16243F; border-bottom: 2px solid #2183E8; }
-.fl-toplink:hover { color: #16243F; }
-.fl-whoami { font-weight: 700; font-size: 13px; color: #39415a; }
+.fl-dashcard:hover { border-color: #C68A1E; }
+.fl-dashcard.due { border-color: #C68A1E; }
+.fl-dashcard.alert { border-color: #BC4A3C; }
+.fl-dashlbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #39415a; }
+.fl-dashnum { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 34px; line-height: 1; color: #16243F; }
 
-/* Command center: its own line under the logo, and the FULL width of it.
-   A half-width button reads as one option among several; a full-width bar
-   reads as "leave this app", which is what it does. */
-.fl-sideback {
-  display: block !important; width: auto !important;
-  margin: 10px 16px !important; padding: 10px 14px !important;
-  text-align: center; background: #e0a82e; color: #0f172a !important;
-  border-radius: 6px; font-weight: 700; font-size: 13px; text-decoration: none;
-}
-
-/* Old rule kept below for anything that still references it. */
-.fl-sideback-old { It leaves the app, so it does
-   not belong in the row of things that switch pages inside it. */
-.fl-sideback {
-  display: inline-block; margin: 10px 16px 0; font-size: 13px;
-  font-weight: 700; text-decoration: none;
-}
-
-/* The five links left, Settings pushed right by a spacer that eats the gap. */
-.fl-nav3 { display: flex !important; align-items: center; flex-wrap: wrap; }
-.fl-navspacer { flex: 1 1 auto; }
-
-/* Settings underneath the row, in lighter text - the same relationship it has
-   on the T and M side. It is not one of the five you work from all day. */
-.fl-settingslink {
-  display: inline-block; width: auto; text-align: right;
-  background: none; border: none; cursor: pointer;
-  font-size: 13px; color: #64748b; padding: 6px 10px; margin-top: 4px;
-}
-.fl-settingslink.on { color: #0f172a; font-weight: 700; }
-
-/* Procedure guides: small boxes with a title you tap, not walls of text. */
+/* Procedure guides: small boxes with a title you tap. */
 .fl-guides { display: grid; gap: 8px; margin-top: 12px; }
 .fl-guide {
-  display: block; background: #fff; border: 1px solid #E4DECF;
-  border-radius: 8px; padding: 14px 16px; text-decoration: none;
+  display: block; width: 100%; text-align: left; background: #fff;
+  border: 1px solid #E4DECF; border-radius: 8px; padding: 14px 16px;
+  text-decoration: none; cursor: pointer; font-family: inherit;
 }
 .fl-guide:hover { border-color: #C68A1E; }
 .fl-guide-t { display: block; font-weight: 700; font-size: 14px; color: #16243F; }
 .fl-guide-b { display: block; font-size: 12px; color: #64748b; margin-top: 3px; line-height: 1.4; }
 
-/* Settings footer: gold switch on the left, white box with red lettering on
-   the right. Identical to the T and M tech settings, deliberately. */
-.fl-footactions {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; margin: 24px 0 8px;
-}
-.fl-switchbtn {
-  background: #e0a82e; color: #0f172a; font-weight: 700; font-size: 14px;
-  padding: 10px 16px; border-radius: 6px; text-decoration: none;
-}
-.fl-signoutbtn {
-  background: #fff; color: #dc2626; border: 1px solid #fca5a5;
-  font-weight: 700; font-size: 14px; padding: 10px 16px; border-radius: 6px;
-  text-decoration: none;
-}
-.fl-whoami { font-weight: 700; color: inherit; }
+.fl-whoami { font-weight: 700; font-size: 13px; color: #e2e8f0; }
+.fl-rolebadge { display: none !important; }
 
-@media (max-width: 860px) {
-  .fl-noprint { padding-left: 0; }
-  .fl-header { position: static !important; width: auto; height: auto; padding: 14px 16px !important; }
-  .fl-nav3 {
-    position: static !important; width: auto; bottom: auto;
-    flex-direction: row !important; flex-wrap: wrap !important; padding: 10px !important;
-  }
-  .fl-sideback { width: 100%; }
+@media (max-width: 640px) {
+  .fl-tmtab { font-size: 11px; padding: 9px 1px; }
+  .fl-tmtop { padding: 10px 12px; }
   .fl-dash { grid-template-columns: minmax(0, 1fr); }
-  .fl-dashhello { font-size: 26px; }
-  .fl-sidelink { width: auto; }
-  .fl-stats .fl-chip { display: flex !important; }
+  .fl-leaverow { gap: 8px; }
+  .fl-btn-command, .fl-btn-swap, .fl-btn-signout { font-size: 12px; padding: 9px 11px; }
 }
 `;
 
