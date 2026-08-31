@@ -54,7 +54,7 @@ export default async function LegalPage({
         {!doc ? (
           <p className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-600">
             This page has not been published yet. Contact
-            BlessedElectric303@gmail.com for a copy.
+            support@reyguild.com for a copy.
           </p>
         ) : (
           <>
@@ -66,7 +66,7 @@ export default async function LegalPage({
         )}
 
         <p className="mt-8 text-center text-xs text-slate-400">
-          Blessed Electric LLC, doing business as ReyGuild &middot; Denver, Colorado
+          ReyGuild &middot; Denver, Colorado
         </p>
       </div>
     </main>
