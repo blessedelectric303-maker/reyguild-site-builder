@@ -548,7 +548,7 @@ export default function ReyGuild({ suiteRole = "tech" }) {
   const [royaltyTo, setRoyaltyTo] = useState(() => toLocalDate(new Date()));
   const [audit, setAudit] = useState([]);
   const [auditQuery, setAuditQuery] = useState("");
-  const [settingsSub, setSettingsSub] = useState("help");
+  const [settingsSub, setSettingsSub] = useState("procedures");
   const [previewFor, setPreviewFor] = useState(null); // record id whose preview is open
   const [messages, setMessages] = useState([]);
   const [msgSeen, setMsgSeen] = useState({});
@@ -687,23 +687,26 @@ export default function ReyGuild({ suiteRole = "tech" }) {
     managePeople: role === "Owner",
   };
 
+  // The five that matter, in the order somebody works: quote it, bill it,
+  // who for, what it costs, talk about it. Settings is NOT in here - it sits
+  // below the row in smaller text, the way it does on the T and M side.
+  //
+  // "My pay" and "Royalties" are gone. There are no royalties: the job gets
+  // invoiced and the person gets paid for the work.
   const TABS = [
-    { key: "dashboard", label: "Dashboard", show: isAdmin },
-    { key: "estimates", label: "Estimates", show: true },
+    { key: "estimates", label: "Proposals", show: true },
     { key: "invoices", label: "Invoices", show: true },
-    { key: "followups", label: "Follow-ups", show: isAdmin },
     { key: "clients", label: "Clients", show: true },
     { key: "prices", label: "Price List", show: true },
-    { key: "mypay", label: "My pay", show: !can.seeNumbers },
+    { key: "messages", label: "Messages", show: true },
+    { key: "dashboard", label: "Dashboard", show: isAdmin },
+    { key: "followups", label: "Follow-ups", show: isAdmin },
     { key: "team", label: "Team", show: isAdmin },
     { key: "alerts", label: "Approvals", show: isAdmin },
-    { key: "royalties", label: "Royalties", show: can.seeNumbers },
     { key: "numbers", label: "Numbers", show: can.seeNumbers },
-    { key: "messages", label: "Messages", show: true },
-    { key: "settings", label: "Settings", show: true },
   ].filter((t) => t.show);
 
-  useEffect(() => { if (!TABS.some((t) => t.key === page)) setPage(TABS[0] ? TABS[0].key : "estimates"); }, [role]);
+  useEffect(() => { if (page !== "settings" && !TABS.some((t) => t.key === page)) setPage(TABS[0] ? TABS[0].key : "estimates"); }, [role]);
   useEffect(() => { if (page === "messages") save(STORAGE.msgSeen, { ...msgSeen, [actorKey]: Date.now() }, setMsgSeen); }, [page]);
 
   // estimators always create under their own name
@@ -1302,6 +1305,10 @@ export default function ReyGuild({ suiteRole = "tech" }) {
           </span>
         </div>
         <div className="fl-stats">
+          {/* The five counters lived here. Every one of them opened a page
+              that is already a tab in the nav directly underneath, so on a
+              phone you scrolled past five big white boxes to reach the same
+              five links. */}
           <label className="fl-actas">
             {canPreview ? (
               <select value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)}>
@@ -1334,6 +1341,12 @@ export default function ReyGuild({ suiteRole = "tech" }) {
             {t.label}{t.key === "messages" && unreadMsgs ? " (" + unreadMsgs + ")" : ""}
           </button>
         ))}
+        <button
+          className={"fl-settingslink" + (page === "settings" ? " on" : "")}
+          onClick={() => { setPage("settings"); setQuery(""); setNavOpen(false); }}
+        >
+          Settings
+        </button>
       </nav>
 
       {page === "dashboard" && (
@@ -2027,19 +2040,39 @@ export default function ReyGuild({ suiteRole = "tech" }) {
       {page === "settings" && (
         <>
           <div className="so-subnav">
-            <button className={"fl-pill" + (settingsSub === "help" ? " active" : "")} onClick={() => setSettingsSub("help")}>Help</button>
+            <button className={"fl-pill" + (settingsSub === "procedures" ? " active" : "")} onClick={() => setSettingsSub("procedures")}>Procedures</button>
             <button className={"fl-pill" + (settingsSub === "preferences" ? " active" : "")} onClick={() => setSettingsSub("preferences")}>Preferences</button>
-            {/* SOPs, Account and the audit log are office work. A tech in a
-                truck has Help and Preferences, the same two the T and M side
-                gives him, and nothing else to scroll past. */}
-            {isAdmin && <button className={"fl-pill" + (settingsSub === "sops" ? " active" : "")} onClick={() => setSettingsSub("sops")}>SOPs</button>}
+            <button className={"fl-pill" + (settingsSub === "help" ? " active" : "")} onClick={() => setSettingsSub("help")}>Help</button>
             {can.editProfile && <button className={"fl-pill" + (settingsSub === "account" ? " active" : "")} onClick={() => setSettingsSub("account")}>Account</button>}
             {can.managePeople && <button className={"fl-pill" + (settingsSub === "audit" ? " active" : "")} onClick={() => setSettingsSub("audit")}>Audit log</button>}
           </div>
 
+          {/* Procedures: the written guides, each on its own page. Small boxes
+              with a title you tap, not walls of text you scroll past. */}
+          {settingsSub === "procedures" && (
+            <div className="fl-weekly">
+              <p className="fl-foot-note" style={{ marginTop: 0 }}>
+                How the work gets quoted, billed and handed over. Tap one to read it.
+              </p>
+              <div className="fl-guides">
+                {[
+                  ["guide-proposal", "How to build a proposal", "Walking the job, and the three lines that go at the bottom of every one."],
+                  ["guide-invoice", "How to build an invoice", "When to raise one, what to bill, and never taking payment yourself."],
+                  ["guide-convert", "Turning a proposal into an invoice", "Do not retype it. What carries across and what changes."],
+                  ["guide-pricelist-have", "Price list: I already have one", "An AI prompt that converts your list into the format this app imports."],
+                  ["guide-pricelist-none", "Price list: starting from nothing", "An AI prompt that interviews you and builds one from scratch."],
+                ].map(([key, title, blurb]) => (
+                  <a key={key} className="fl-guide" href={"/guide/" + key}>
+                    <span className="fl-guide-t">{title}</span>
+                    <span className="fl-guide-b">{blurb}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Switch on the left, sign out on the right - so the thing you press
-              often is nowhere near the thing you press by accident. Same
-              arrangement, same colours, as the T and M tech settings. */}
+              often is nowhere near the thing you press by accident. */}
           <div className="fl-footactions">
             <a href="/tm/enter" className="fl-switchbtn">Switch to T&amp;M &amp; P&amp;L</a>
             <a href="/auth/signout" className="fl-signoutbtn">Sign out</a>

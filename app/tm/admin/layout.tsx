@@ -3,6 +3,11 @@ import { getCurrentUser, ADMIN_ROLES, ROLES, ALL_OFFICE_ROLES, isOrgLocked } fro
 import { prisma } from "@/lib/prisma";
 import AdminShell from "./AdminShell";
 
+export const metadata = {
+  title: "ReyGuild - Admin Portal",
+  description: "Jobs, scheduling, timesheets and the numbers.",
+};
+
 export default async function AdminLayout({
   children,
 }: {

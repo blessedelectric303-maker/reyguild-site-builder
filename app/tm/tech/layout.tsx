@@ -15,6 +15,13 @@ const NAV = [
   { href: "/tm/tech/messages", label: "Messages" },
 ];
 
+// What the browser tab says. Nobody should see a vercel address at the top of
+// their phone - they should see whose app it is and which door they came in.
+export const metadata = {
+  title: "ReyGuild - Employee Portal",
+  description: "Your jobs, procedures, hours and documents.",
+};
+
 export default async function TechLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

@@ -3,6 +3,11 @@ import { createClient } from "@/utils/supabase/server";
 import { canAccess, homeFor } from "@/utils/roles";
 import Invoicing from "./Invoicing";
 
+export const metadata = {
+  title: "ReyGuild - Proposals & Invoicing",
+  description: "Proposals, invoices, clients and the price list.",
+};
+
 export default async function EstimatingPage() {
   const supabase = await createClient();
   const {

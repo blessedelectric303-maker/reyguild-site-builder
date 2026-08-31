@@ -175,6 +175,25 @@ const STYLE_FIX = `
   .fl-dashwrap { padding-top: 16px; }
 }
 
+/* Settings underneath the row, in lighter text - the same relationship it has
+   on the T and M side. It is not one of the five you work from all day. */
+.fl-settingslink {
+  display: block; width: 100%; text-align: left;
+  background: none; border: none; cursor: pointer;
+  font-size: 13px; color: #64748b; padding: 6px 10px; margin-top: 4px;
+}
+.fl-settingslink.on { color: #0f172a; font-weight: 700; }
+
+/* Procedure guides: small boxes with a title you tap, not walls of text. */
+.fl-guides { display: grid; gap: 8px; margin-top: 12px; }
+.fl-guide {
+  display: block; background: #fff; border: 1px solid #E4DECF;
+  border-radius: 8px; padding: 14px 16px; text-decoration: none;
+}
+.fl-guide:hover { border-color: #C68A1E; }
+.fl-guide-t { display: block; font-weight: 700; font-size: 14px; color: #16243F; }
+.fl-guide-b { display: block; font-size: 12px; color: #64748b; margin-top: 3px; line-height: 1.4; }
+
 /* Settings footer: gold switch on the left, white box with red lettering on
    the right. Identical to the T and M tech settings, deliberately. */
 .fl-footactions {
