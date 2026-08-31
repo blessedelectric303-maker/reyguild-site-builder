@@ -505,7 +505,7 @@ const SUITE_TO_EST = {
   apprentice: "Estimator",
 };
 
-export default function ReyGuild({ suiteRole = "tech" }) {
+export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const lockedRole = SUITE_TO_EST[String(suiteRole).toLowerCase()] || "Estimator";
   const [loading, setLoading] = useState(true);
   // A link can open a tab directly - the command center's Client Contacts
@@ -660,11 +660,18 @@ export default function ReyGuild({ suiteRole = "tech" }) {
   // to the office (admins) on their own private line, or to the whole team.
   const msgTargets = isAdmin
     ? [{ key: "team", label: "Whole team" }].concat(people.filter((p) => (p.name || "").trim() && p.name !== myName).map((p) => ({ key: p.name, label: p.name })))
-    : [{ key: actorKey, label: "The office" }, { key: "team", label: "Whole team" }];
+    : [{ key: actorKey, label: "The office" }];
   const msgAllowed = msgTargets.map((t) => t.key);
   const effTarget = msgAllowed.includes(msgTarget) ? msgTarget : msgTargets[0].key;
   // who can see a message: team is everyone; a person-thread is that person + all admins
-  function canSeeMsg(m) { const th = threadOf(m); return th === "team" || isAdmin || th === actorKey; }
+  function canSeeMsg(m) {
+    const th = threadOf(m);
+    // Team threads are office-only to READ as well as to send. Before this a
+    // tech could not post a broadcast but could read every one the office
+    // sent, which is the same leak wearing a different hat.
+    if (th === "team") return isAdmin;
+    return isAdmin || th === actorKey;
+  }
   const threadMsgs = messages.filter((m) => threadOf(m) === effTarget);
   function sendMessage() {
     const t = msgDraft.trim(); if (!t) return;
@@ -1331,7 +1338,7 @@ export default function ReyGuild({ suiteRole = "tech" }) {
                 {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             ) : (
-              <span className="fl-tmname">{myName || profile.name || ""}</span>
+              <span className="fl-tmname">{myName || signedInName || ""}</span>
             )}
             <span className="fl-tmrole">{role}</span>
           </div>

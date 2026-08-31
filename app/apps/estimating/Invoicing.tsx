@@ -192,6 +192,7 @@ const InvoicingApp = dynamic(() => import("./ReyGuild-Invoicing"), {
 export default function Invoicing() {
   const [ready, setReady] = useState(false);
   const [role, setRole] = useState("tech");
+  const [who, setWho] = useState("");
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -217,6 +218,11 @@ export default function Invoicing() {
         // and let them pick anybody from an "Acting as" menu - which handed a
         // tech cost, margin, the price list and CSV export of every client.
         const suiteRole = (mem as any)?.role || "tech";
+        // The name shown above the role. The invoicing app only knew its own
+        // "people" list, so anybody never added there showed a blank.
+        const meta: any = (su as any)?.user_metadata || {};
+        const myName = String(meta.full_name || meta.name || "").trim()
+          || String(su?.email || "").split("@")[0];
         if (!companyId) {
           if (alive) setErr("No company found for this account. Open Settings and set up your company first.");
           return;
@@ -241,7 +247,7 @@ export default function Invoicing() {
 
         installStorage(companyId);
         await migrateLegacy(companyId);
-        if (alive) { setRole(suiteRole); setReady(true); }
+        if (alive) { setRole(suiteRole); setWho(myName); setReady(true); }
       } catch (e: any) {
         if (alive) setErr("Could not reach your company data. Check your connection and reload.");
       }
@@ -261,7 +267,7 @@ export default function Invoicing() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLE_FIX }} />
-      <InvoicingApp suiteRole={role} />
+      <InvoicingApp suiteRole={role} signedInName={who} />
     </>
   );
 }

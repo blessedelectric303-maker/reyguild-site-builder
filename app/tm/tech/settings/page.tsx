@@ -39,6 +39,7 @@ export default async function TechSettingsPage() {
   // across. An apprentice does not - T and M and P and L is his whole job -
   // so the link simply is not there for him.
   let canSwitch = false;
+  let isOffice = false;
   try {
     const supabase = await createClient();
     const {
@@ -52,7 +53,9 @@ export default async function TechSettingsPage() {
         .eq("user_id", su.id)
         .limit(1)
         .maybeSingle();
-      canSwitch = canAccess(((mem as any) || {}).role || "", "estimating");
+      const r = ((mem as any) || {}).role || "";
+      canSwitch = canAccess(r, "estimating");
+      isOffice = r === "owner" || r === "admin";
     }
   } catch (e) {
     canSwitch = false;
@@ -84,13 +87,21 @@ export default async function TechSettingsPage() {
           The command center button is not here: this layout only ever serves
           technicians and apprentices, and they are redirected out of the
           command center. Offering it would be a dead end. */}
+      {/* Leave left, cross over middle, sign out right. Same three, same
+          order, same colours as Proposals and Invoicing. The command center
+          button only renders for the office tier - this layout serves
+          technicians and apprentices, who are redirected out of the command
+          center, so for them it would be a dead end. */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
+        {isOffice ? (
+          <a href="/" className="rounded-md px-4 py-2.5 text-sm font-bold"
+             style={{ background: "#16243F", color: "#e0a82e" }}>
+            &larr; Back to command center
+          </a>
+        ) : <span />}
         {canSwitch ? (
-          <a
-            href="/apps/estimating"
-            className="rounded-md px-4 py-2.5 text-sm font-bold"
-            style={{ background: "#e0a82e", color: "#16243F" }}
-          >
+          <a href="/apps/estimating" className="rounded-md px-4 py-2.5 text-sm font-bold"
+             style={{ background: "#e0a82e", color: "#16243F" }}>
             Switch to Proposals &amp; Invoicing
           </a>
         ) : <span />}
