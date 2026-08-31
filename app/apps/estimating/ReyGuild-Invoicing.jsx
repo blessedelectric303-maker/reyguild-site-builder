@@ -703,6 +703,7 @@ export default function ReyGuild({ suiteRole = "tech" }) {
     { key: "estimates", label: "Proposals", show: true },
     { key: "invoices", label: "Invoices", show: true },
     { key: "prices", label: "Price List", show: true },
+    { key: "messages", label: "Messages", show: true },
   ].filter((t) => t.show);
 
   // Reachable, but from inside Settings rather than from the row.
@@ -1308,57 +1309,62 @@ export default function ReyGuild({ suiteRole = "tech" }) {
   return (
     <div className={"fl-root" + (theme === "dark" ? " so-dark" : "")}>
       <div className="fl-noprint">
-      <header className="fl-header">
-        <div className="fl-wordmark">
-          <span className="fl-logo"><img src={LOGO} alt="ReyGuild" /></span>
-          <span className="fl-brandtext">
+      {/* Built to the same shape as T and M and P and L, deliberately. One
+          dark bar: crest left, who you are in the middle, Settings right.
+          Then one row of evenly spread tabs. Leaving the app lives in
+          Settings, not in the header - T and M never had it up there either. Two apps that look different for no reason is
+          two apps to learn. */}
+      <header className="fl-tmhead">
+        <div className="fl-tmtop">
+          <div className="fl-tmleft">
+            <span className="fl-logo"><img src={LOGO} alt="ReyGuild" /></span>
             <span className="fl-brandname"><span className="fl-rey">Rey</span><span className="fl-guild">Guild</span></span>
-            <span className="fl-tagline">Proposals &amp; Invoicing</span>
-          </span>
-        </div>
-        <div className="fl-topright">
-          <label className="fl-actas">
+          </div>
+          <div className="fl-tmwho">
             {canPreview ? (
-              <select value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)}>
+              <select
+                className="fl-tmselect"
+                value={currentUserId}
+                onChange={(e) => setCurrentUserId(e.target.value)}
+              >
                 <option value="">{profile.name || "Owner"}</option>
                 {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             ) : (
-              <span className="fl-whoami">{myName || profile.name || ""}</span>
+              <span className="fl-tmname">{myName || profile.name || ""}</span>
             )}
-          </label>
-          <button
-            className={"fl-toplink" + (page === "messages" ? " on" : "")}
-            onClick={() => { setPage("messages"); setQuery(""); }}
-          >
-            Messages{unreadMsgs ? " (" + unreadMsgs + ")" : ""}
-          </button>
-          <button
-            className={"fl-toplink" + (page === "settings" ? " on" : "")}
-            onClick={() => { setPage("settings"); setQuery(""); }}
-          >
-            Settings
-          </button>
+            <span className="fl-tmrole">{role}</span>
+          </div>
+          <div className="fl-tmright">
+            <button
+              className={"fl-tmset" + (page === "settings" ? " on" : "")}
+              onClick={() => { setPage("settings"); setQuery(""); }}
+            >
+              Settings
+            </button>
+          </div>
         </div>
+
+        <nav className="fl-tmnav">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              className={"fl-tmtab" + (page === t.key ? " on" : "")}
+              onClick={() => { setPage(t.key); setQuery(""); setNavOpen(false); }}
+            >
+              {t.label}{t.key === "messages" && unreadMsgs ? " (" + unreadMsgs + ")" : ""}
+            </button>
+          ))}
+        </nav>
       </header>
 
       {isAdmin && collectionsDue.length > 0 && (
         <div className="so-banner" onClick={() => setPage("alerts")}>
-          ⚠ {collectionsDue.length} invoice{collectionsDue.length === 1 ? "" : "s"} still unpaid {COLLECT_AFTER_DAYS}+ days after the past-due notice — time to call the client. Tap to review.
+          {collectionsDue.length} invoice{collectionsDue.length === 1 ? "" : "s"} still unpaid {COLLECT_AFTER_DAYS}+ days after the past-due notice - time to call the client. Tap to review.
         </div>
       )}
 
-      {/* Command center sits on its own line directly under the logo, so it
-          reads as "leave this app" rather than as a sixth tab. */}
-      <a className="fl-sideback" href="/">&larr; Command center</a>
 
-      <nav className="fl-nav3">
-        {TABS.map((t) => (
-          <button key={t.key} className={"fl-sidelink" + (page === t.key ? " on" : "")} onClick={() => { setPage(t.key); setQuery(""); setNavOpen(false); }}>
-            {t.label}{t.key === "messages" && unreadMsgs ? " (" + unreadMsgs + ")" : ""}
-          </button>
-        ))}
-      </nav>
 
       {page === "dashboard" && (
         <div className="fl-dashwrap">
@@ -2100,9 +2106,16 @@ export default function ReyGuild({ suiteRole = "tech" }) {
 
           {/* Switch on the left, sign out on the right - so the thing you press
               often is nowhere near the thing you press by accident. */}
-          <div className="fl-footactions">
-            <a href="/tm/enter" className="fl-switchbtn">Switch to T&amp;M &amp; P&amp;L</a>
-            <a href="/auth/signout" className="fl-signoutbtn">Sign out</a>
+          {/* Leave left, cross over middle, sign out right. The thing you
+              press by accident is as far as possible from the thing you press
+              often. The command center button only appears for the office -
+              a tech is redirected out of it, so offering it is a dead end. */}
+          <div className="fl-leaverow">
+            {isAdmin ? (
+              <a href="/" className="fl-btn-command">&larr; Back to command center</a>
+            ) : <span />}
+            <a href="/tm/enter" className="fl-btn-swap">Switch to T&amp;M &amp; P&amp;L</a>
+            <a href="/auth/signout" className="fl-btn-signout">Sign out</a>
           </div>
         </>
       )}

@@ -180,6 +180,109 @@ const STYLE_FIX = `
   .fl-dashwrap { padding-top: 16px; }
 }
 
+
+/* ── Header, built to match T&M & P&L ───────────────────────────────────── */
+.fl-tmhead { background: #0f172a; color: #fff; }
+.fl-tmtop {
+  max-width: 42rem; margin: 0 auto; padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.fl-tmleft { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.fl-tmleft .fl-logo img { height: 24px; width: auto; display: block; }
+.fl-tmleft .fl-brandname { font-size: 15px; font-weight: 800; letter-spacing: .02em; }
+.fl-tmleft .fl-rey { color: #e0a82e; }
+.fl-tmleft .fl-guild { color: #fff; }
+
+.fl-tmwho { flex: 1 1 0; min-width: 0; text-align: center; }
+.fl-tmname, .fl-tmselect {
+  display: block; width: 100%; font-size: 14px; font-weight: 500;
+  color: #e2e8f0; background: none; border: none; text-align: center;
+}
+.fl-tmselect { cursor: pointer; }
+.fl-tmselect option { color: #0f172a; }
+.fl-tmrole {
+  display: block; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .08em; color: #94a3b8;
+}
+
+.fl-tmright { flex: 1 1 0; display: flex; justify-content: flex-end; }
+.fl-tmset {
+  background: none; border: none; cursor: pointer;
+  font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: underline;
+}
+.fl-tmset:hover, .fl-tmset.on { color: #fff; }
+
+/* Full width, edge to edge. It leaves the app - it is not one tab among the
+   others, and a half-width button read like one. */
+.fl-tmback {
+  display: block; max-width: 42rem; margin: 0 auto 8px;
+  padding: 9px 16px; text-align: center;
+  background: #e0a82e; color: #0f172a; font-weight: 700; font-size: 13px;
+  text-decoration: none; border-radius: 6px;
+  width: calc(100% - 32px);
+}
+
+/* One row, tabs share the width evenly, gold underline on the live one. */
+.fl-tmnav { max-width: 42rem; margin: 0 auto; padding: 0 4px; display: flex; }
+.fl-tmtab {
+  flex: 1 1 0; min-width: 0; background: none; border: none; cursor: pointer;
+  padding: 10px 2px; font-size: 12px; font-weight: 500; line-height: 1.2;
+  color: #cbd5e1; border-bottom: 2px solid transparent;
+}
+.fl-tmtab:hover { color: #fff; }
+.fl-tmtab.on { color: #fff; border-bottom-color: #e0a82e; }
+
+@media (min-width: 640px) { .fl-tmtab { font-size: 14px; } }
+
+/* The header, built to the same shape as T and M and P and L. */
+.fl-tmhead { background: #0f172a; color: #fff; }
+.fl-tmtop {
+  max-width: 42rem; margin: 0 auto; padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.fl-tmleft { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.fl-tmleft .fl-logo img { height: 24px; width: auto; }
+.fl-tmleft .fl-brandname { font-size: 15px; font-weight: 800; letter-spacing: .02em; }
+.fl-tmleft .fl-rey { color: #e0a82e; }
+.fl-tmleft .fl-guild { color: #fff; }
+.fl-tmwho { flex: 1; min-width: 0; text-align: center; }
+.fl-tmname { display: block; font-size: 14px; font-weight: 600; color: #e2e8f0; }
+.fl-tmselect {
+  background: transparent; border: none; color: #e2e8f0;
+  font-size: 14px; font-weight: 600; text-align: center;
+}
+.fl-tmrole {
+  display: block; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .06em; color: #94a3b8;
+}
+.fl-tmright { flex: 1; display: flex; justify-content: flex-end; }
+.fl-tmset {
+  background: none; border: none; cursor: pointer;
+  font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: underline;
+}
+.fl-tmset.on, .fl-tmset:hover { color: #fff; }
+.fl-tmnav { max-width: 42rem; margin: 0 auto; padding: 0 4px; display: flex; }
+.fl-tmtab {
+  flex: 1; min-width: 0; background: none; border: none; cursor: pointer;
+  text-align: center; padding: 10px 2px; font-size: 13px; font-weight: 600;
+  line-height: 1.2; color: #cbd5e1; border-bottom: 2px solid transparent;
+}
+.fl-tmtab:hover { color: #fff; border-bottom-color: #475569; }
+.fl-tmtab.on { color: #fff; border-bottom-color: #e0a82e; }
+
+/* Leaving the app: three buttons, in the app's own colours. */
+.fl-leaverow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin: 24px 0 8px; flex-wrap: wrap;
+}
+.fl-btn-command, .fl-btn-swap, .fl-btn-signout {
+  font-weight: 700; font-size: 13px; padding: 10px 14px;
+  border-radius: 6px; text-decoration: none; white-space: nowrap;
+}
+.fl-btn-command { background: #16243F; color: #e0a82e; }
+.fl-btn-swap    { background: #e0a82e; color: #16243F; }
+.fl-btn-signout { background: #fff; color: #dc2626; border: 1px solid #fca5a5; }
+
 /* Header: logo hard left, Messages and Settings hard right in the brand blue
    that matches the wordmark. Nothing else lives up here. */
 .fl-topright { display: flex; align-items: center; gap: 14px; margin-left: auto; }

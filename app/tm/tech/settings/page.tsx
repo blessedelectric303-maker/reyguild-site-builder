@@ -79,16 +79,24 @@ export default async function TechSettingsPage() {
         ))}
       </div>
 
-      {/* Switch on the left, sign out on the right - so the thing you press
-          often is nowhere near the thing you press by accident. */}
-      <div className="mt-6 flex items-center justify-between gap-3">
+      {/* Leave left, cross over middle, sign out right - the same three, in
+          the same order and the same colours, as Proposals and Invoicing.
+          The command center button is not here: this layout only ever serves
+          technicians and apprentices, and they are redirected out of the
+          command center. Offering it would be a dead end. */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
         {canSwitch ? (
-          <a href="/apps/estimating" className="rounded-md px-4 py-2.5 text-sm font-bold text-slate-900" style={{ background: "#e0a82e" }}>
+          <a
+            href="/apps/estimating"
+            className="rounded-md px-4 py-2.5 text-sm font-bold"
+            style={{ background: "#e0a82e", color: "#16243F" }}
+          >
             Switch to Proposals &amp; Invoicing
           </a>
         ) : <span />}
         <LogoutButton className="rounded-md border border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50" />
       </div>
+
     </div>
   );
 }
