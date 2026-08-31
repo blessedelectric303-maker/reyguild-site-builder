@@ -76,13 +76,16 @@ const DEFAULT_PAYOUT = 50;        // flat $ paid to the estimator per invoice �
 const PLAN = { name: "ReyGuild Pro", cycleDays: 30 };
 
 // ── Seed data — replace with your real numbers in the Price List / SOP tabs ──
-const SEED_PRICE = [
-  { id: "p1", category: "Labor", name: "Standard labor (per hour)", unit: "hr", price: 95, cost: 45 },
-  { id: "p2", category: "Labor", name: "After-hours / emergency labor", unit: "hr", price: 145, cost: 70 },
-  { id: "p3", category: "Service", name: "Service call / trip charge", unit: "ea", price: 89, cost: 25 },
-  { id: "p4", category: "Service", name: "Diagnostic / inspection", unit: "ea", price: 125, cost: 40 },
-  { id: "p5", category: "Materials", name: "Materials markup", unit: "ea", price: 0, cost: 0 },
-];
+// EMPTY ON PURPOSE. There used to be five demo prices in here - standard
+// labor at 95, a service call at 89 and so on. They are Blessed Electric's
+// numbers wearing an example costume, and a plumber who signs up and finds
+// them already in his list might send one to a customer.
+//
+// They also made the SQL that empties the price list look broken: you wiped
+// the table, the app reloaded, found nothing, and put all five back.
+//
+// The three terms lines come from SQL 30, not from here.
+const SEED_PRICE = [];
 
 const SEED_SOPS = [
   {
@@ -278,9 +281,8 @@ Note: one-tap sending works today; fully automatic sending from the no-reply add
 // ── Supply depots — quick links to check material prices not yet on the list ──
 // Seeded with a few; Owner/Admin can add, edit, or remove any of them in-app.
 const SEED_SUPPLIERS = [
-  { id: "sup1", name: "Home Depot", url: "https://www.homedepot.com" },
-  { id: "sup2", name: "Lowe's", url: "https://www.lowes.com" },
-  { id: "sup3", name: "Rexel (electrical)", url: "https://www.rexelusa.com" },
+  { id: "sup_homedepot", name: "Home Depot", url: "https://www.homedepot.com" },
+  { id: "sup_lowes", name: "Lowes", url: "https://www.lowes.com" },
 ];
 
 // ── Help articles (searchable) ───────────────────────────────────────────────
@@ -628,7 +630,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           setMsgSeen(await load(STORAGE.msgSeen, {}));
           setOutreachVisits(await load(OUTREACH_VISITS_KEY, [])); // who walked which address, from the outreach app
         } else {
-          setPriceList(SEED_PRICE); setSops(SEED_SOPS); setSuppliers(SEED_SUPPLIERS);
+          // Storage unavailable. Start empty rather than inventing prices.
+          setPriceList([]); setSops(SEED_SOPS); setSuppliers(SEED_SUPPLIERS);
         }
       } finally { setLoading(false); }
     })();
@@ -686,6 +689,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const can = {
     seeNumbers: isAdmin,          // cost, margin, the financial dashboard
     editPrices: isAdmin,
+    // Supply depots are a company account list. A tech opening a job should
+    // not be able to add, rename or delete one.
+    editSuppliers: isAdmin,
     approve: isAdmin,
     seeAllWork: isAdmin,          // everyone's estimates/invoices vs. just mine
     editSops: isAdmin,
@@ -1981,14 +1987,14 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {suppliers.map((s) => (
                   <span className="so-sup" key={s.id}>
                     <a className="so-sup-link" href={s.url} target="_blank" rel="noopener noreferrer">🔗 {s.name}</a>
-                    {can.editPrices && <button className="so-sup-x" onClick={() => setSupplierForm({ ...emptySupplier(), ...s })}>edit</button>}
-                    {can.editPrices && (confirmId === s.id
+                    {can.editSuppliers && <button className="so-sup-x" onClick={() => setSupplierForm({ ...emptySupplier(), ...s })}>edit</button>}
+                    {can.editSuppliers && (confirmId === s.id
                       ? <><button className="fl-link danger" onClick={() => removeSupplier(s.id)}>del</button><button className="fl-link" onClick={() => setConfirmId(null)}>keep</button></>
                       : <button className="so-sup-x" onClick={() => setConfirmId(s.id)}>×</button>)}
                   </span>
                 ))}
               </div>
-              {can.editPrices && (
+              {can.editSuppliers && (
                 <div className="so-sup-add">
                   <input value={supplierForm.name} placeholder="Supplier name" onChange={(e) => setSupplierForm({ ...supplierForm, name: e.target.value })} />
                   <input value={supplierForm.url} placeholder="rexelusa.com or full https:// link" onChange={(e) => setSupplierForm({ ...supplierForm, url: e.target.value })} />
@@ -2118,9 +2124,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               often. The command center button only appears for the office -
               a tech is redirected out of it, so offering it is a dead end. */}
           <div className="fl-leaverow">
-            {isAdmin ? (
-              <a href="/" className="fl-btn-command">&larr; Back to command center</a>
-            ) : <span />}
+            {/* Shown to everybody. "/" routes by role, so a tech lands back
+                on his own home rather than on a screen he cannot open. Three
+                buttons on one line, always, so the row never changes shape
+                depending on who is looking at it. */}
+            <a href="/" className="fl-btn-command">&larr; Back to command center</a>
             <a href="/tm/enter" className="fl-btn-swap">Switch to T&amp;M &amp; P&amp;L</a>
             <a href="/auth/signout" className="fl-btn-signout">Sign out</a>
           </div>

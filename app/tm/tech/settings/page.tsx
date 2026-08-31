@@ -93,12 +93,10 @@ export default async function TechSettingsPage() {
           technicians and apprentices, who are redirected out of the command
           center, so for them it would be a dead end. */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-        {isOffice ? (
-          <a href="/" className="rounded-md px-4 py-2.5 text-sm font-bold"
-             style={{ background: "#16243F", color: "#e0a82e" }}>
-            &larr; Back to command center
-          </a>
-        ) : <span />}
+        <a href="/" className="rounded-md px-4 py-2.5 text-sm font-bold"
+           style={{ background: "#16243F", color: "#e0a82e" }}>
+          &larr; Back to command center
+        </a>
         {canSwitch ? (
           <a href="/apps/estimating" className="rounded-md px-4 py-2.5 text-sm font-bold"
              style={{ background: "#e0a82e", color: "#16243F" }}>
