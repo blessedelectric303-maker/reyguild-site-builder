@@ -485,6 +485,18 @@ const NET_DAYS = 15;
 // ONLY thing that decides what you can do in here. It used to default to
 // "Owner" and be switchable from a menu, which meant a tech could see cost,
 // margin, the price list and export every client.
+// Fills [COMPANY NAME] and friends from the company profile. Installed by
+// Invoicing.tsx before this component mounts; falls back to leaving the text
+// alone if it is not there, which shows the bracket rather than a blank.
+const tok = (t) => {
+  try {
+    const f = typeof window !== "undefined" && window.fillCompanyTokens;
+    return f ? f(String(t == null ? "" : t)) : t;
+  } catch (e) {
+    return t;
+  }
+};
+
 const SUITE_TO_EST = {
   owner: "Owner",
   admin: "Admin",

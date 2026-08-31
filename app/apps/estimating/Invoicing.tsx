@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState, type ComponentType } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { buildTokenMap, fillTokens, type CompanyFacts } from "@/utils/tokens";
 
 // The invoicing app saves through window.storage (a simple key/value API).
 // We back that API with Supabase so proposals belong to the COMPANY instead of
@@ -245,6 +246,24 @@ export default function Invoicing() {
           if (alive) setErr("No company found for this account. Open Settings and set up your company first.");
           return;
         }
+        // The three standard proposal lines - labour and materials, the
+        // warranty and the contract agreement - are written universal, with
+        // [COMPANY NAME] standing in. They print on a customer's proposal, so
+        // the substitution has to happen before anything is sent. Without it
+        // a customer receives a contract with a bracket in it.
+        try {
+          const { data: co } = await supabase
+            .schema("suite")
+            .from("companies")
+            .select("name,phone,email,website,address,city,state,zip,owner_name,trade,settings")
+            .eq("id", companyId)
+            .maybeSingle();
+          const map = buildTokenMap(((co || {}) as unknown) as CompanyFacts);
+          (window as any).fillCompanyTokens = (text: string) => fillTokens(text, map);
+        } catch {
+          (window as any).fillCompanyTokens = (text: string) => text;
+        }
+
         installStorage(companyId);
         await migrateLegacy(companyId);
         if (alive) { setRole(suiteRole); setReady(true); }

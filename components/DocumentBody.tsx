@@ -12,6 +12,8 @@
 //
 // Everything else is a paragraph.
 
+import { fillTokens } from "@/utils/tokens";
+
 type Piece = { t: string; b?: boolean; i?: boolean };
 
 function inline(text: string): Piece[] {
@@ -49,10 +51,20 @@ function Line({ text }: { text: string }) {
   );
 }
 
-export default function DocumentBody({ body }: { body: string }) {
+export default function DocumentBody({
+  body,
+  tokens,
+}: {
+  body: string;
+  // [COMPANY NAME] and friends. The documents are written universal and the
+  // company's own name is dropped in here, at the moment it is read. Without
+  // this the reader shows the bracket itself, which is what it did before.
+  tokens?: Record<string, string>;
+}) {
+  const fill = (t: string) => (tokens ? fillTokens(t, tokens) : t);
   // Blank lines separate blocks. Inside a block, single newlines are just the
   // way the text was wrapped when it was written and mean nothing.
-  const blocks = body.replace(/\r\n/g, "\n").split(/\n\s*\n/);
+  const blocks = fill(body).replace(/\r\n/g, "\n").split(/\n\s*\n/);
 
   return (
     <div className="space-y-3 text-[15px] leading-relaxed text-slate-700">

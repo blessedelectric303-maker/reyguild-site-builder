@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/utils/supabase/server";
 import DocumentBody from "@/components/DocumentBody";
+import { companyTokensForCurrentUser } from "@/utils/companyTokens";
 import SignBlock from "@/components/SignBlock";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +43,8 @@ export default async function TechDocumentPage({
     );
   }
 
+  const tokens = await companyTokensForCurrentUser();
+
   return (
     <div className="pb-10">
       <Link href="/tm/tech/documents" className="text-sm text-slate-500 underline">
@@ -54,7 +57,7 @@ export default async function TechDocumentPage({
       ) : null}
 
       <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
-        <DocumentBody body={doc.body || ""} />
+        <DocumentBody body={doc.body || ""} tokens={tokens} />
       </div>
 
       {doc.requires_signature ? (

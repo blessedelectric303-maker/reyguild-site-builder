@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import DocumentBody from "@/components/DocumentBody";
+import { companyTokensForCurrentUser } from "@/utils/companyTokens";
 import SignBlock from "@/components/SignBlock";
 import Logo from "@/components/Logo";
 
@@ -30,6 +31,8 @@ export default async function OnboardingDocumentPage({
   const suggested =
     (user.user_metadata && (user.user_metadata as any).full_name) || "";
 
+  const tokens = await companyTokensForCurrentUser();
+
   return (
     <main className="min-h-screen bg-slate-50">
       <header className="bg-slate-900 text-white">
@@ -57,7 +60,7 @@ export default async function OnboardingDocumentPage({
             ) : null}
 
             <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
-              <DocumentBody body={doc.body || ""} />
+              <DocumentBody body={doc.body || ""} tokens={tokens} />
             </div>
 
             {doc.requires_signature ? (
