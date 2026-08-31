@@ -693,20 +693,32 @@ export default function ReyGuild({ suiteRole = "tech" }) {
   //
   // "My pay" and "Royalties" are gone. There are no royalties: the job gets
   // invoiced and the person gets paid for the work.
+  // The row is the four things you work FROM. Everything else moved under
+  // Settings, and Messages moved to the top right next to it - a conversation
+  // is not a place you work from.
+  //
+  // "Numbers" is gone entirely. So are My pay and Royalties.
   const TABS = [
+    { key: "dashboard", label: "Dashboard", show: isAdmin },
     { key: "estimates", label: "Proposals", show: true },
     { key: "invoices", label: "Invoices", show: true },
-    { key: "clients", label: "Clients", show: true },
     { key: "prices", label: "Price List", show: true },
-    { key: "messages", label: "Messages", show: true },
-    { key: "dashboard", label: "Dashboard", show: isAdmin },
-    { key: "followups", label: "Follow-ups", show: isAdmin },
-    { key: "team", label: "Team", show: isAdmin },
-    { key: "alerts", label: "Approvals", show: isAdmin },
-    { key: "numbers", label: "Numbers", show: can.seeNumbers },
   ].filter((t) => t.show);
 
-  useEffect(() => { if (page !== "settings" && !TABS.some((t) => t.key === page)) setPage(TABS[0] ? TABS[0].key : "estimates"); }, [role]);
+  // Reachable, but from inside Settings rather than from the row.
+  const SETTINGS_PAGES = [
+    { key: "clients", label: "Clients", show: true },
+    { key: "team", label: "Team", show: isAdmin },
+    { key: "followups", label: "Follow-ups", show: isAdmin },
+    { key: "alerts", label: "Approvals", show: isAdmin },
+  ].filter((t) => t.show);
+
+  useEffect(() => {
+    const ok = page === "settings"
+      || TABS.some((t) => t.key === page)
+      || SETTINGS_PAGES.some((t) => t.key === page);
+    if (!ok) setPage(TABS[0] ? TABS[0].key : "estimates");
+  }, [role]);
   useEffect(() => { if (page === "messages") save(STORAGE.msgSeen, { ...msgSeen, [actorKey]: Date.now() }, setMsgSeen); }, [page]);
 
   // estimators always create under their own name
@@ -1304,11 +1316,7 @@ export default function ReyGuild({ suiteRole = "tech" }) {
             <span className="fl-tagline">Proposals &amp; Invoicing</span>
           </span>
         </div>
-        <div className="fl-stats">
-          {/* The five counters lived here. Every one of them opened a page
-              that is already a tab in the nav directly underneath, so on a
-              phone you scrolled past five big white boxes to reach the same
-              five links. */}
+        <div className="fl-topright">
           <label className="fl-actas">
             {canPreview ? (
               <select value={currentUserId} onChange={(e) => setCurrentUserId(e.target.value)}>
@@ -1318,8 +1326,19 @@ export default function ReyGuild({ suiteRole = "tech" }) {
             ) : (
               <span className="fl-whoami">{myName || profile.name || ""}</span>
             )}
-            <span className="fl-rolebadge" style={{ "--accent": ROLE_COLOR[role] || "var(--ink-2)" }}>{role}</span>
           </label>
+          <button
+            className={"fl-toplink" + (page === "messages" ? " on" : "")}
+            onClick={() => { setPage("messages"); setQuery(""); }}
+          >
+            Messages{unreadMsgs ? " (" + unreadMsgs + ")" : ""}
+          </button>
+          <button
+            className={"fl-toplink" + (page === "settings" ? " on" : "")}
+            onClick={() => { setPage("settings"); setQuery(""); }}
+          >
+            Settings
+          </button>
         </div>
       </header>
 
@@ -1339,13 +1358,6 @@ export default function ReyGuild({ suiteRole = "tech" }) {
             {t.label}{t.key === "messages" && unreadMsgs ? " (" + unreadMsgs + ")" : ""}
           </button>
         ))}
-        <span className="fl-navspacer" />
-        <button
-          className={"fl-settingslink" + (page === "settings" ? " on" : "")}
-          onClick={() => { setPage("settings"); setQuery(""); setNavOpen(false); }}
-        >
-          Settings
-        </button>
       </nav>
 
       {page === "dashboard" && (
@@ -2044,6 +2056,22 @@ export default function ReyGuild({ suiteRole = "tech" }) {
             <button className={"fl-pill" + (settingsSub === "help" ? " active" : "")} onClick={() => setSettingsSub("help")}>Help</button>
             {can.editProfile && <button className={"fl-pill" + (settingsSub === "account" ? " active" : "")} onClick={() => setSettingsSub("account")}>Account</button>}
             {can.managePeople && <button className={"fl-pill" + (settingsSub === "audit" ? " active" : "")} onClick={() => setSettingsSub("audit")}>Audit log</button>}
+          </div>
+
+          {/* Clients, Team, Follow-ups and Approvals used to sit in the top
+              row. They are things you go and do occasionally, not the four
+              screens you work from all day, so they live here now. */}
+          <div className="fl-guides" style={{ marginTop: 12 }}>
+            {SETTINGS_PAGES.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                className="fl-guide"
+                onClick={() => { setPage(t.key); setQuery(""); }}
+              >
+                <span className="fl-guide-t">{t.label}</span>
+              </button>
+            ))}
           </div>
 
           {/* Procedures: the written guides, each on its own page. Small boxes

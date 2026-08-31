@@ -12,7 +12,6 @@ const NAV = [
   { href: "/tm/tech/procedures", label: "Procedures" },
   { href: "/tm/tech/my-hours", label: "My Hours" },
   { href: "/tm/tech/time-off", label: "Time Off" },
-  { href: "/tm/tech/messages", label: "Messages" },
 ];
 
 // What the browser tab says. Nobody should see a vercel address at the top of
@@ -120,8 +119,12 @@ export default async function TechLayout({ children }: { children: React.ReactNo
           </div>
           {/* Sign out lives under Settings now - it is not something anybody
               should be one stray thumb away from on a job. */}
-          <div className="flex-1 flex justify-end">
-            <Link href="/tm/tech/settings" className="text-xs text-slate-400 hover:text-white underline">Settings</Link>
+          {/* Messages and Settings sit together, top right. Messages is a
+              conversation, not a place you work from - it does not belong in
+              the row with Jobs and My Hours. */}
+          <div className="flex-1 flex items-center justify-end gap-3">
+            <Link href="/tm/tech/messages" className="text-xs font-semibold text-sky-300 hover:text-white">Messages</Link>
+            <Link href="/tm/tech/settings" className="text-xs font-semibold text-sky-300 hover:text-white">Settings</Link>
           </div>
         </div>
         <nav className="max-w-2xl mx-auto px-1 flex">

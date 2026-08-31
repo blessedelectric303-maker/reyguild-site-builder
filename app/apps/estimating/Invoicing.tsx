@@ -158,7 +158,9 @@ const STYLE_FIX = `
   /* The five counters were five full-width cards before any content. They
      are a desk screen, not a truck screen. */
   .fl-stats .fl-chip { display: none !important; }
-  .fl-sideback { margin: 8px 12px 0; }
+  .fl-sideback { margin: 8px 12px !important; }
+  .fl-topright { gap: 10px; }
+  .fl-toplink { font-size: 12px; }
   .fl-nav3 { padding: 6px 8px 8px !important; }
   .fl-navspacer { flex: 1 1 auto; }
   .fl-actas { margin: 0 !important; }
@@ -178,7 +180,29 @@ const STYLE_FIX = `
   .fl-dashwrap { padding-top: 16px; }
 }
 
-/* Command center: its own line under the logo. It leaves the app, so it does
+/* Header: logo hard left, Messages and Settings hard right in the brand blue
+   that matches the wordmark. Nothing else lives up here. */
+.fl-topright { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+.fl-toplink {
+  background: none; border: none; cursor: pointer; padding: 4px 2px;
+  font-size: 13px; font-weight: 700; color: #2183E8;
+}
+.fl-toplink.on { color: #16243F; border-bottom: 2px solid #2183E8; }
+.fl-toplink:hover { color: #16243F; }
+.fl-whoami { font-weight: 700; font-size: 13px; color: #39415a; }
+
+/* Command center: its own line under the logo, and the FULL width of it.
+   A half-width button reads as one option among several; a full-width bar
+   reads as "leave this app", which is what it does. */
+.fl-sideback {
+  display: block !important; width: auto !important;
+  margin: 10px 16px !important; padding: 10px 14px !important;
+  text-align: center; background: #e0a82e; color: #0f172a !important;
+  border-radius: 6px; font-weight: 700; font-size: 13px; text-decoration: none;
+}
+
+/* Old rule kept below for anything that still references it. */
+.fl-sideback-old { It leaves the app, so it does
    not belong in the row of things that switch pages inside it. */
 .fl-sideback {
   display: inline-block; margin: 10px 16px 0; font-size: 13px;
