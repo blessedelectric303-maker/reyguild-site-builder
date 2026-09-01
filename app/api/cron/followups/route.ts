@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { buildTokenMap, fillTokens, type CompanyFacts } from "@/utils/tokens";
+import { signProposal } from "@/lib/proposalToken";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -171,6 +172,16 @@ export async function GET(req: NextRequest) {
       .eq("company_id", co.id)
       .in("key", ["so_estimates", "so_invoices"]);
 
+    // Anybody who has already answered - by clicking Accept or No thanks in
+    // an earlier email - drops out of the queue entirely. Chasing a customer
+    // who already said yes is worse than not chasing at all.
+    const { data: answered } = await sb
+      .schema("suite")
+      .from("proposal_responses")
+      .select("ref_id")
+      .eq("company_id", co.id);
+    const answeredIds = new Set((answered || []).map((r: any) => String(r.ref_id)));
+
     const store: Record<string, any[]> = {};
     (rows || []).forEach((r: any) => {
       try {
@@ -194,6 +205,7 @@ export async function GET(req: NextRequest) {
       // Stop the moment there is an answer, either way. Chasing somebody who
       // already said yes is worse than not chasing at all.
       if (e.archived || e.invoiced || e.fuStopped) continue;
+      if (answeredIds.has(String(e.id))) continue;
       if (status.includes("accept") || status.includes("reject") || status.includes("declin") || status.includes("won") || status.includes("lost")) continue;
       if (!e.sentAt) continue;
 
@@ -217,7 +229,9 @@ export async function GET(req: NextRequest) {
           customer_first_name: firstName(e.clientContact || e.client || ""),
           customer_name: String(e.client || ""),
           job_summary: String(e.jobDescription || e.lumpDescription || "the work we discussed"),
-          view_your_proposal: APP_URL + "/apps/estimating",
+          // A signed, single-purpose link. It opens only this proposal, and
+          // only because it came from us.
+          view_your_proposal: APP_URL + "/p/" + signProposal(co.id, String(e.id || "")),
           ref_id: String(e.id || ""),
         },
       });
