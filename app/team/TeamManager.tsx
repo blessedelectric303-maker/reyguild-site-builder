@@ -6,6 +6,10 @@ import { ROLE_ORDER, ROLE_LABELS, normalizeRole } from "@/utils/roles";
 
 type Member = {
   email?: string;
+  // Name and phone live on the MEMBERSHIP, not the login - the same person
+  // could be in two companies, and what each calls him is their business.
+  full_name?: string | null;
+  phone?: string | null;
   is_me?: boolean; id: string; user_id: string; role: string };
 type Invite = {
   id: string;
@@ -55,6 +59,41 @@ export default function TeamManager({
     }
     setTeam(team.map((t) => (t.user_id === userId ? { ...t, role: next } : t)));
   }
+  // Editing a person's name and number. Without this the app fell back to
+  // the part of an email before the @, which is how a tech ends up shown to
+  // his own crew as "benp".
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const [draftPhone, setDraftPhone] = useState("");
+  const [detailErr, setDetailErr] = useState<string | null>(null);
+
+  function startEdit(m: Member) {
+    setEditing(m.user_id);
+    setDraftName(m.full_name || "");
+    setDraftPhone(m.phone || "");
+    setDetailErr(null);
+  }
+
+  async function saveDetails(userId: string) {
+    setSaving(userId);
+    setDetailErr(null);
+    const { error } = await supabase
+      .schema("suite")
+      .rpc("set_member_details", {
+        target_user: userId,
+        p_name: draftName,
+        p_phone: draftPhone,
+      });
+    setSaving(null);
+    if (error) {
+      setDetailErr(error.message);
+      return;
+    }
+    setTeam(team.map((t) =>
+      t.user_id === userId ? { ...t, full_name: draftName, phone: draftPhone } : t));
+    setEditing(null);
+  }
+
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState("");
   const [army, setArmy] = useState(armyMode);
@@ -214,9 +253,45 @@ export default function TeamManager({
           <div className="flex flex-col gap-2">
             {team.map((m) => (
               <div key={m.id} className="rounded-lg border border-slate-700 bg-slate-900/40 p-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="truncate text-sm text-slate-100">{m.email || "(no email)"}</div>
-                  {m.is_me ? <div className="text-xs text-slate-500">you</div> : null}
+                <div className="min-w-0 flex-1">
+                  {editing === m.user_id ? (
+                    <div className="space-y-2">
+                      <input
+                        value={draftName}
+                        onChange={(e) => setDraftName(e.target.value)}
+                        placeholder="Full name"
+                        className="w-full rounded-md bg-slate-800 border border-slate-600 px-3 py-2 text-sm text-slate-100"
+                      />
+                      <input
+                        value={draftPhone}
+                        onChange={(e) => setDraftPhone(e.target.value)}
+                        placeholder="Phone"
+                        inputMode="tel"
+                        className="w-full rounded-md bg-slate-800 border border-slate-600 px-3 py-2 text-sm text-slate-100"
+                      />
+                      {detailErr ? <p className="text-xs text-red-400">{detailErr}</p> : null}
+                      <div className="flex gap-2">
+                        <button type="button" disabled={saving === m.user_id}
+                          onClick={() => saveDetails(m.user_id)}
+                          className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50">
+                          {saving === m.user_id ? "Saving..." : "Save"}
+                        </button>
+                        <button type="button" onClick={() => setEditing(null)}
+                          className="rounded-md border border-slate-600 px-3 py-1.5 text-xs font-bold text-slate-300">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => startEdit(m)} className="block w-full text-left">
+                      <div className="truncate text-sm font-semibold text-slate-100">
+                        {m.full_name || <span className="text-slate-400">Add a name</span>}
+                      </div>
+                      <div className="truncate text-xs text-slate-400">{m.email || "(no email)"}</div>
+                      {m.phone ? <div className="text-xs text-slate-400">{m.phone}</div> : null}
+                      {m.is_me ? <div className="text-xs text-slate-500">you</div> : null}
+                    </button>
+                  )}
                 </div>
                 {m.is_me ? (
                   <span className="rounded-md border border-slate-700 px-3 py-1.5 text-xs text-slate-400">{roleLabel(m.role)}</span>

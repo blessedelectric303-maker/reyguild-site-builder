@@ -38,6 +38,8 @@ export default async function TeamPage() {
     user_id: r.user_id,
     role: r.role,
     email: r.email,
+    full_name: r.full_name,
+    phone: r.phone,
     is_me: r.is_me,
     created_at: r.joined_at,
   }));
