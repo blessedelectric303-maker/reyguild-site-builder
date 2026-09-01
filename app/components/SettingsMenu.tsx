@@ -116,6 +116,16 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
     }
   }
 
+  const linkBtn = (href: string, label: string) => (
+    <Link
+      href={href}
+      onClick={() => setOpen(false)}
+      className="flex-1 rounded-md px-3 py-2 text-center text-sm font-semibold text-slate-400 transition hover:text-slate-200"
+    >
+      {label}
+    </Link>
+  );
+
   const tabBtn = (id: Tab, label: string) => {
     const active = tab === id;
     const cls =
@@ -161,7 +171,13 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
               </div>
             </div>
 
+            {/* Data and Documents were tiles under the calendar on the front
+                page. They are settings, not daily work - a command centre
+                should be the things you do every day, not everything that
+                exists. Data first because it is the one people look for. */}
             <div className="flex gap-1 border-b border-slate-800 p-2">
+              {linkBtn("/export", "Data")}
+              {linkBtn("/team/paperwork", "Documents")}
               {tabBtn("help", "Help")}
               {tabBtn("account", "Account")}
             </div>

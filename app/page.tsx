@@ -281,15 +281,10 @@ export default async function Home() {
         {/* The office-only row. Paperwork, export and billing were all built
             and had no link anywhere - a feature nobody can reach is a feature
             that does not exist. */}
-        {/* Army / Employees lives under Settings now - it was in both places,
-            and a link that exists twice is a link somebody has to think
-            about. */}
-        {isOffice && (
-          <div className="mt-2 max-w-3xl mx-auto grid auto-rows-fr grid-cols-2 gap-2">
-            <Link href="/export" className={tileCls}>Export Data</Link>
-            <Link href="/team/paperwork" className={tileCls}>Paperwork</Link>
-          </div>
-        )}
+        {/* Export Data and Paperwork used to sit here. They moved into
+            Settings as "Data" and "Documents" - a command centre should be
+            the handful of things somebody does every day, not a list of
+            everything that exists. */}
 
         <div className="text-center mt-8">
           <h1 className="text-2xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #e0a82e" }}>YOUR COMMAND CENTER</h1>
