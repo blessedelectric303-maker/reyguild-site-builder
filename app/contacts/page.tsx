@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { roleLabel, isStaff, homeFor } from "@/utils/roles";
+import BackLink from "@/components/BackLink";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,7 @@ export default async function ContactsPage() {
   return (
     <main className="min-h-screen p-6 md:p-10">
       <div className="mx-auto max-w-2xl">
-        <Link href="/" className="text-sm text-slate-400 underline">&larr; Back to command center</Link>
+        <BackLink className="text-sm text-slate-400 underline hover:text-slate-200" />
         <h1 className="mt-4 text-2xl font-bold text-white">Company Contacts</h1>
         <p className="mt-1 text-sm text-slate-400">
           Everybody on the team. Added automatically when somebody is invited -

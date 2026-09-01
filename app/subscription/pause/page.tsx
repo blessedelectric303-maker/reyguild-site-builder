@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import SubscriptionAction from "@/components/SubscriptionAction";
+import BackLink from "@/components/BackLink";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "ReyGuild - Pause subscription" };
@@ -25,9 +26,7 @@ export default async function PausePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <Link href="/subscription" className="text-sm text-slate-400 underline">
-        &larr; Subscription
-      </Link>
+      <BackLink className="text-sm text-slate-400 underline hover:text-slate-200" />
 
       <h1 className="mt-3 text-xl font-bold text-white">Pause your subscription</h1>
       <p className="mt-1 text-sm text-slate-400">

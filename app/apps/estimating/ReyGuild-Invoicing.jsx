@@ -2327,13 +2327,26 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               them. Sign out was the same size and on the same row as the two
               you press all day, which is how somebody signs themselves out
               reaching for the other app. */}
-          <div className="fl-leaverow">
-            <a href="/" className="fl-btn-command">&larr; Back to command center</a>
-            <a href="/tm/enter" className="fl-btn-swap">Switch to T&amp;M &amp; P&amp;L</a>
-          </div>
-          <div className="fl-signoutrow">
-            <a href="/auth/signout" className="fl-btn-signout">Sign out</a>
-          </div>
+          {/* Only the office tier gets a command centre button - everybody
+              else is redirected out of it, so the button would open onto a
+              wall. An apprentice has no second app either, so sign out stands
+              on its own rather than pretending to be half a pair. */}
+          {isAdmin ? (
+            <>
+              <div className="fl-leaverow">
+                <a href="/" className="fl-btn-command">&larr; Back to command center</a>
+                <a href="/tm/enter" className="fl-btn-swap">Switch to T&amp;M &amp; P&amp;L</a>
+              </div>
+              <div className="fl-signoutrow">
+                <a href="/auth/signout" className="fl-btn-signout">Sign out</a>
+              </div>
+            </>
+          ) : (
+            <div className="fl-leaverow">
+              <a href="/tm/enter" className="fl-btn-swap">Switch to T&amp;M &amp; P&amp;L</a>
+              <a href="/auth/signout" className="fl-btn-signout">Sign out</a>
+            </div>
+          )}
         </>
       )}
 

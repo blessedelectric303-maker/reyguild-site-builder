@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import DocumentBody from "@/components/DocumentBody";
 import { companyTokensForCurrentUser } from "@/utils/companyTokens";
+import BackLink from "@/components/BackLink";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +35,7 @@ export default async function GuidePage({
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <Link href="/apps/estimating" className="text-sm text-slate-500 underline">
-          &larr; Back to Proposals &amp; Invoicing
-        </Link>
+        <BackLink className="text-sm text-slate-400 underline hover:text-slate-200" />
 
         {!doc ? (
           <p className="mt-4 rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-600">

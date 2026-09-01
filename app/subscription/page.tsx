@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import BackLink from "@/components/BackLink";
 
 export const dynamic = "force-dynamic";
 
@@ -86,9 +87,7 @@ export default async function SubscriptionPage() {
   if (!isOffice) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <Link href="/" className="text-sm text-slate-400 underline">
-          &larr; Command center
-        </Link>
+        <BackLink className="text-sm text-slate-400 underline hover:text-slate-200" />
         <h1 className="mt-3 text-xl font-bold text-white">Subscription</h1>
         <p className="mt-4 rounded-xl border border-slate-700 bg-slate-900/60 p-5 text-sm text-slate-300">
           Only an owner or an administrator can see the billing for this
