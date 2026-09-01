@@ -89,6 +89,26 @@ export default async function Home() {
   // supervisor sees three tiles that would turn him away.
   const isOffice = myRole === "owner" || myRole === "admin";
 
+  // PAPERWORK GATE FOR THE OFFICE.
+  //
+  // The gate lives in the tech layout, and owners are redirected away from
+  // that - so an owner signed up, was made owner, and was never asked to sign
+  // anything at all. Correct for the employee booklet, which is not his to
+  // sign. Wrong for the four ReyGuild documents that everybody agrees to:
+  // the terms, the privacy policy, the cookie policy and the NDA.
+  //
+  // Fails OPEN. If the documents are not loaded, or the call errors, the
+  // command centre opens exactly as it did before.
+  let needsPaperwork = false;
+  try {
+    const { data: st } = await supabase.schema("suite").rpc("my_onboarding");
+    const row: any = st && st.length ? st[0] : null;
+    needsPaperwork = !!row && row.complete === false;
+  } catch (e) {
+    needsPaperwork = false;
+  }
+  if (needsPaperwork) redirect("/onboarding");
+
   // Role-based access: employees skip the command center and go straight to their app.
   if (!isStaff(myRole)) redirect(homeFor(myRole));
 
