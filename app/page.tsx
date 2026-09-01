@@ -99,13 +99,26 @@ export default async function Home() {
   //
   // Fails OPEN. If the documents are not loaded, or the call errors, the
   // command centre opens exactly as it did before.
+  //
+  // NOTE ON THE FIRST VERSION OF THIS: supabase-js does NOT throw on an
+  // error - it returns { data, error }. The first attempt read only `data`
+  // and wrapped it in a try/catch, so a permission problem or a stale schema
+  // cache came back as an error object, `data` was null, and the gate
+  // silently decided there was no paperwork. It failed open on a fault it
+  // never noticed. Read the error.
   let needsPaperwork = false;
   try {
-    const { data: st } = await supabase.schema("suite").rpc("my_onboarding");
-    const row: any = st && st.length ? st[0] : null;
-    needsPaperwork = !!row && row.complete === false;
-  } catch (e) {
-    needsPaperwork = false;
+    const { data: st, error: stErr } = await supabase
+      .schema("suite")
+      .rpc("my_onboarding");
+    if (stErr) {
+      console.error("[paperwork gate] my_onboarding failed:", stErr.message);
+    } else {
+      const row: any = Array.isArray(st) ? st[0] : st;
+      needsPaperwork = !!row && row.complete === false;
+    }
+  } catch (e: any) {
+    console.error("[paperwork gate] threw:", e?.message || e);
   }
   if (needsPaperwork) redirect("/onboarding");
 
