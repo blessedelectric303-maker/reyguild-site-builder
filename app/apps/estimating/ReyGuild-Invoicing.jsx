@@ -720,6 +720,41 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   ].filter((t) => t.show);
 
   // Reachable, but from inside Settings rather than from the row.
+  // WHAT THE CUSTOMER SAID.
+  // A proposal answered by email is worthless if nobody in the office
+  // notices. This is the count behind the badge on the Proposals tab, and
+  // the list on the tab itself.
+  const [answers, setAnswers] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    const pull = async () => {
+      try {
+        const r = await fetch("/api/proposal/responses");
+        const j = await r.json();
+        if (alive) setAnswers(Array.isArray(j.items) ? j.items : []);
+      } catch (e) { /* leave the badge alone rather than clearing it */ }
+    };
+    pull();
+    // Slow on purpose. This is a "somebody replied" nudge, not a live feed,
+    // and an estimator on a phone should not be paying for a poll every
+    // few seconds.
+    const t = setInterval(pull, 120000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+
+  const toSchedule = answers.filter((a) => a.needs_scheduling);
+
+  async function clearAnswer(refId) {
+    try {
+      await fetch("/api/proposal/responses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ref_id: refId }),
+      });
+      setAnswers((list) => list.filter((a) => a.ref_id !== refId));
+    } catch (e) { /* it stays on the list, which is the safe failure */ }
+  }
+
   const SETTINGS_PAGES = [
     { key: "clients", label: "Clients", show: true },
     { key: "team", label: "Team", show: isAdmin },
@@ -1365,7 +1400,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               className={"fl-tmtab" + (page === t.key ? " on" : "")}
               onClick={() => { setPage(t.key); setQuery(""); setNavOpen(false); }}
             >
-              {t.label}{t.key === "messages" && unreadMsgs ? " (" + unreadMsgs + ")" : ""}
+              {t.label}
+              {t.key === "messages" && unreadMsgs ? " (" + unreadMsgs + ")" : ""}
+              {t.key === "estimates" && answers.length ? (
+                <span className="fl-badge">{answers.length}</span>
+              ) : null}
             </button>
           ))}
         </nav>
@@ -1411,6 +1450,47 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       )}
 
       {/* ════════════════════ ESTIMATES ════════════════════ */}
+      {/* Customer answers, at the top of Proposals where they cannot be
+          missed. Accepted ones say SCHEDULE IT, because that is the only
+          thing anybody needs to do about them. Declined ones carry the
+          reason, which is the most useful sentence in the whole system. */}
+      {page === "estimates" && answers.length > 0 && (
+        <div className="fl-answers">
+          <div className="fl-answers-h">
+            {toSchedule.length > 0
+              ? toSchedule.length + " accepted - get " + (toSchedule.length === 1 ? "it" : "them") + " on the calendar"
+              : answers.length + " customer " + (answers.length === 1 ? "reply" : "replies")}
+          </div>
+          {answers.map((a) => {
+            const est = estimates.find((e) => String(e.id) === String(a.ref_id));
+            const who = est ? (est.client || est.clientContact || "") : "";
+            const accepted = a.response === "accepted";
+            return (
+              <div key={a.ref_id} className={"fl-answer" + (accepted ? " yes" : "")}>
+                <div className="fl-answer-main">
+                  <div className="fl-answer-t">
+                    {accepted ? "Accepted" : "Declined"}
+                    {who ? " - " + who : ""}
+                  </div>
+                  {est && est.jobDescription ? (
+                    <div className="fl-answer-s">{est.jobDescription}</div>
+                  ) : null}
+                  {a.reason ? (
+                    <div className="fl-answer-r">&ldquo;{a.reason}&rdquo;</div>
+                  ) : null}
+                  <div className="fl-answer-d">
+                    {a.responded_at ? new Date(a.responded_at).toLocaleString() : ""}
+                  </div>
+                </div>
+                <button className="fl-answer-x" onClick={() => clearAnswer(a.ref_id)}>
+                  {accepted ? "Scheduled" : "Got it"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {page === "estimates" && (
         <div className="fl-grid">
           <section className="fl-panel" ref={formRef}>

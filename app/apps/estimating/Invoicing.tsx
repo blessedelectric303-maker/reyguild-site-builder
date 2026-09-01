@@ -130,6 +130,39 @@ const STYLE_FIX = `
 .fl-tmtab:hover { color: #fff; border-bottom-color: #475569; }
 .fl-tmtab.on { color: #fff; border-bottom-color: #e0a82e; }
 
+/* The count on a tab. Small, red, and only there when it means something. */
+.fl-badge {
+  display: inline-block; margin-left: 5px; min-width: 16px; padding: 0 4px;
+  border-radius: 8px; background: #dc2626; color: #fff;
+  font-size: 10px; font-weight: 700; line-height: 16px; text-align: center;
+}
+
+/* Customer answers, at the top of Proposals. */
+.fl-answers { max-width: 42rem; margin: 16px auto 0; }
+.fl-answers-h {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: #16243F; margin-bottom: 8px;
+}
+.fl-answer {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #fff; border: 1px solid #E4DECF; border-left: 4px solid #94a3b8;
+  border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;
+}
+.fl-answer.yes { border-left-color: #0F6E56; background: #F3FBF8; }
+.fl-answer-main { flex: 1; min-width: 0; }
+.fl-answer-t { font-weight: 700; font-size: 14px; color: #16243F; }
+.fl-answer-s { font-size: 12px; color: #64748b; margin-top: 2px; }
+.fl-answer-r {
+  font-size: 13px; color: #39415a; margin-top: 6px; font-style: italic;
+  line-height: 1.45;
+}
+.fl-answer-d { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+.fl-answer-x {
+  flex: none; background: #16243F; color: #e0a82e; border: none;
+  border-radius: 6px; padding: 8px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+
 /* Leaving the app: three buttons, in the app's own colours. */
 .fl-leaverow {
   display: flex; align-items: center; justify-content: space-between;
