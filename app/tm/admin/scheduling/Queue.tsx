@@ -103,7 +103,7 @@ export default function Queue({ proposals, jobs, techs }: { proposals: PendingPr
                       {j.jobAddress ? <div className="text-xs text-slate-400">{j.jobAddress}</div> : null}
                       {j.jobDescription ? <div className="mt-1 text-sm text-slate-300">{j.jobDescription}</div> : null}
                     </div>
-                    <button type="button" onClick={() => { setOpenJob(open ? null : j.id); setJobType(j.jobType || "proposal"); }} className="shrink-0 rounded-md px-4 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>{open ? "Close" : "Set date"}</button>
+                    <button type="button" onClick={() => { setOpenJob(open ? null : j.id); setJobType(j.jobType || "proposal"); }} className="shrink-0 rounded-md px-4 py-2 text-sm font-semibold text-slate-900" style={{ background: "#CC9000" }}>{open ? "Close" : "Set date"}</button>
                   </div>
 
                   {open ? (
@@ -130,11 +130,11 @@ export default function Queue({ proposals, jobs, techs }: { proposals: PendingPr
                           <span className="text-xs text-slate-500">No techs to assign yet.</span>
                         ) : (
                           techs.map((t) => (
-                            <button type="button" key={t.id} onClick={() => setTech(tech === t.id ? "" : t.id)} className={"rounded-full border px-3 py-1 text-xs font-semibold " + (tech === t.id ? "text-slate-900 border-transparent" : "border-slate-600 text-slate-200")} style={tech === t.id ? { background: "#e0a82e" } : undefined}>{t.name}</button>
+                            <button type="button" key={t.id} onClick={() => setTech(tech === t.id ? "" : t.id)} className={"rounded-full border px-3 py-1 text-xs font-semibold " + (tech === t.id ? "text-slate-900 border-transparent" : "border-slate-600 text-slate-200")} style={tech === t.id ? { background: "#CC9000" } : undefined}>{t.name}</button>
                           ))
                         )}
                       </div>
-                      <button type="button" disabled={busy === j.id || !date} onClick={() => send({ action: "schedule", jobId: j.id, date, time, hours, techId: tech, jobType }, j.id)} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-50" style={{ background: "#e0a82e" }}>{busy === j.id ? "Scheduling..." : "Schedule it"}</button>
+                      <button type="button" disabled={busy === j.id || !date} onClick={() => send({ action: "schedule", jobId: j.id, date, time, hours, techId: tech, jobType }, j.id)} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-50" style={{ background: "#CC9000" }}>{busy === j.id ? "Scheduling..." : "Schedule it"}</button>
                     </div>
                   ) : null}
                 </div>

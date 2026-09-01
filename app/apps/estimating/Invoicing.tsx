@@ -146,7 +146,7 @@ const STYLE_FIX = `
 .fl-tmleft { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
 .fl-tmleft .fl-logo img { height: 24px; width: auto; }
 .fl-tmleft .fl-brandname { font-size: 15px; font-weight: 800; letter-spacing: .02em; }
-.fl-tmleft .fl-rey { color: #e0a82e; }
+.fl-tmleft .fl-rey { color: #CC9000; }
 .fl-tmleft .fl-guild { color: #fff; }
 .fl-tmwho { flex: 1; min-width: 0; text-align: center; }
 .fl-tmname { display: block; font-size: 14px; font-weight: 600; color: #e2e8f0; }
@@ -172,7 +172,7 @@ const STYLE_FIX = `
   font-family: inherit;
 }
 .fl-tmtab:hover { color: #fff; border-bottom-color: #475569; }
-.fl-tmtab.on { color: #fff; border-bottom-color: #e0a82e; }
+.fl-tmtab.on { color: #fff; border-bottom-color: #CC9000; }
 
 /* The price editor. Two prices side by side, then the three numbers that
    build them, then the one line the customer reads. */
@@ -212,7 +212,7 @@ const STYLE_FIX = `
 }
 .fl-answer-d { font-size: 11px; color: #94a3b8; margin-top: 6px; }
 .fl-answer-x {
-  flex: none; background: #16243F; color: #e0a82e; border: none;
+  flex: none; background: #16243F; color: #CC9000; border: none;
   border-radius: 6px; padding: 8px 12px; font-size: 12px; font-weight: 700;
   cursor: pointer; font-family: inherit;
 }
@@ -234,8 +234,8 @@ const STYLE_FIX = `
   font-weight: 700; font-size: 13px; padding: 10px 14px;
   border-radius: 6px; text-decoration: none; white-space: nowrap;
 }
-.fl-btn-command { background: #16243F; color: #e0a82e; }
-.fl-btn-swap    { background: #e0a82e; color: #16243F; }
+.fl-btn-command { background: #16243F; color: #CC9000; }
+.fl-btn-swap    { background: #CC9000; color: #16243F; }
 .fl-btn-signout { background: #fff; color: #dc2626; border: 1px solid #fca5a5; }
 
 /* Dashboard cards. */

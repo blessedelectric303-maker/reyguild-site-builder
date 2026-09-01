@@ -54,7 +54,7 @@ export default async function CancelPage() {
         <Link
           href="/export"
           className="mt-3 inline-block rounded-md px-4 py-2 text-sm font-bold"
-          style={{ background: "#e0a82e", color: "#16243F" }}
+          style={{ background: "#CC9000", color: "#16243F" }}
         >
           Export my data
         </Link>

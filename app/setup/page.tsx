@@ -114,7 +114,7 @@ export default function SetupPage() {
             SERVICE COMPANY SOFTWARE
           </div>
           <div className="text-2xl font-extrabold tracking-wide">
-            <span style={{ color: "#e0a82e" }}>REY</span>
+            <span style={{ color: "#CC9000" }}>REY</span>
             <span className="text-white">GUILD</span>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function SetupPage() {
           onClick={submit}
           disabled={busy || companyName.trim().length < 2 || yourName.trim().length < 2}
           className="mt-5 w-full rounded-md py-2.5 text-sm font-semibold text-slate-900 disabled:opacity-50"
-          style={{ background: "#e0a82e" }}
+          style={{ background: "#CC9000" }}
         >
           {busy ? "Building your company..." : "Create my company"}
         </button>

@@ -1,0 +1,248 @@
+/* ============================================================
+   REYGUILD BRAND TOKENS + SPLASH
+   Values sampled off the crest artwork.
+   ============================================================ */
+
+:root{
+  --navy-900:#00101F;
+  --navy-800:#001830;
+  --navy-700:#03203E;
+  --navy-600:#0A2C4F;
+  --navy-500:#123A63;
+  --line:#12395F;
+  --line-soft:#0C2B48;
+
+  --gold-300:#F0CE7A;
+  --gold-400:#D89000;
+  --gold-500:#CC9000;
+  --gold-600:#C08400;
+  --gold-700:#8A5E00;
+
+  /* THE gleaming gold. Real metal is never one colour - a flat fill reads
+     yellow and looks cheap. The gleam is light -> core -> shadow -> light
+     running across the shape. */
+  --metal:linear-gradient(160deg,
+    #F0CE7A 0%, #CC9000 34%, #8A5E00 58%, #D89000 82%, #F0CE7A 100%);
+  --metal-h:linear-gradient(90deg,#C08400,#F0CE7A 45%,#CC9000 70%,#D89000);
+
+  --white:#FCFCFC;
+  --mist:#C3D2E3;
+  --mist-dim:#8AA0BA;
+  --mist-faint:#5E7794;
+
+  --good:#3E9D6E;
+  --flag:#D9542B;
+  --warn:#D89000;
+
+  --crest:url(/crest.png);
+}
+
+/* ============================================================
+   GOLD THAT LOOKS LIKE METAL
+   Anything that was a flat #e0a82e fill becomes the gradient.
+   ============================================================ */
+
+.btn-gold,
+/* Anything still filled with a flat gold, inline or otherwise. React renders
+   an inline style object into a real style attribute, so this catches them. */
+[style*="CC9000"],
+[style*="cc9000"],
+.fl-btn-swap,
+.fl-guide-gold{
+  background:var(--metal) !important;
+  color:var(--navy-800) !important;
+  font-weight:700;
+  border:0;
+  position:relative;
+  overflow:hidden;
+  /* these two lines are what sell it as metal */
+  box-shadow:
+    0 8px 22px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.45);
+}
+
+/* shine that travels across on hover */
+.btn-gold::after,
+.fl-btn-swap::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.6) 50%,transparent 58%);
+  transform:translateX(-120%);
+}
+.btn-gold:hover::after,
+.fl-btn-swap:hover::after{
+  transform:translateX(120%);
+  transition:transform .7s ease;
+}
+
+/* Text and thin rules keep the FLAT core gold. A gradient clipped to a 1px
+   underline or a small letter reads as mud - his own note: gold text on navy
+   is fine at 16px and up, below that use mist. */
+.fl-tmleft .fl-rey,
+.fl-tmtab.on,
+.rg-rey{
+  background:none !important;
+  color:var(--gold-500) !important;
+  box-shadow:none !important;
+}
+
+/* Gold TEXT keeps the flat core colour - a gradient clipped to thin glyphs
+   fails contrast on navy. */
+.gold-text{
+  background:var(--metal);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:var(--gold-500);
+}
+
+/* ============================================================
+   THE SPLASH
+   ============================================================ */
+
+.rg-splash{
+  --rg-crest:var(--crest);
+  --rg-navy-900:#00101F;
+  --rg-gold-300:#F0CE7A;
+  --rg-gold-400:#D89000;
+  --rg-gold-500:#CC9000;
+  --rg-white:#FCFCFC;
+  --rg-mist:#5E7794;
+
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  overflow:hidden;
+  background:var(--rg-navy-900);
+  padding:env(safe-area-inset-top) env(safe-area-inset-right)
+          env(safe-area-inset-bottom) env(safe-area-inset-left);
+  font-family:"Playfair Display",Georgia,serif;
+}
+
+.rg-splash__glow{
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 46%,rgba(204,144,0,.16),transparent 70%);
+  opacity:0;
+  animation:rg-glow 1s .1s ease-out forwards;
+}
+@keyframes rg-glow{ to{ opacity:1 } }
+
+.rg-splash__spark{
+  position:absolute;
+  bottom:-8px;
+  width:2px;
+  height:2px;
+  border-radius:50%;
+  background:var(--rg-gold-400);
+  box-shadow:0 0 6px 1px rgba(216,144,0,.75);
+  opacity:0;
+  animation-name:rg-rise;
+  animation-timing-function:linear;
+  animation-fill-mode:forwards;
+}
+@keyframes rg-rise{
+  0%   { opacity:0; transform:translateY(0) scale(.6) }
+  12%  { opacity:.9 }
+  85%  { opacity:.5 }
+  100% { opacity:0; transform:translateY(-88vh) scale(1.1) }
+}
+
+.rg-splash__stage{
+  position:relative;
+  width:min(46vw,190px);
+  height:min(46vw,190px);
+}
+
+.rg-splash__crest{
+  position:absolute;
+  inset:0;
+  background:var(--rg-crest) center/contain no-repeat;
+  opacity:0;
+  transform:translateY(-16px) scale(1.12);
+  filter:blur(6px);
+  animation:rg-stamp .85s .15s cubic-bezier(.2,.9,.25,1) forwards;
+}
+@keyframes rg-stamp{
+  to{ opacity:1; transform:none; filter:none }
+}
+
+.rg-splash__ring{
+  position:absolute;
+  inset:-8%;
+  border-radius:50%;
+  border:1px solid rgba(204,144,0,.5);
+  opacity:0;
+  transform:scale(.7);
+  animation:rg-ring 1.1s .55s ease-out forwards;
+}
+@keyframes rg-ring{
+  0%   { opacity:.8; transform:scale(.7) }
+  100% { opacity:0;  transform:scale(1.25) }
+}
+
+.rg-splash__sheen{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);
+  -webkit-mask:var(--rg-crest) center/contain no-repeat;
+          mask:var(--rg-crest) center/contain no-repeat;
+  background-size:280% 100%;
+  background-position:-90% 0;
+  background-repeat:no-repeat;
+  animation:rg-sheen 1s 1.1s ease-in-out forwards;
+}
+@keyframes rg-sheen{ to{ background-position:190% 0 } }
+
+.rg-splash__word{
+  margin-top:1.5rem;
+  font-weight:700;
+  font-size:clamp(1.7rem,7vw,2.7rem);
+  letter-spacing:.11em;
+  opacity:0;
+  animation:rg-word .8s 1.25s cubic-bezier(.2,.8,.3,1) forwards;
+}
+.rg-splash__word .rg-rey  { color:var(--rg-gold-500) }
+.rg-splash__word .rg-guild{ color:var(--rg-white) }
+@keyframes rg-word{
+  0%   { opacity:0; transform:translateY(14px); letter-spacing:.3em }
+  100% { opacity:1; transform:none;             letter-spacing:.11em }
+}
+
+.rg-splash__tag{
+  margin-top:.6rem;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:.62rem;
+  font-weight:700;
+  letter-spacing:.34em;
+  text-transform:uppercase;
+  color:var(--rg-mist);
+  opacity:0;
+  animation:rg-word .7s 1.55s ease-out forwards;
+}
+
+.rg-splash--out{
+  animation:rg-out .6s cubic-bezier(.5,0,.6,1) forwards;
+  pointer-events:none;
+}
+@keyframes rg-out{
+  to{ opacity:0; visibility:hidden; transform:scale(1.05) }
+}
+
+/* Hold the finished frame, move nothing. */
+@media (prefers-reduced-motion: reduce){
+  .rg-splash *,
+  .rg-splash{ animation:none !important; transition:none !important }
+  .rg-splash__glow,
+  .rg-splash__crest,
+  .rg-splash__word,
+  .rg-splash__tag{ opacity:1; transform:none; filter:none }
+  .rg-splash__spark,
+  .rg-splash__ring,
+  .rg-splash__sheen{ display:none }
+  .rg-splash--out{ opacity:0; visibility:hidden }
+}

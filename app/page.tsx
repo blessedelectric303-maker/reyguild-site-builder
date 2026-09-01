@@ -38,10 +38,10 @@ export default async function Home() {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-center p-8">
         <img src="/crest.png" alt="ReyGuild" className="w-28 h-auto mb-6" />
-        <h1 className="mil text-5xl tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></h1>
+        <h1 className="mil text-5xl tracking-wide"><span style={{ color: "#CC9000" }}>REY</span><span className="text-white">GUILD</span></h1>
         <p className="mt-4 text-slate-300 max-w-md">One login. Every ReyGuild app in one place.</p>
-        <Link href="/login" className="mt-6 rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Sign in</Link>
-        <div className="mt-10 h-[3px] w-16 rounded bg-[#e0a82e]" />
+        <Link href="/login" className="mt-6 rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#CC9000" }}>Sign in</Link>
+        <div className="mt-10 h-[3px] w-16 rounded bg-[#CC9000]" />
       </main>
     );
   }
@@ -184,9 +184,9 @@ export default async function Home() {
         <div className="mt-4">
           {canOpen && live ? (
             live.external ? (
-              <a href={live.href} target="_blank" rel="noopener noreferrer" className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open &#8599;</a>
+              <a href={live.href} target="_blank" rel="noopener noreferrer" className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#CC9000" }}>Open &#8599;</a>
             ) : (
-              <Link href={live.href} className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Open &rarr;</Link>
+              <Link href={live.href} className="inline-block rounded-md px-4 py-1.5 text-xs font-semibold text-slate-900" style={{ background: "#CC9000" }}>Open &rarr;</Link>
             )
           ) : (
             <span className="inline-block rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-400">Coming soon &mdash; being built</span>
@@ -214,14 +214,14 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto w-full">
         <div className="flex flex-col items-center mb-5">
           {companyName ? (
-            <div className="mil text-3xl md:text-4xl tracking-wide text-white text-center" style={{ WebkitTextStroke: "1.5px #e0a82e" }}>{companyName}</div>
+            <div className="mil text-3xl md:text-4xl tracking-wide text-white text-center" style={{ WebkitTextStroke: "1.5px #CC9000" }}>{companyName}</div>
           ) : (
             <>
               <img src="/crest.png" alt="ReyGuild" className="w-16 md:w-20 h-auto drop-shadow" />
-              <div className="mil mt-1 text-lg tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></div>
+              <div className="mil mt-1 text-lg tracking-wide"><span style={{ color: "#CC9000" }}>REY</span><span className="text-white">GUILD</span></div>
             </>
           )}
-          <span className="mt-2 rounded-full px-3 py-0.5 text-xs font-semibold text-slate-900" style={{ background: soloMode ? "#e0a82e" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} &middot; {roleLabel}</span>
+          <span className="mt-2 rounded-full px-3 py-0.5 text-xs font-semibold text-slate-900" style={{ background: soloMode ? "#CC9000" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} &middot; {roleLabel}</span>
 
           {/* STEP ONE. Every call starts here and leaves pointed at a colour.
               White on purpose - it is not one of the eight call colours. */}
@@ -287,7 +287,7 @@ export default async function Home() {
             everything that exists. */}
 
         <div className="text-center mt-8">
-          <h1 className="text-2xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #e0a82e" }}>YOUR COMMAND CENTER</h1>
+          <h1 className="text-2xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #CC9000" }}>YOUR COMMAND CENTER</h1>
           {trialDaysLeft != null && (
             <p className="mt-1 text-sm font-semibold text-amber-300">Free trial &middot; {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left</p>
           )}
@@ -295,7 +295,7 @@ export default async function Home() {
       </div>
 
       <footer className="mt-auto pt-10 text-center">
-        <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#e0a82e]" />
+        <div className="mx-auto mb-3 h-[2px] w-24 rounded bg-[#CC9000]" />
         <p className="text-xs md:text-sm tracking-[0.25em] text-slate-400 uppercase">Software for service companies &mdash; ready for the battles of everyday work</p>
       </footer>
     </main>

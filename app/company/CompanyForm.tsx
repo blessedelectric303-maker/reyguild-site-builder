@@ -199,7 +199,7 @@ export default function CompanyForm({
             ) : (
               <span className="text-slate-500 text-sm">No logo yet</span>
             )}
-            <label className="cursor-pointer rounded-md px-4 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>
+            <label className="cursor-pointer rounded-md px-4 py-2 text-sm font-semibold text-slate-900" style={{ background: "#CC9000" }}>
               {f.logo ? "Change logo" : "Upload logo"}
               <input type="file" accept="image/*" className="hidden" onChange={onLogo} />
             </label>
@@ -253,7 +253,7 @@ export default function CompanyForm({
           <input className={field} value={f.website} onChange={(e) => set("website", e.target.value)} placeholder="yourcompany.com" />
 
           <div className="mt-5 flex items-center gap-3">
-            <button onClick={save} className="rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Save</button>
+            <button onClick={save} className="rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#CC9000" }}>Save</button>
             {status && <span className="text-xs text-slate-300">{status}</span>}
           </div>
         </div>

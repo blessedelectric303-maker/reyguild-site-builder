@@ -93,12 +93,12 @@ export default async function TechSettingsPage() {
         <>
           <div className="mt-6 flex items-stretch gap-2">
             <a href="/" className="flex-1 rounded-md px-4 py-2.5 text-center text-sm font-bold"
-               style={{ background: "#16243F", color: "#e0a82e" }}>
+               style={{ background: "#16243F", color: "#CC9000" }}>
               &larr; Back to command center
             </a>
             {canSwitch ? (
               <a href="/apps/estimating" className="flex-1 rounded-md px-4 py-2.5 text-center text-sm font-bold"
-                 style={{ background: "#e0a82e", color: "#16243F" }}>
+                 style={{ background: "#CC9000", color: "#16243F" }}>
                 Switch to Proposals &amp; Invoicing
               </a>
             ) : null}
@@ -110,7 +110,7 @@ export default async function TechSettingsPage() {
       ) : canSwitch ? (
         <div className="mt-6 flex items-stretch gap-2">
           <a href="/apps/estimating" className="flex-1 rounded-md px-4 py-2.5 text-center text-sm font-bold"
-             style={{ background: "#e0a82e", color: "#16243F" }}>
+             style={{ background: "#CC9000", color: "#16243F" }}>
             Switch to Proposals &amp; Invoicing
           </a>
           <LogoutButton className="flex-1 rounded-md border border-red-300 bg-white px-4 py-2.5 text-center text-sm font-bold text-red-600 hover:bg-red-50" />

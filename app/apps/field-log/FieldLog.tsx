@@ -41,7 +41,7 @@ if (typeof window !== "undefined" && !(window as any).storage) {
 const STYLE_FIX = `
 .fl-actas { background: #FFFFFF !important; }
 .fl-actas select { color: #34507A !important; font-weight: 700 !important; }
-.fl-rolebadge { background: #e0a82e !important; color: #FFFFFF !important; }
+.fl-rolebadge { background: #CC9000 !important; color: #FFFFFF !important; }
 .fl-noprint { display: flex !important; flex-direction: column !important; }
 .fl-header, .fl-nav { width: 100% !important; }
 .fl-grid { grid-template-columns: 1fr !important; max-width: 900px !important; }

@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
           <div className="space-y-3">
             <input type="password" placeholder="New password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none" />
             <input type="password" placeholder="Confirm new password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none" />
-            <button type="button" onClick={submit} disabled={busy} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-60" style={{ background: "#e0a82e" }}>{busy ? "Saving..." : "Save new password"}</button>
+            <button type="button" onClick={submit} disabled={busy} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-60" style={{ background: "#CC9000" }}>{busy ? "Saving..." : "Save new password"}</button>
             {error && <p className="text-sm text-red-400">{error}</p>}
           </div>
         )}

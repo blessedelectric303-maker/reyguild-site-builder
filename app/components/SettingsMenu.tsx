@@ -194,7 +194,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                   <div className="mt-4 space-y-5">
                     {APP_GUIDE.map((sec) => (
                       <div key={sec.heading}>
-                        <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#e0a82e" }}>{sec.heading}</div>
+                        <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#CC9000" }}>{sec.heading}</div>
                         <ul className="mt-2 space-y-2">
                           {sec.steps.map((step, i) => (
                             <li key={i} className="flex gap-2.5 text-sm text-slate-300">
@@ -224,7 +224,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                     <h3 className="text-base font-semibold text-white">Still stuck?</h3>
                     <p className="mt-2 text-sm text-slate-300">If none of the above sorted it, send us a message and we will pick it up.</p>
                     <div className="mt-3 space-y-2">
-                      <a href={"mailto:" + SUPPORT.email} className="block rounded-md px-3 py-2 text-center text-sm font-bold text-slate-900" style={{ background: "#e0a82e" }}>Email {SUPPORT.email}</a>
+                      <a href={"mailto:" + SUPPORT.email} className="block rounded-md px-3 py-2 text-center text-sm font-bold text-slate-900" style={{ background: "#CC9000" }}>Email {SUPPORT.email}</a>
                       {SUPPORT.phone ? (
                         <a href={"tel:" + SUPPORT.phone} className="block rounded-md border border-slate-600 px-3 py-2 text-center text-sm text-slate-200 hover:bg-slate-800">Call {SUPPORT.phone}</a>
                       ) : null}
@@ -266,7 +266,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                           <div className="text-slate-100 text-sm font-medium">Owner and Admin</div>
                           <div className="text-slate-500 text-xs">Combined = the owner also has admin powers. Separate = two distinct roles.</div>
                         </div>
-                        <button type="button" onClick={toggleOwnerAdmin} disabled={savingMode} className={"shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold " + (ownerAdmin ? "text-slate-900" : "text-slate-200 border border-slate-600")} style={ownerAdmin ? { background: "#e0a82e" } : undefined}>{ownerAdmin ? "Combined" : "Separate"}</button>
+                        <button type="button" onClick={toggleOwnerAdmin} disabled={savingMode} className={"shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold " + (ownerAdmin ? "text-slate-900" : "text-slate-200 border border-slate-600")} style={ownerAdmin ? { background: "#CC9000" } : undefined}>{ownerAdmin ? "Combined" : "Separate"}</button>
                       </div>
                     </div>
                   ) : null}

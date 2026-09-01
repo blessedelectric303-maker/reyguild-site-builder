@@ -53,7 +53,7 @@ export default async function TechHelpPage() {
           office first - they can actually change those. If the app itself is
           misbehaving, contact ReyGuild.
         </p>
-        <a href={"mailto:" + SUPPORT.email} className="mt-3 block rounded-md px-3 py-2.5 text-center text-sm font-bold text-slate-900" style={{ background: "#e0a82e" }}>
+        <a href={"mailto:" + SUPPORT.email} className="mt-3 block rounded-md px-3 py-2.5 text-center text-sm font-bold text-slate-900" style={{ background: "#CC9000" }}>
           Email ReyGuild
         </a>
         {SUPPORT.phone ? (

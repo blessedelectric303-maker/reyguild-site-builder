@@ -39,7 +39,7 @@ export default async function LegalPage({
       <header className="bg-slate-900 text-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <div className="text-lg font-extrabold tracking-wide">
-            <span style={{ color: "#e0a82e" }}>REY</span>
+            <span style={{ color: "#CC9000" }}>REY</span>
             <span className="text-white">GUILD</span>
           </div>
           <nav className="flex gap-4 text-xs text-slate-400">

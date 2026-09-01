@@ -108,7 +108,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900/60 p-8">
         <div className="text-center mb-6">
           <div className="text-[10px] tracking-[0.3em] text-slate-400 mb-2">SERVICE COMPANY SOFTWARE</div>
-          <div className="text-2xl font-extrabold tracking-wide"><span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span></div>
+          <div className="text-2xl font-extrabold tracking-wide"><span style={{ color: "#CC9000" }}>REY</span><span className="text-white">GUILD</span></div>
         </div>
 
         <div className="flex rounded-lg bg-slate-800 p-1 mb-6 text-sm">
@@ -147,7 +147,7 @@ export default function LoginPage() {
             </label>
           )}
 
-          <button type="button" onClick={handleSubmit} disabled={busy || (mode === "signup" && !agreed)} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-60" style={{ background: "#e0a82e" }}>{buttonLabel}</button>
+          <button type="button" onClick={handleSubmit} disabled={busy || (mode === "signup" && !agreed)} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-60" style={{ background: "#CC9000" }}>{buttonLabel}</button>
 
           {mode === "signin" ? (
             <button type="button" onClick={() => { setMode("reset"); setError(null); setNotice(null); }} className="w-full text-center text-xs text-slate-400 hover:text-slate-200">Forgot password?</button>

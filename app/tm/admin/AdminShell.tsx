@@ -84,7 +84,7 @@ export default function AdminShell({
           </div>
         </div>
         <div className="px-3 pt-3">
-          <a href="/" className="block rounded-md px-3 py-2 text-center text-xs font-semibold text-slate-900" style={{ background: "#e0a82e" }}>&larr; Command center</a>
+          <a href="/" className="block rounded-md px-3 py-2 text-center text-xs font-semibold text-slate-900" style={{ background: "#CC9000" }}>&larr; Command center</a>
         </div>
         <NavLinks onClick={() => setDrawerOpen(false)} />
         <div className="border-t border-slate-800 p-4">

@@ -132,7 +132,7 @@ export default function Messages({ userId, companyId, triggerClassName }: { user
       <button type="button" onClick={() => setOpen(true)} aria-label="Messages" className={triggerClassName ? "relative " + triggerClassName : "relative inline-flex items-center gap-1.5 rounded-md border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"}>
         {triggerClassName ? null : mailIcon}
         <span className={triggerClassName ? "" : "hidden sm:inline"}>Messages</span>
-        {totalUnread > 0 ? <span className="absolute -top-1.5 -right-1.5 min-w-[18px] rounded-full px-1 text-center text-[11px] font-bold text-slate-900" style={{ background: "#e0a82e" }}>{totalUnread}</span> : null}
+        {totalUnread > 0 ? <span className="absolute -top-1.5 -right-1.5 min-w-[18px] rounded-full px-1 text-center text-[11px] font-bold text-slate-900" style={{ background: "#CC9000" }}>{totalUnread}</span> : null}
       </button>
 
       {open ? (
@@ -159,7 +159,7 @@ export default function Messages({ userId, companyId, triggerClassName }: { user
                         <span className="block truncate text-sm text-slate-100">{c.email}</span>
                         <span className="block text-xs text-slate-500">{roleLabel(c.role)}</span>
                       </span>
-                      {unread[c.user_id] ? <span className="ml-2 min-w-[18px] rounded-full px-1 text-center text-[11px] font-bold text-slate-900" style={{ background: "#e0a82e" }}>{unread[c.user_id]}</span> : null}
+                      {unread[c.user_id] ? <span className="ml-2 min-w-[18px] rounded-full px-1 text-center text-[11px] font-bold text-slate-900" style={{ background: "#CC9000" }}>{unread[c.user_id]}</span> : null}
                     </button>
                   ))
                 )}
@@ -176,7 +176,7 @@ export default function Messages({ userId, companyId, triggerClassName }: { user
                       const bubbleCls = "max-w-[80%] rounded-2xl px-3 py-2 text-sm " + (mine ? "text-slate-900" : "bg-slate-800 text-slate-100");
                       return (
                         <div key={m.id} className={rowCls}>
-                          <div className={bubbleCls} style={mine ? { background: "#e0a82e" } : undefined}>
+                          <div className={bubbleCls} style={mine ? { background: "#CC9000" } : undefined}>
                             <div className="whitespace-pre-wrap break-words">{m.body}</div>
                             <div className={"mt-0.5 text-[10px] " + (mine ? "text-amber-900/70" : "text-slate-500")}>{timeLabel(m.created_at)}</div>
                           </div>
@@ -188,7 +188,7 @@ export default function Messages({ userId, companyId, triggerClassName }: { user
                 </div>
                 <div className="flex items-center gap-2 border-t border-slate-800 p-3">
                   <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} placeholder="Type a message" className="flex-1 rounded-full bg-slate-800 border border-slate-700 px-4 py-2 text-sm text-slate-100" />
-                  <button type="button" onClick={send} disabled={sending || !text.trim()} className="rounded-full px-4 py-2 text-sm font-semibold text-slate-900 disabled:opacity-50" style={{ background: "#e0a82e" }}>Send</button>
+                  <button type="button" onClick={send} disabled={sending || !text.trim()} className="rounded-full px-4 py-2 text-sm font-semibold text-slate-900 disabled:opacity-50" style={{ background: "#CC9000" }}>Send</button>
                 </div>
               </>
             )}

@@ -363,7 +363,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                         const label = t.role === "me" ? "Me" : shortName(t.email);
                         const cls = "rounded-full px-3 py-1 text-xs font-semibold border " + (on ? "text-slate-900 border-transparent" : busy ? "text-slate-600 border-slate-800" : "text-slate-200 border-slate-600");
                         return (
-                          <button type="button" key={t.user_id} disabled={busy} onClick={() => setFTech(on ? "" : t.user_id)} className={cls} style={on ? { background: "#e0a82e" } : undefined}>{label}{busy ? " (full)" : ""}</button>
+                          <button type="button" key={t.user_id} disabled={busy} onClick={() => setFTech(on ? "" : t.user_id)} className={cls} style={on ? { background: "#CC9000" } : undefined}>{label}{busy ? " (full)" : ""}</button>
                         );
                       })}
                       {techOptions.length === 0 ? <span className="text-xs text-slate-600">Invite your team to assign techs.</span> : null}
@@ -371,7 +371,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                   </div>
 
                   {err ? <p className="text-xs text-red-400">{err}</p> : null}
-                  <button type="button" onClick={addEvent} disabled={saving || !fTitle.trim()} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-50" style={{ background: "#e0a82e" }}>{saving ? "Adding..." : "Add to calendar"}</button>
+                  <button type="button" onClick={addEvent} disabled={saving || !fTitle.trim()} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-50" style={{ background: "#CC9000" }}>{saving ? "Adding..." : "Add to calendar"}</button>
                 </div>
               ) : null}
             </div>

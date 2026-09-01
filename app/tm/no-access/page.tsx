@@ -35,7 +35,7 @@ export default async function NoAccess({ searchParams }: { searchParams: Promise
       <h1 className="text-2xl text-white">{msg.title}</h1>
       <p className="mt-3 max-w-md text-sm text-slate-400">{msg.body}</p>
       {detail ? <p className="mt-2 text-xs text-slate-500">{detail}</p> : null}
-      <Link href="/" className="mt-6 rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#e0a82e" }}>Back to the command center</Link>
+      <Link href="/" className="mt-6 rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#CC9000" }}>Back to the command center</Link>
     </main>
   );
 }

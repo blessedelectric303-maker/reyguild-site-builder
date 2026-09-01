@@ -163,7 +163,7 @@ export default function NumberingForm({ rows }: { rows: Row[] }) {
                 disabled={!d.start || Number(d.start) < 1}
                 onClick={() => { setConfirm(r.kind); setSaved(null); }}
                 className="mt-3 w-full rounded-md py-2.5 text-sm font-bold text-slate-900 disabled:opacity-40"
-                style={{ background: "#e0a82e" }}
+                style={{ background: "#CC9000" }}
               >
                 {r.configured ? "Change the starting number" : "Set the starting number"}
               </button>

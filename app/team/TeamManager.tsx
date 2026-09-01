@@ -176,7 +176,7 @@ export default function TeamManager({
               <div className="text-slate-100 text-sm font-medium">Owner &amp; Admin</div>
               <div className="text-slate-400 text-xs">Combined = the owner also has admin powers. Separate = two distinct roles.</div>
             </div>
-            <button onClick={toggleOwnerAdmin} className={"shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold " + (ownerAdmin ? "text-slate-900" : "text-slate-200 border border-slate-600")} style={ownerAdmin ? { background: "#e0a82e" } : {}}>{ownerAdmin ? "Combined" : "Separate"}</button>
+            <button onClick={toggleOwnerAdmin} className={"shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold " + (ownerAdmin ? "text-slate-900" : "text-slate-200 border border-slate-600")} style={ownerAdmin ? { background: "#CC9000" } : {}}>{ownerAdmin ? "Combined" : "Separate"}</button>
           </div>
         </div>
 
@@ -204,7 +204,7 @@ export default function TeamManager({
               onClick={createInvite}
               disabled={busy}
               className="rounded-md px-4 py-2 text-sm font-semibold text-slate-900"
-              style={{ background: "#e0a82e" }}
+              style={{ background: "#CC9000" }}
             >
               {busy ? "..." : "Create invite"}
             </button>

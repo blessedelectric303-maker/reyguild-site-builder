@@ -70,7 +70,7 @@ export default async function ExportPage() {
           <a
             href="/api/export?section=everything"
             className="mt-6 block rounded-xl px-4 py-4 text-center text-sm font-bold"
-            style={{ background: "#e0a82e", color: "#16243F" }}
+            style={{ background: "#CC9000", color: "#16243F" }}
           >
             Download everything (JSON)
           </a>

@@ -646,7 +646,7 @@ function RGEmblem({ size = 40 }) {
 function BrandLockup({ tagline = "Service Site Builder", centered, emblemSize = 40, nameSize = "text-2xl", tagSize = "text-[11px]" }) {
   const name = (
     <div className={`font-serif font-bold ${nameSize} leading-none tracking-tight`}>
-      <span style={{ color: "#e0a82e" }}>REY</span><span className="text-white">GUILD</span>
+      <span style={{ color: "#CC9000" }}>REY</span><span className="text-white">GUILD</span>
     </div>
   );
   const tag = <div className={`${tagSize} uppercase tracking-[0.25em] text-slate-400 mt-1`}>{tagline}</div>;
