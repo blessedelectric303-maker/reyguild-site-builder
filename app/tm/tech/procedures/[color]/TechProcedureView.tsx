@@ -8,7 +8,7 @@ type Row = { id: string; label: string; group: string };
 // Phone first. Big tap targets, light theme to match the rest of the tech app,
 // and the checklist saves itself the same way the office one does.
 export default function TechProcedureView({
-  color, procedureId, label, skin, purpose, onePager, items,
+  color, procedureId, label, skin, purpose, onePager, items, longFormHref,
 }: {
   color: string;
   procedureId: string;
@@ -17,8 +17,24 @@ export default function TechProcedureView({
   purpose: string | null;
   onePager: string | null;
   items: Row[];
+  // Set when SQL 46 has loaded the full written procedure for this card.
+  // Undefined means the card is all there is, and no link is drawn.
+  longFormHref?: string;
 }) {
   const [pane, setPane] = useState<"onepage" | "checklist">("onepage");
+  const longForm = longFormHref ? (
+    <a
+      href={longFormHref}
+      className="mt-4 block rounded-xl border border-slate-300 bg-white p-4 text-center"
+    >
+      <span className="block text-sm font-bold text-slate-900">
+        Read the full procedure
+      </span>
+      <span className="mt-0.5 block text-xs text-slate-500">
+        Everything behind this card, in detail. Worth reading once, off the job.
+      </span>
+    </a>
+  ) : null;
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
   const [runId, setRunId] = useState<string | null>(null);
   const [saved, setSaved] = useState("");
@@ -100,6 +116,9 @@ export default function TechProcedureView({
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
           {purpose ? <p className="mb-3 text-sm text-slate-600">{purpose}</p> : null}
           <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-800">{onePager || "The one page card has not been written yet."}</pre>
+          {/* At the bottom of the summary, where somebody who has just read it
+              and wants the detail will look for it. */}
+          {longForm}
         </div>
       ) : (
         <div className="mt-3">

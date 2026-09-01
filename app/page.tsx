@@ -84,6 +84,11 @@ export default async function Home() {
   }
   const soloMode = !armyMode;
 
+  // Paperwork, export and billing are owner and admin work. The functions
+  // behind them refuse anybody else anyway, so this only decides whether a
+  // supervisor sees three tiles that would turn him away.
+  const isOffice = myRole === "owner" || myRole === "admin";
+
   // Role-based access: employees skip the command center and go straight to their app.
   if (!isStaff(myRole)) redirect(homeFor(myRole));
 
@@ -239,6 +244,17 @@ export default async function Home() {
               import already lives. One list of customers, not two. */}
           <Link href="/apps/estimating?tab=clients" className={tileCls}>Client Contacts</Link>
         </div>
+
+        {/* The office-only row. Paperwork, export and billing were all built
+            and had no link anywhere - a feature nobody can reach is a feature
+            that does not exist. */}
+        {isOffice && (
+          <div className="mt-2 max-w-3xl mx-auto grid auto-rows-fr grid-cols-3 gap-2">
+            <Link href="/team/paperwork" className={tileCls}>Paperwork</Link>
+            <Link href="/export" className={tileCls}>Export Data</Link>
+            <Link href="/team" className={tileCls}>Army / Employees</Link>
+          </div>
+        )}
 
         <div className="text-center mt-8">
           <h1 className="text-2xl font-extrabold tracking-wide text-white" style={{ WebkitTextStroke: "1px #e0a82e" }}>YOUR COMMAND CENTER</h1>

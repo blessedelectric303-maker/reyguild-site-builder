@@ -22,6 +22,9 @@ export default async function TechProcedurePage({ params }: { params: Promise<{ 
   let proc: any = null;
   let items: any[] = [];
   let facts: CompanyFacts = {} as CompanyFacts;
+  // Whether SQL 46 has loaded the full written procedure behind this card.
+  // 12,000 words were sitting in the database with no link to them.
+  let hasLongForm = false;
   let reachable = true;
 
   try {
@@ -47,6 +50,15 @@ export default async function TechProcedurePage({ params }: { params: Promise<{ 
         .eq("id", cid)
         .maybeSingle();
       facts = ((co || {}) as unknown) as CompanyFacts;
+
+      try {
+        const { data: doc } = await supabase
+          .schema("suite")
+          .rpc("document_body", { p_key: "proc-" + color });
+        hasLongForm = !!(doc && doc.length);
+      } catch (e) {
+        hasLongForm = false;
+      }
 
       const { data: p } = await supabase
         .schema("suite")
@@ -108,6 +120,7 @@ export default async function TechProcedurePage({ params }: { params: Promise<{ 
 
   return (
     <TechProcedureView
+      longFormHref={hasLongForm ? "/guide/proc-" + color : undefined}
       color={color}
       procedureId={proc.id}
       label={card.label}
