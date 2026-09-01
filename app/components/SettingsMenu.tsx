@@ -255,10 +255,13 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
                     </div>
                   ) : null}
 
+                  {/* Three equal boxes. The labels shrink rather than the
+                      boxes, so the row stays even at any width. */}
                   {isStaff ? (
-                    <div className="mb-4 grid grid-cols-2 gap-2">
-                      <Link href="/company" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Company</Link>
-                      <Link href="/team" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-3 py-2 text-center text-slate-200 hover:bg-slate-800">Army / Employees</Link>
+                    <div className="mb-4 grid grid-cols-3 gap-2">
+                      <Link href="/company" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-2 py-2 text-center text-xs leading-tight text-slate-200 hover:bg-slate-800">Company</Link>
+                      <Link href="/team" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-2 py-2 text-center text-xs leading-tight text-slate-200 hover:bg-slate-800">Army /<br />Employees</Link>
+                      <Link href="/subscription" onClick={() => setOpen(false)} className="rounded-md border border-slate-600 px-2 py-2 text-center text-xs leading-tight text-slate-200 hover:bg-slate-800">Subscription</Link>
                     </div>
                   ) : null}
 

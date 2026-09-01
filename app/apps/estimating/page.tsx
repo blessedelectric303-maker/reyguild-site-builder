@@ -15,14 +15,31 @@ export default async function EstimatingPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: ent } = await supabase
+  // SCOPED TO THIS USER, and never maybeSingle() on an unfiltered read.
+  //
+  // This was: .from("entitlements").select("status").eq("app_key","estimating")
+  //           .maybeSingle()
+  //
+  // No user filter. maybeSingle() ERRORS if more than one row comes back, so
+  // the moment a second person existed the read failed, `ent` was null, and
+  // everybody was redirected out of the app they had paid for. Same shape as
+  // the unscoped membership lookups that once handed a tech the owner's row.
+  const { data: ents, error: entErr } = await supabase
     .schema("suite")
     .from("entitlements")
     .select("status")
-    .eq("app_key", "estimating")
-    .maybeSingle();
-  const ok = ent && (ent.status === "active" || ent.status === "trialing");
-  if (!ok) redirect("/");
+    .eq("user_id", user.id)
+    .eq("app_key", "estimating");
+
+  if (entErr) console.error("[estimating] entitlement read failed:", entErr.message);
+
+  const statuses = (ents || []).map((e: any) => String(e.status));
+  // 'trial' is accepted alongside 'trialing' so an account written before
+  // SQL 51 is not locked out of the app it is paying for.
+  const ok = statuses.some((st) =>
+    st === "active" || st === "trialing" || st === "trial"
+  );
+  if (!ok) redirect("/?no_access=estimating");
 
   const { data: mem } = await supabase
     .schema("suite")

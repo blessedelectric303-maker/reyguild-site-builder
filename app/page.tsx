@@ -281,11 +281,13 @@ export default async function Home() {
         {/* The office-only row. Paperwork, export and billing were all built
             and had no link anywhere - a feature nobody can reach is a feature
             that does not exist. */}
+        {/* Army / Employees lives under Settings now - it was in both places,
+            and a link that exists twice is a link somebody has to think
+            about. */}
         {isOffice && (
-          <div className="mt-2 max-w-3xl mx-auto grid auto-rows-fr grid-cols-3 gap-2">
-            <Link href="/team/paperwork" className={tileCls}>Paperwork</Link>
+          <div className="mt-2 max-w-3xl mx-auto grid auto-rows-fr grid-cols-2 gap-2">
             <Link href="/export" className={tileCls}>Export Data</Link>
-            <Link href="/team" className={tileCls}>Army / Employees</Link>
+            <Link href="/team/paperwork" className={tileCls}>Paperwork</Link>
           </div>
         )}
 
