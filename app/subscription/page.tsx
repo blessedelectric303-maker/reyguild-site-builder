@@ -21,6 +21,14 @@ export const metadata = {
 // arithmetic, not as a total, because a price somebody can check themselves
 // is a price they trust.
 
+type Req = {
+  request: string;
+  reason: string | null;
+  requested_at: string;
+  handled_at: string | null;
+  monthly_at_time: number | null;
+};
+
 type Seats = {
   seats: number;
   included: number;
@@ -45,6 +53,7 @@ export default async function SubscriptionPage() {
   let companyName = "";
   let s: Seats | null = null;
   let people: { email: string; role: string }[] = [];
+  let requests: Req[] = [];
   let problem: string | null = null;
 
   try {
@@ -78,6 +87,14 @@ export default async function SubscriptionPage() {
       .schema("suite")
       .rpc("company_document_status");
     people = (roster || []).map((r: any) => ({ email: r.email, role: r.role }));
+
+    // A pause or cancel is recorded the moment somebody taps it. Until now
+    // nobody in the office could see that it had been asked for - which is
+    // how a company ends up billed after asking you to stop.
+    const { data: reqs } = await supabase
+      .schema("suite")
+      .rpc("my_subscription_requests");
+    requests = (reqs || []) as Req[];
   } catch (e: any) {
     problem = e?.message || "Could not load your subscription.";
   }
@@ -117,6 +134,51 @@ export default async function SubscriptionPage() {
         <p className="mt-4 rounded-xl border border-amber-700 bg-amber-950/30 p-4 text-sm text-amber-200">
           Could not read your seat count: {problem}
         </p>
+      ) : null}
+
+      {requests.length > 0 ? (
+        <div className="mt-5 space-y-2">
+          {requests.slice(0, 3).map((r, i) => (
+            <div
+              key={i}
+              className={
+                "rounded-xl border p-4 " +
+                (r.handled_at
+                  ? "border-slate-700 bg-slate-900/40"
+                  : r.request === "cancel"
+                  ? "border-red-800 bg-red-950/25"
+                  : "border-amber-800 bg-amber-950/20")
+              }
+            >
+              <div className="text-sm font-semibold text-white">
+                {r.request === "cancel"
+                  ? "Cancellation requested"
+                  : r.request === "pause"
+                  ? "Pause requested"
+                  : "Resume requested"}
+                {r.handled_at ? " - done" : " - waiting on us"}
+              </div>
+              <div className="mt-1 text-xs text-slate-400">
+                {new Date(r.requested_at).toLocaleString()}
+                {r.monthly_at_time != null
+                  ? " \u00b7 $" + Number(r.monthly_at_time).toFixed(2) + " a month at the time"
+                  : ""}
+              </div>
+              {r.reason ? (
+                <div className="mt-2 text-sm italic leading-snug text-slate-300">
+                  &ldquo;{r.reason}&rdquo;
+                </div>
+              ) : null}
+              {!r.handled_at ? (
+                <div className="mt-2 text-xs leading-snug text-slate-400">
+                  Billing is not connected yet, so a person handles this rather
+                  than a machine. Nothing about the account has changed and
+                  nothing is deleted.
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
       ) : null}
 
       {/* The number, and the arithmetic behind it. */}

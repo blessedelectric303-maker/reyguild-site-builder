@@ -2108,6 +2108,20 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       )}
 
       {/* ════════════════════ PRICE LIST ════════════════════ */}
+      {/* The rules that sit above the individual prices - what is included,
+          what triggers an upcharge, and which of it a customer may hear.
+          Linked from here because this is where somebody is already thinking
+          about pricing. */}
+      {page === "prices" && (
+        <a href="/price-rules" className="fl-guide" style={{ marginBottom: 10 }}>
+          <span className="fl-guide-t">Price book rules</span>
+          <span className="fl-guide-b">
+            What is included, what costs extra, and what you are allowed to say
+            to a customer.
+          </span>
+        </a>
+      )}
+
       {page === "prices" && (
         <div className={can.editPrices ? "fl-grid" : "fl-weekly"}>
           {can.editPrices && (
