@@ -44,13 +44,28 @@ export default async function ProcedurePage({ params }: { params: Promise<{ colo
     .eq("id", companyId)
     .maybeSingle();
 
-  const { data: proc } = await supabase
+  let { data: proc } = await supabase
     .schema("suite")
     .from("procedures")
     .select("id,color,title,purpose,qualifies,opening_script,may_say,may_not_say,one_pager,schedules_to_calendar,default_block_hours")
     .eq("company_id", companyId)
     .eq("color", color)
     .maybeSingle();
+
+  // Fall back to the universal template. Without this a brand new company
+  // opens a coloured button and finds nothing behind it - the templates were
+  // sitting there at company_id null the whole time, and only the tech side
+  // knew to look. That is what made a new account's procedure boxes empty.
+  if (!proc) {
+    const { data: tmpl } = await supabase
+      .schema("suite")
+      .from("procedures")
+      .select("id,color,title,purpose,qualifies,opening_script,may_say,may_not_say,one_pager,schedules_to_calendar,default_block_hours")
+      .is("company_id", null)
+      .eq("color", color)
+      .maybeSingle();
+    if (tmpl) proc = tmpl;
+  }
 
   if (!proc) {
     return (

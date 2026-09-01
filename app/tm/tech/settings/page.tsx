@@ -92,18 +92,22 @@ export default async function TechSettingsPage() {
           button only renders for the office tier - this layout serves
           technicians and apprentices, who are redirected out of the command
           center, so for them it would be a dead end. */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-        <a href="/" className="rounded-md px-4 py-2.5 text-sm font-bold"
+      {/* Two equal buttons, then sign out centred beneath. Identical to
+          Proposals and Invoicing, deliberately. */}
+      <div className="mt-6 flex items-stretch gap-2">
+        <a href="/" className="flex-1 rounded-md px-4 py-2.5 text-center text-sm font-bold"
            style={{ background: "#16243F", color: "#e0a82e" }}>
           &larr; Back to command center
         </a>
         {canSwitch ? (
-          <a href="/apps/estimating" className="rounded-md px-4 py-2.5 text-sm font-bold"
+          <a href="/apps/estimating" className="flex-1 rounded-md px-4 py-2.5 text-center text-sm font-bold"
              style={{ background: "#e0a82e", color: "#16243F" }}>
             Switch to Proposals &amp; Invoicing
           </a>
-        ) : <span />}
-        <LogoutButton className="rounded-md border border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50" />
+        ) : null}
+      </div>
+      <div className="mt-2 flex justify-center">
+        <LogoutButton className="rounded-md border border-red-300 bg-white px-6 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50" />
       </div>
 
     </div>

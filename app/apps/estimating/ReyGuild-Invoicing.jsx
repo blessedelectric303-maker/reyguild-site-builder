@@ -751,6 +751,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     { key: "estimates", label: "Proposals", show: true },
     { key: "invoices", label: "Invoices", show: true },
     { key: "prices", label: "Price List", show: true },
+    // Between Price List and Messages, as asked. Clients is somewhere an
+    // estimator goes several times a day - it does not belong buried in
+    // Settings with the things you touch once a month.
+    { key: "clients", label: "Clients", show: true },
     { key: "messages", label: "Messages", show: true },
   ].filter((t) => t.show);
 
@@ -812,7 +816,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
 
   const SETTINGS_PAGES = [
-    { key: "clients", label: "Clients", show: true },
     { key: "team", label: "Team", show: isAdmin },
     { key: "followups", label: "Follow-ups", show: isAdmin },
     { key: "alerts", label: "Approvals", show: isAdmin },
@@ -2318,13 +2321,15 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               press by accident is as far as possible from the thing you press
               often. The command center button only appears for the office -
               a tech is redirected out of it, so offering it is a dead end. */}
+          {/* Two equal buttons on one line, then sign out centred beneath
+              them. Sign out was the same size and on the same row as the two
+              you press all day, which is how somebody signs themselves out
+              reaching for the other app. */}
           <div className="fl-leaverow">
-            {/* Shown to everybody. "/" routes by role, so a tech lands back
-                on his own home rather than on a screen he cannot open. Three
-                buttons on one line, always, so the row never changes shape
-                depending on who is looking at it. */}
             <a href="/" className="fl-btn-command">&larr; Back to command center</a>
             <a href="/tm/enter" className="fl-btn-swap">Switch to T&amp;M &amp; P&amp;L</a>
+          </div>
+          <div className="fl-signoutrow">
             <a href="/auth/signout" className="fl-btn-signout">Sign out</a>
           </div>
         </>

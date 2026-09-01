@@ -174,9 +174,17 @@ const STYLE_FIX = `
 }
 
 /* Leaving the app: three buttons, in the app's own colours. */
+/* Two buttons, exactly the same width, side by side. flex:1 with a shared
+   basis is what makes them equal - space-between only pushed them apart and
+   let the longer label be the wider button. */
 .fl-leaverow {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; margin: 24px auto 8px; max-width: 42rem; flex-wrap: wrap;
+  display: flex; align-items: stretch; gap: 10px;
+  margin: 24px auto 10px; max-width: 42rem;
+}
+.fl-leaverow > a { flex: 1 1 0; text-align: center; }
+.fl-signoutrow {
+  display: flex; justify-content: center;
+  margin: 0 auto 8px; max-width: 42rem;
 }
 .fl-btn-command, .fl-btn-swap, .fl-btn-signout {
   font-weight: 700; font-size: 13px; padding: 10px 14px;
