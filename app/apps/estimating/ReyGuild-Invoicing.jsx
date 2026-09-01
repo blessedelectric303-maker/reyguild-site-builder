@@ -687,6 +687,27 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
   function threadOf(m) { return m.thread || "team"; }
   // Admin/owner can write to the whole team or any one person. An estimator can write
+  // WHO YOU CAN MESSAGE.
+  // This used to be built from a hand-kept "people" array inside this app,
+  // which meant the messaging rule lived in two places and drifted: a person
+  // deleted from that roster kept their thread, and a real employee who had
+  // never been typed into it had none.
+  //
+  // Now it comes from suite.messageable_members(), the same function the T&M
+  // side uses. One rule, one place.
+  const [contacts, setContacts] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/messages/contacts");
+        const j = await r.json();
+        if (alive && Array.isArray(j.contacts)) setContacts(j.contacts);
+      } catch (e) { /* keep whatever we had */ }
+    })();
+    return () => { alive = false; };
+  }, []);
+
   // to the office (admins) on their own private line, or to the whole team.
   // The office tier gets a broadcast plus one thread per person the database
   // says they may reach. Everybody else gets a single thread to the office -
@@ -781,26 +802,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     return () => { alive = false; clearInterval(t); };
   }, []);
 
-  // WHO YOU CAN MESSAGE.
-  // This used to be built from a hand-kept "people" array inside this app,
-  // which meant the messaging rule lived in two places and drifted: a person
-  // deleted from that roster kept their thread, and a real employee who had
-  // never been typed into it had none.
-  //
-  // Now it comes from suite.messageable_members(), the same function the T&M
-  // side uses. One rule, one place.
-  const [contacts, setContacts] = useState([]);
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const r = await fetch("/api/messages/contacts");
-        const j = await r.json();
-        if (alive && Array.isArray(j.contacts)) setContacts(j.contacts);
-      } catch (e) { /* keep whatever we had */ }
-    })();
-    return () => { alive = false; };
-  }, []);
+
 
   const toSchedule = answers.filter((a) => a.needs_scheduling);
 
