@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { createClient as createSuiteClient } from "@/utils/supabase/server";
 
 // The calendar talks to jobs through here. A scheduled job IS the calendar
 // entry, so the description and material typed here are the same ones the
@@ -129,6 +130,36 @@ export async function POST(req: Request) {
   const date = String(b.date || "");
   if (!title || !date) return NextResponse.json({ error: "Name and date are required." }, { status: 400 });
 
+  // A JOB COMES FROM AN ACCEPTED PROPOSAL.
+  //
+  // Ben's rule: nothing goes on the calendar that the customer has not said
+  // yes to, and one proposal never becomes two jobs. The database holds both
+  // guards - claim_proposal_for_job refuses an unaccepted proposal, and a
+  // unique index refuses a second job for the same one.
+  //
+  // The claim happens BEFORE the job is written. If it throws, no job exists
+  // to clean up. Doing it afterwards would leave an orphan on the calendar
+  // every time the guard fired, which is the failure nobody notices.
+  const proposalRef = String(b.proposalRef || b.proposal_ref || "").trim();
+  const jobId = crypto.randomUUID();
+
+  if (proposalRef) {
+    try {
+      const supabase = await createSuiteClient();
+      const { error: claimErr } = await supabase
+        .schema("suite")
+        .rpc("claim_proposal_for_job", { p_proposal: proposalRef, p_job: jobId });
+      if (claimErr) {
+        return NextResponse.json({ error: claimErr.message }, { status: 409 });
+      }
+    } catch (e: any) {
+      return NextResponse.json(
+        { error: "Could not check that proposal. Try again." },
+        { status: 500 }
+      );
+    }
+  }
+
   const hours = Number(b.hours) || 2;
   const start = parseStart(date, String(b.time || ""));
   if (!start) return NextResponse.json({ error: "That start time did not make sense." }, { status: 400 });
@@ -136,7 +167,7 @@ export async function POST(req: Request) {
 
   const job = await prisma.job.create({
     data: {
-      id: crypto.randomUUID(),
+      id: jobId,
       orgId: me.orgId,
       createdById: me.id,
       customerName: title,
