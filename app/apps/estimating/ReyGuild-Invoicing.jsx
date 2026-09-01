@@ -675,11 +675,29 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
   // ── in-app team messaging ──────────────────────────────────────────────────
   const actorKey = myName || "Owner";
+
+  function roleWord(r) {
+    return ({
+      owner: "Owner / Manager",
+      admin: "Administrator",
+      supervisor: "Supervisor",
+      tech: "Tech / Estimator",
+      apprentice: "Apprentice",
+    })[String(r || "").toLowerCase()] || "Team";
+  }
   function threadOf(m) { return m.thread || "team"; }
   // Admin/owner can write to the whole team or any one person. An estimator can write
   // to the office (admins) on their own private line, or to the whole team.
+  // The office tier gets a broadcast plus one thread per person the database
+  // says they may reach. Everybody else gets a single thread to the office -
+  // and if no admin or supervisor has been hired yet, "the office" is simply
+  // the owner, which is correct on day one and needs no special case.
   const msgTargets = isAdmin
-    ? [{ key: "team", label: "Whole team" }].concat(people.filter((p) => (p.name || "").trim() && p.name !== myName).map((p) => ({ key: p.name, label: p.name })))
+    ? [{ key: "team", label: "Whole team" }].concat(
+        contacts
+          .filter((c) => (c.label || "").trim())
+          .map((c) => ({ key: c.label, label: c.label + " \u00b7 " + roleWord(c.role) }))
+      )
     : [{ key: actorKey, label: "The office" }];
   const msgAllowed = msgTargets.map((t) => t.key);
   const effTarget = msgAllowed.includes(msgTarget) ? msgTarget : msgTargets[0].key;
@@ -757,6 +775,27 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     // few seconds.
     const t = setInterval(pull, 120000);
     return () => { alive = false; clearInterval(t); };
+  }, []);
+
+  // WHO YOU CAN MESSAGE.
+  // This used to be built from a hand-kept "people" array inside this app,
+  // which meant the messaging rule lived in two places and drifted: a person
+  // deleted from that roster kept their thread, and a real employee who had
+  // never been typed into it had none.
+  //
+  // Now it comes from suite.messageable_members(), the same function the T&M
+  // side uses. One rule, one place.
+  const [contacts, setContacts] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/messages/contacts");
+        const j = await r.json();
+        if (alive && Array.isArray(j.contacts)) setContacts(j.contacts);
+      } catch (e) { /* keep whatever we had */ }
+    })();
+    return () => { alive = false; };
   }, []);
 
   const toSchedule = answers.filter((a) => a.needs_scheduling);
