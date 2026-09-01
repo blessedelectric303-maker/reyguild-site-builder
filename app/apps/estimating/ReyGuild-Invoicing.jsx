@@ -870,7 +870,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
 
   // ── estimates ─────────────────────────────────────────────────────────────────
-  function saveEstimate(status) {
+  async function saveEstimate(status) {
     if (!estForm.client.trim()) { setErr("Enter the contact's full name first."); return; }
     setErr("");
     const rec = { ...estForm, status: status || estForm.status, createdBy: estForm.createdBy || myName || "Owner" };
@@ -879,10 +879,43 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       save(STORAGE.clients, [{ ...emptyClient(), id: uid(), company: rec.client.trim(), address: rec.clientAddr.trim(), owner: myName || "Owner" }, ...clients], setClients);
     }
     if (rec.id) save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
-    else save(STORAGE.estimates, [{ ...rec, id: uid() }, ...estimates], setEstimates);
+    else {
+      if (!String(rec.estimateNo || "").trim()) {
+        const n = await takeNumber("estimate");
+        if (n) rec.estimateNo = n;
+      }
+      save(STORAGE.estimates, [{ ...rec, id: uid() }, ...estimates], setEstimates);
+    }
     logAudit(rec.id ? "Edited estimate" : "Created estimate", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
     setEstForm(emptyEstimate());
   }
+  // THE NUMBER COMES FROM THE DATABASE.
+  //
+  // It used to be a blank box somebody typed into. Two estimators both
+  // looking at 1041 both write 1042, and now two jobs share an invoice
+  // number - which you find out about during a chargeback or a tax check.
+  //
+  // next_document_number hands one out and increments in a single statement,
+  // so two people pressing at the same instant get different numbers. Taken
+  // ONLY when a record is first created; editing never re-takes one, because
+  // a number already sent to a customer must not move.
+  async function takeNumber(kind) {
+    try {
+      const res = await fetch("/api/numbering", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "next", kind }),
+      });
+      const j = await res.json();
+      return res.ok && j.number ? String(j.number) : "";
+    } catch (e) {
+      // Numbering not set up, or offline. Fall back to whatever was typed
+      // rather than blocking the save - an unnumbered estimate somebody can
+      // fix beats a lost one.
+      return "";
+    }
+  }
+
   function editEstimate(e) { setEstForm({ ...emptyEstimate(), ...e, lines: e.lines && e.lines.length ? e.lines : [emptyLine()] }); setPage("estimates"); setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }
   function setEstStatus(id, status) { const e = estimates.find((x) => x.id === id); save(STORAGE.estimates, estimates.map((x) => (x.id === id ? { ...x, status } : x)), setEstimates); logAudit("Estimate → " + status, e ? (e.client || "") + (e.estimateNo ? " #" + e.estimateNo : "") : ""); }
   function removeEstimate(id) { save(STORAGE.estimates, estimates.filter((e) => e.id !== id), setEstimates); setConfirmId(null); }
@@ -1127,14 +1160,21 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
 
   // ── invoices ────────────────────────────────────────────────────────────────
-  function saveInvoice(status) {
+  async function saveInvoice(status) {
     if (!invForm.client.trim()) { setErr("Pick or enter a client first."); return; }
     setErr("");
     const rec = { ...invForm, status: status || invForm.status, createdBy: invForm.createdBy || myName || "Owner" };
     if (rec.status === "Sent" && !rec.sentAt) rec.sentAt = toLocalDate(new Date());
     let id = rec.id;
     if (rec.id) save(STORAGE.invoices, invoices.map((i) => (i.id === rec.id ? rec : i)), setInvoices);
-    else { id = uid(); save(STORAGE.invoices, [{ ...rec, id }, ...invoices], setInvoices); }
+    else {
+      if (!String(rec.invoiceNo || "").trim()) {
+        const n = await takeNumber("invoice");
+        if (n) rec.invoiceNo = n;
+      }
+      id = uid();
+      save(STORAGE.invoices, [{ ...rec, id }, ...invoices], setInvoices);
+    }
     if ((rec.status === "Sent")) { ensurePayout({ ...rec, id }); noticeSent("invoice", { ...rec, id }); }
     logAudit(rec.id ? "Edited invoice" : "Created invoice", (rec.client || "") + (rec.invoiceNo ? " #" + rec.invoiceNo : ""));
     setInvForm(emptyInvoice());
