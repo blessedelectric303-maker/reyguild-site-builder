@@ -178,7 +178,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
             <div className="flex gap-1 border-b border-slate-800 p-2">
               {linkBtn("/export", "Data")}
               {linkBtn("/team/paperwork", "Documents")}
-              {tabBtn("help", "Help")}
+              {linkBtn("/help", "Help")}
               {tabBtn("account", "Account")}
             </div>
 
