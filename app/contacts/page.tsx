@@ -30,7 +30,11 @@ export default async function ContactsPage() {
   const { data: roster } = await supabase.schema("suite").rpc("company_members");
   const members = ((roster as any[]) || []);
 
-  // Names and phone numbers live on the T and M user record.
+  // Names and phone numbers now live on the MEMBERSHIP - SQL 58 put them
+  // there, and Army / Employees is where they get typed. The T and M user
+  // record is still read afterwards, but only to fill a gap: a company that
+  // has been running for months already has names in there, and making them
+  // retype all of them to see a directory would be a poor trade.
   let extra: Record<string, { name: string; phone: string }> = {};
   try {
     const emails = members.map((m) => (m.email || "").toLowerCase()).filter(Boolean);
@@ -57,8 +61,10 @@ export default async function ContactsPage() {
       email: m.email || "",
       role: m.role,
       isMe: m.is_me === true,
-      name: (extra[e] || {}).name || "",
-      phone: (extra[e] || {}).phone || "",
+      // The membership wins. What the office typed about this person beats
+      // whatever an old T and M record happens to say.
+      name: (m.full_name || "").trim() || (extra[e] || {}).name || "",
+      phone: (m.phone || "").trim() || (extra[e] || {}).phone || "",
     };
   });
 
