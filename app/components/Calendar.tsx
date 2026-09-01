@@ -63,6 +63,36 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
   const [fDur, setFDur] = useState(2);
   const [fDesc, setFDesc] = useState("");
   const [fMat, setFMat] = useState("");
+
+  // ACCEPTED PROPOSALS WAITING TO BE SCHEDULED.
+  // Ben's rule: nothing goes on the calendar the customer has not said yes
+  // to. Picking one here fills the form from the proposal, so the job that
+  // gets booked is the job that was quoted - not a retyped approximation of
+  // it that drifts by a room and two hours.
+  const [props, setProps] = useState<any[]>([]);
+  const [fProp, setFProp] = useState("");
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/proposals/schedulable");
+        const j = await r.json();
+        if (alive && Array.isArray(j.items)) setProps(j.items);
+      } catch (e) { /* leave it empty; the picker hides itself */ }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const waiting = props.filter((p) => !p.already_scheduled);
+
+  function pickProposal(ref: string) {
+    setFProp(ref);
+    const p = props.find((x) => x.ref_id === ref);
+    if (!p) return;
+    if (p.client) setFTitle(p.client);
+    if (p.address) setFAddr(p.address);
+    if (p.description) setFDesc(p.description);
+  }
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -180,6 +210,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
           techEmail: fTech ? emailFor(fTech) : "",
           jobDescription: fDesc.trim(),
           material: fMat.trim(),
+          proposalRef: fProp,
         }),
       });
       const payload = await res.json().catch(() => ({}));
@@ -189,6 +220,10 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
         return;
       }
       if (payload.note) setErr(payload.note);
+      setFProp("");
+      setProps((list) =>
+        list.map((p) => (p.ref_id === fProp ? { ...p, already_scheduled: true } : p))
+      );
     } catch (e) {
       setSaving(false);
       setErr("Could not reach the server.");
@@ -338,6 +373,37 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                     {typeToggle("warranty_call", "Warranty")}
                     {typeToggle("emergency", "Emergency")}
                   </div>
+                  {/* Accepted proposals waiting to be booked. Above the form,
+                      because picking one fills the form in - and a job booked
+                      from the proposal is the job that was quoted, rather
+                      than a retyped version that drifts by a room and two
+                      hours. Hidden entirely when there are none, so a company
+                      not using proposals sees the calendar it always had. */}
+                  {waiting.length > 0 ? (
+                    <div className="rounded-md border border-amber-800 bg-amber-950/20 p-2.5">
+                      <div className="text-[11px] font-bold uppercase tracking-wide text-amber-300">
+                        {waiting.length} accepted proposal{waiting.length === 1 ? "" : "s"} waiting to be booked
+                      </div>
+                      <select
+                        value={fProp}
+                        onChange={(e) => pickProposal(e.target.value)}
+                        className="mt-2 w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100"
+                      >
+                        <option value="">Not from a proposal</option>
+                        {waiting.map((p) => (
+                          <option key={p.ref_id} value={p.ref_id}>
+                            {(p.client || p.ref_id) + (p.description ? " - " + String(p.description).slice(0, 40) : "")}
+                          </option>
+                        ))}
+                      </select>
+                      {fProp ? (
+                        <p className="mt-1.5 text-[11px] leading-snug text-amber-200">
+                          Booking this proposal. It cannot be booked twice.
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
                   <input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="Job / customer name" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <input value={fAddr} onChange={(e) => setFAddr(e.target.value)} placeholder="Address" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <input value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="Start time - 9:00 AM or 09:00" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
