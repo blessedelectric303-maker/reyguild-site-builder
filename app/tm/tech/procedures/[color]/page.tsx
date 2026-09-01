@@ -25,6 +25,10 @@ export default async function TechProcedurePage({ params }: { params: Promise<{ 
   // Whether SQL 46 has loaded the full written procedure behind this card.
   // 12,000 words were sitting in the database with no link to them.
   let hasLongForm = false;
+  let canEditProc = false;
+  // True while the company is still reading ReyGuild's copy. Editing makes
+  // their own; ours is never touched.
+  let readingTemplate = false;
   let reachable = true;
 
   try {
@@ -35,11 +39,15 @@ export default async function TechProcedurePage({ params }: { params: Promise<{ 
     const { data: mem } = await supabase
       .schema("suite")
       .from("memberships")
-      .select("company_id")
+      .select("company_id,role")
       .eq("user_id", su?.id || "")
       .limit(1)
       .maybeSingle();
     const cid = ((mem as any) || {}).company_id || "";
+    const myRole = ((mem as any) || {}).role || "";
+    // Owners and admins may edit. A tech reading the card on a job cannot,
+    // and should not be shown a button that would turn him away.
+    canEditProc = myRole === "owner" || myRole === "admin";
     if (!cid) {
       reachable = false;
     } else {
@@ -81,6 +89,7 @@ export default async function TechProcedurePage({ params }: { params: Promise<{ 
           .eq("color", color)
           .maybeSingle();
         proc = t || null;
+        readingTemplate = !!t;
       }
 
       if (proc) {
@@ -121,6 +130,9 @@ export default async function TechProcedurePage({ params }: { params: Promise<{ 
   return (
     <TechProcedureView
       longFormHref={hasLongForm ? "/guide/proc-" + color : undefined}
+      editColor={color}
+      editIsTemplate={readingTemplate}
+      canEditProcedure={canEditProc}
       color={color}
       procedureId={proc.id}
       label={card.label}

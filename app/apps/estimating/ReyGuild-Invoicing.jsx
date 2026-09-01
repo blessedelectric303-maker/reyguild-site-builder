@@ -881,8 +881,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     if (rec.id) save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
     else {
       if (!String(rec.estimateNo || "").trim()) {
-        const n = await takeNumber("estimate");
-        if (n) rec.estimateNo = n;
+        const num = await takeNumber("estimate");
+        if (num) rec.estimateNo = num;
       }
       save(STORAGE.estimates, [{ ...rec, id: uid() }, ...estimates], setEstimates);
     }
@@ -890,15 +890,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     setEstForm(emptyEstimate());
   }
   // THE NUMBER COMES FROM THE DATABASE.
-  //
   // It used to be a blank box somebody typed into. Two estimators both
   // looking at 1041 both write 1042, and now two jobs share an invoice
-  // number - which you find out about during a chargeback or a tax check.
-  //
-  // next_document_number hands one out and increments in a single statement,
-  // so two people pressing at the same instant get different numbers. Taken
-  // ONLY when a record is first created; editing never re-takes one, because
-  // a number already sent to a customer must not move.
+  // number - found out about during a chargeback or a tax check.
+  // Taken ONLY when a record is first created; editing never re-takes one,
+  // because a number already sent to a customer must not move.
   async function takeNumber(kind) {
     try {
       const res = await fetch("/api/numbering", {
@@ -909,9 +905,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       const j = await res.json();
       return res.ok && j.number ? String(j.number) : "";
     } catch (e) {
-      // Numbering not set up, or offline. Fall back to whatever was typed
-      // rather than blocking the save - an unnumbered estimate somebody can
-      // fix beats a lost one.
+      // Not set up, or offline. Fall back to whatever was typed rather than
+      // blocking the save - an unnumbered estimate beats a lost one.
       return "";
     }
   }
@@ -1169,8 +1164,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     if (rec.id) save(STORAGE.invoices, invoices.map((i) => (i.id === rec.id ? rec : i)), setInvoices);
     else {
       if (!String(rec.invoiceNo || "").trim()) {
-        const n = await takeNumber("invoice");
-        if (n) rec.invoiceNo = n;
+        const num = await takeNumber("invoice");
+        if (num) rec.invoiceNo = num;
       }
       id = uid();
       save(STORAGE.invoices, [{ ...rec, id }, ...invoices], setInvoices);

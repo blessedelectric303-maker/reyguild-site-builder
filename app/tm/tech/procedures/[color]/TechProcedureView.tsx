@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import ProcedureEditor from "@/components/ProcedureEditor";
 
 type Row = { id: string; label: string; group: string };
 
@@ -9,6 +10,7 @@ type Row = { id: string; label: string; group: string };
 // and the checklist saves itself the same way the office one does.
 export default function TechProcedureView({
   color, procedureId, label, skin, purpose, onePager, items, longFormHref,
+  editColor, editIsTemplate, canEditProcedure,
 }: {
   color: string;
   procedureId: string;
@@ -20,6 +22,11 @@ export default function TechProcedureView({
   // Set when SQL 46 has loaded the full written procedure for this card.
   // Undefined means the card is all there is, and no link is drawn.
   longFormHref?: string;
+  // Editing, for an owner or admin who happens to be on a phone. It sits at
+  // the BOTTOM of the one page view, past everything a tech reads.
+  editColor?: string;
+  editIsTemplate?: boolean;
+  canEditProcedure?: boolean;
 }) {
   const [pane, setPane] = useState<"onepage" | "checklist">("onepage");
   const longForm = longFormHref ? (
@@ -119,6 +126,16 @@ export default function TechProcedureView({
           {/* At the bottom of the summary, where somebody who has just read it
               and wants the detail will look for it. */}
           {longForm}
+          {editColor && canEditProcedure ? (
+            <ProcedureEditor
+              color={editColor}
+              title={label}
+              purpose={purpose}
+              onePager={onePager}
+              isTemplate={!!editIsTemplate}
+              canEdit={true}
+            />
+          ) : null}
         </div>
       ) : (
         <div className="mt-3">
