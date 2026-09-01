@@ -130,6 +130,16 @@ const STYLE_FIX = `
 .fl-tmtab:hover { color: #fff; border-bottom-color: #475569; }
 .fl-tmtab.on { color: #fff; border-bottom-color: #e0a82e; }
 
+/* The price editor. Two prices side by side, then the three numbers that
+   build them, then the one line the customer reads. */
+.fl-pricepair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fl-three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.fl-warn { color: #7A3E00 !important; background: #FFF7E6; border: 1px solid #EFC46A;
+           border-radius: 6px; padding: 8px 10px; }
+.so-scope { font-size: 12px; color: #475569; line-height: 1.4; margin-top: 3px; max-width: 34rem; }
+.so-scope.missing { color: #b45309; font-style: italic; }
+.so-dash { color: #cbd5e1; }
+
 /* The count on a tab. Small, red, and only there when it means something. */
 .fl-badge {
   display: inline-block; margin-left: 5px; min-width: 16px; padding: 0 4px;

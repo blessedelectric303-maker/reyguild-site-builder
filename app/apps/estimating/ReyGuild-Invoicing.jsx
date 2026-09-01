@@ -476,7 +476,24 @@ function defaultContract(co) {
   const C = co || "the Company";
   return `SERVICE AGREEMENT\n\nThis Agreement is between ${C} ("Company") and the client identified on this estimate ("Client").\n\n1. SCOPE. Company will perform the work described in this estimate.\n\n2. PAYMENT TERMS. Payment is due Net 15 days from the invoice date. Balances not paid within 15 days may accrue a late charge as permitted by law.\n\n3. COLLECTION & LEGAL COSTS. If any amount is not paid when due and the matter is referred to a third party for collection or legal action, Client agrees to pay all third-party costs of collection, including collection-agency fees, court costs, and reasonable attorney's fees.\n\n4. WARRANTY. Completed work is covered by Company's one (1) year workmanship warranty, provided separately.\n\n5. CHANGES. Any change to the scope of work must be agreed in writing and may adjust the price.\n\n6. ACCEPTANCE. Client's signature on, or written approval of, this estimate constitutes acceptance of these terms.\n\n${C}`;
 }
-const emptyPriceItem = () => ({ id: null, category: "", name: "", unit: "ea", price: "", cost: "" });
+// The price book has ELEVEN fields, not six, and the difference is the whole
+// model. Two prices per item: standalone carries the drive, the setup and the
+// minimum call, so a single outlet is $350 on its own; add-on is what the same
+// work is worth bolted onto a job already on site, roughly hours x men x the
+// internal rate, because the trip is already paid for.
+//
+// internal_hours, man_count and material_allowance are how the two prices get
+// BUILT. They are not the price and the customer never sees them.
+//
+// included_scope is the ONLY customer-facing column.
+const emptyPriceItem = () => ({
+  id: null, category: "", section: "", name: "",
+  price_standalone: "", price_addon: "",
+  internal_hours: "", man_count: "1", material_allowance: "",
+  included_scope: "", pricing_rule: "", tech_notes: "",
+  // kept so older saved items keep rendering
+  unit: "ea", price: "", cost: "",
+});
 const emptySupplier = () => ({ id: null, name: "", url: "" });
 const emptyEstimate = () => ({ id: null, estimateNo: "", date: toLocalDate(new Date()), client: "", clientAddr: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
 const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [] });
@@ -1274,7 +1291,20 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   function savePriceItem() {
     if (!priceForm.name.trim()) { setErr("Name the item."); return; }
     setErr("");
-    const rec = { ...priceForm, price: num(priceForm.price), cost: num(priceForm.cost) };
+    // price stays populated from the standalone figure so every existing
+    // screen that reads item.price - proposals, invoices, totals - keeps
+    // working without being rewritten. Standalone IS the price of the item
+    // when it is the whole job, which is what those screens mean by "price".
+    const rec = {
+      ...priceForm,
+      price_standalone: num(priceForm.price_standalone),
+      price_addon: num(priceForm.price_addon),
+      internal_hours: num(priceForm.internal_hours),
+      man_count: num(priceForm.man_count) || 1,
+      material_allowance: num(priceForm.material_allowance),
+      price: num(priceForm.price_standalone),
+      cost: num(priceForm.material_allowance),
+    };
     if (rec.id) save(STORAGE.price, priceList.map((p) => (p.id === rec.id ? rec : p)), setPriceList);
     else save(STORAGE.price, [...priceList, { ...rec, id: uid() }], setPriceList);
     setPriceForm(emptyPriceItem());
@@ -2040,14 +2070,47 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <section className="fl-panel">
               <div className="fl-panel-head"><h2>{priceForm.id ? "Edit item" : "Add item"}</h2></div>
               <div className="fl-form">
-                <Field label="Category"><input value={priceForm.category} placeholder="Labor, Materials…" onChange={(e) => setPriceForm({ ...priceForm, category: e.target.value })} /></Field>
-                <Field label="Item / service"><input value={priceForm.name} placeholder="Standard labor (per hour)" onChange={(e) => setPriceForm({ ...priceForm, name: e.target.value })} /></Field>
-                <Field label="Unit"><input value={priceForm.unit} placeholder="hr, ea, ft…" onChange={(e) => setPriceForm({ ...priceForm, unit: e.target.value })} /></Field>
                 <div className="fl-two">
-                  <Field label="Price (customer)"><input value={priceForm.price} inputMode="decimal" placeholder="0.00" onChange={(e) => setPriceForm({ ...priceForm, price: e.target.value })} /></Field>
-                  <Field label="Cost (internal)"><input value={priceForm.cost} inputMode="decimal" placeholder="0.00" onChange={(e) => setPriceForm({ ...priceForm, cost: e.target.value })} /></Field>
+                  <Field label="Category"><input value={priceForm.category} placeholder="Service, Devices, Lighting..." onChange={(e) => setPriceForm({ ...priceForm, category: e.target.value })} /></Field>
+                  <Field label="Section"><input value={priceForm.section} placeholder="optional" onChange={(e) => setPriceForm({ ...priceForm, section: e.target.value })} /></Field>
                 </div>
-                <p className="fl-hint">Price is what estimators quote. Cost is internal — only Owner/Admin see it, and it drives the margin numbers.</p>
+                <Field label="Service item"><input value={priceForm.name} placeholder="Replace standard outlet" onChange={(e) => setPriceForm({ ...priceForm, name: e.target.value })} /></Field>
+
+                <div className="fl-pricepair">
+                  <Field label="Standalone / base price">
+                    <input value={priceForm.price_standalone} inputMode="decimal" placeholder="350.00" onChange={(e) => setPriceForm({ ...priceForm, price_standalone: e.target.value })} />
+                  </Field>
+                  <Field label="Add to a bigger job">
+                    <input value={priceForm.price_addon} inputMode="decimal" placeholder="87.50" onChange={(e) => setPriceForm({ ...priceForm, price_addon: e.target.value })} />
+                  </Field>
+                </div>
+                <p className="fl-hint">
+                  <b>Standalone</b> is the price when this is the whole job &mdash; it has to carry
+                  the drive, the setup and your minimum call. <b>Add-on</b> is what it is worth when
+                  you are already on site for something else.
+                </p>
+
+                <div className="fl-three">
+                  <Field label="Hours"><input value={priceForm.internal_hours} inputMode="decimal" placeholder="0.5" onChange={(e) => setPriceForm({ ...priceForm, internal_hours: e.target.value })} /></Field>
+                  <Field label="Men"><input value={priceForm.man_count} inputMode="numeric" placeholder="1" onChange={(e) => setPriceForm({ ...priceForm, man_count: e.target.value })} /></Field>
+                  <Field label="Material $"><input value={priceForm.material_allowance} inputMode="decimal" placeholder="0.00" onChange={(e) => setPriceForm({ ...priceForm, material_allowance: e.target.value })} /></Field>
+                </div>
+
+                <Field label="Included scope - THE CUSTOMER READS THIS">
+                  <textarea rows={3} value={priceForm.included_scope} placeholder="Remove the old device, install a new one, test it and make good." onChange={(e) => setPriceForm({ ...priceForm, included_scope: e.target.value })} />
+                </Field>
+                <p className="fl-hint fl-warn">
+                  This is the only line a customer ever sees. Never put hours, man count,
+                  material allowance, your hourly rate or the add-on price in here.
+                </p>
+
+                <Field label="Pricing rule (internal)">
+                  <textarea rows={2} value={priceForm.pricing_rule} placeholder="When to use standalone vs add-on. What is included in the base." onChange={(e) => setPriceForm({ ...priceForm, pricing_rule: e.target.value })} />
+                </Field>
+                <Field label="Tech notes (internal)">
+                  <textarea rows={2} value={priceForm.tech_notes} placeholder="What to watch for, what to bring, what makes this go wrong." onChange={(e) => setPriceForm({ ...priceForm, tech_notes: e.target.value })} />
+                </Field>
+                
                 {err && <p className="fl-error">{err}</p>}
                 <div className="fl-actions">
                   <button className="fl-primary" onClick={savePriceItem}>{priceForm.id ? "Update item" : "Add item"}</button>
@@ -2088,26 +2151,39 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <table className="so-table">
                 <thead>
                   <tr>
-                    <th>Item</th><th>Unit</th><th className="r">Price</th>
-                    {can.seeNumbers && <th className="r">Cost</th>}
-                    {can.seeNumbers && <th className="r">Margin</th>}
+                    <th>Item</th>
+                    <th className="r">Standalone</th>
+                    <th className="r">Add-on</th>
+                    {can.seeNumbers && <th className="r">Hrs</th>}
+                    {can.seeNumbers && <th className="r">Men</th>}
+                    {can.seeNumbers && <th className="r">Matl</th>}
                     {can.editPrices && <th></th>}
                   </tr>
                 </thead>
                 <tbody>
                   {priceList.map((p) => (
                     <tr key={p.id}>
-                      <td><strong>{p.name}</strong>{p.category ? <span className="so-cat"> · {p.category}</span> : ""}</td>
-                      <td>{p.unit}</td>
-                      <td className="r">{money(p.price)}</td>
-                      {can.seeNumbers && <td className="r">{money(p.cost)}</td>}
-                      {can.seeNumbers && <td className="r ok">{money(num(p.price) - num(p.cost))}</td>}
+                      <td>
+                        <strong>{p.name}</strong>
+                        {p.category ? <span className="so-cat"> &middot; {p.category}</span> : ""}
+                        {/* What the customer will read on the proposal. Shown
+                            here so an estimator can see at a glance which
+                            lines still have nothing to say for themselves. */}
+                        {p.included_scope
+                          ? <div className="so-scope">{p.included_scope}</div>
+                          : <div className="so-scope missing">No customer description yet</div>}
+                      </td>
+                      <td className="r">{money(p.price_standalone != null && p.price_standalone !== "" ? p.price_standalone : p.price)}</td>
+                      <td className="r">{p.price_addon ? money(p.price_addon) : <span className="so-dash">&mdash;</span>}</td>
+                      {can.seeNumbers && <td className="r">{p.internal_hours || <span className="so-dash">&mdash;</span>}</td>}
+                      {can.seeNumbers && <td className="r">{p.man_count || <span className="so-dash">&mdash;</span>}</td>}
+                      {can.seeNumbers && <td className="r">{p.material_allowance ? money(p.material_allowance) : <span className="so-dash">&mdash;</span>}</td>}
                       {can.editPrices && (
                         <td className="r">
                           <button className="fl-link" onClick={() => setPriceForm({ ...emptyPriceItem(), ...p })}>Edit</button>
                           {confirmId === p.id ? (
                             <><button className="fl-link danger" onClick={() => removePriceItem(p.id)}>Del</button><button className="fl-link" onClick={() => setConfirmId(null)}>Keep</button></>
-                          ) : <button className="fl-link" onClick={() => setConfirmId(p.id)}>×</button>}
+                          ) : <button className="fl-link" onClick={() => setConfirmId(p.id)}>&times;</button>}
                         </td>
                       )}
                     </tr>
