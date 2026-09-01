@@ -4,6 +4,8 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import ClockInPanel from "./ClockInPanel";
 import MarkJobDoneButton from "./MarkJobDoneButton";
+import JobChecklist from "@/components/JobChecklist";
+import { createClient as createSupabase } from "@/utils/supabase/server";
 
 export default async function TechJobDetailPage({
   params,
@@ -85,6 +87,31 @@ export default async function TechJobDetailPage({
   const unlinkedPurchases = allPurchases.filter(
     (p) => !p.items.some((i) => i.fromRequestId !== null)
   );
+
+  // THE ARRIVAL AND COMPLETION CHECKLISTS.
+  // Arrival appears once the tech has said he is there; completion appears
+  // once he is working. Fails quiet - a company that has not loaded them sees
+  // the job page exactly as it was.
+  let arrival: any[] = [];
+  let completion: any[] = [];
+  try {
+    const sb = await createSupabase();
+    if (job.status === "arrived" || job.status === "in_progress") {
+      const { data } = await sb
+        .schema("suite")
+        .rpc("job_checklist", { p_job: job.id, p_phase: "arrival" });
+      arrival = data || [];
+    }
+    if (job.status === "in_progress") {
+      const { data } = await sb
+        .schema("suite")
+        .rpc("job_checklist", { p_job: job.id, p_phase: "completion" });
+      completion = data || [];
+    }
+  } catch (e) {
+    arrival = [];
+    completion = [];
+  }
 
   const statusLabels: Record<string, string> = {
     scheduled: "Scheduled",
@@ -202,6 +229,26 @@ export default async function TechJobDetailPage({
         isClockedInElsewhere={!!isClockedInElsewhere}
         currentStatus={job.status}
       />
+
+      {arrival.length > 0 && (
+        <JobChecklist
+          jobId={job.id}
+          phase="arrival"
+          items={arrival}
+          heading="Before you start"
+          blurb="Tick these as you do them. They are the record that it was done."
+        />
+      )}
+
+      {completion.length > 0 && (
+        <JobChecklist
+          jobId={job.id}
+          phase="completion"
+          items={completion}
+          heading="Before you leave"
+          blurb="The office cannot invoice until this is finished."
+        />
+      )}
 
       {job.status === "in_progress" && !activeOnThisJob && (
         <div className="grid grid-cols-1 gap-2">
