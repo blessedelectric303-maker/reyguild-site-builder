@@ -80,6 +80,50 @@ async function migrateLegacy(companyId: string) {
 // then center them (Follow-ups, Royalties, Numbers, Help, SOPs, Audit + pills).
 // Plus wrap the top stat cards on phones.
 const STYLE_FIX = `
+
+/* BOX OUTLINES.
+   The panels were outlined in #E4DECF, a warm off-white that all but
+   disappears against a white card - so a screen full of boxes read as one
+   flat sheet. Navy makes each box a box. Same navy as the wordmark and the
+   command centre button, so nothing new is introduced. */
+.fl-root .fl-card,
+.fl-root .fl-panel,
+.fl-root .fl-box,
+.fl-root .fl-guide,
+.fl-root .fl-dashcard,
+.fl-root table.fl-table,
+.fl-root .fl-answer,
+.fl-root .so-sup,
+.fl-root .fl-weekly > div,
+.fl-root .so-subnav .fl-pill {
+  border-color: #16243F !important;
+}
+
+/* Table rules inside a card, so the grid lines match the outline. */
+.fl-root table th,
+.fl-root table td {
+  border-color: rgba(22, 36, 63, 0.25) !important;
+}
+
+/* The input boxes too - a form inside a navy-outlined card looked unfinished
+   with pale grey fields sitting in it. */
+.fl-root input,
+.fl-root select,
+.fl-root textarea {
+  border-color: rgba(22, 36, 63, 0.45) !important;
+}
+.fl-root input:focus,
+.fl-root select:focus,
+.fl-root textarea:focus {
+  border-color: #16243F !important;
+  outline: none;
+}
+
+/* Anything still carrying the old warm border. */
+.fl-root [style*="E4DECF"],
+.fl-root [style*="e4decf"] {
+  border-color: #16243F !important;
+}
 /* The invoicing app used to be reshaped into a 250px fixed left sidebar.
    The header is now built to the same shape as T&M&P&L - a dark bar across
    the top - so the sidebar rules are gone. Leaving them behind is what
@@ -155,7 +199,7 @@ const STYLE_FIX = `
 }
 .fl-answer {
   display: flex; align-items: flex-start; gap: 10px;
-  background: #fff; border: 1px solid #E4DECF; border-left: 4px solid #94a3b8;
+  background: #fff; border: 1px solid #16243F; border-left: 4px solid #94a3b8;
   border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;
 }
 .fl-answer.yes { border-left-color: #0F6E56; background: #F3FBF8; }
@@ -201,7 +245,7 @@ const STYLE_FIX = `
 .fl-dash { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .fl-dashcard {
   display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
-  background: #fff; border: 1px solid #E4DECF; border-radius: 8px;
+  background: #fff; border: 1px solid #16243F; border-radius: 8px;
   padding: 18px 16px; min-height: 96px; cursor: pointer; font-family: inherit; text-align: left;
 }
 .fl-dashcard:hover { border-color: #C68A1E; }
@@ -214,7 +258,7 @@ const STYLE_FIX = `
 .fl-guides { display: grid; gap: 8px; margin-top: 12px; }
 .fl-guide {
   display: block; width: 100%; text-align: left; background: #fff;
-  border: 1px solid #E4DECF; border-radius: 8px; padding: 14px 16px;
+  border: 1px solid #16243F; border-radius: 8px; padding: 14px 16px;
   text-decoration: none; cursor: pointer; font-family: inherit;
 }
 .fl-guide:hover { border-color: #C68A1E; }
