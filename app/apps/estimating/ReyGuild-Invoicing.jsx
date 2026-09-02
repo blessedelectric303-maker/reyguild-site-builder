@@ -1653,7 +1653,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             </button>
             )
           ))}
-          <a className="fl-tmtab" href="/help">Help</a>
+          {isAdmin ? <a className="fl-tmtab" href="/help">Help</a> : null}
         </nav>
 
         {/* THE FOOT OF THE SIDEBAR, in the same order as T and M: leave,

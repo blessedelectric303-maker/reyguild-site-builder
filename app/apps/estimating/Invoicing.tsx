@@ -735,6 +735,21 @@ const STYLE_FIX = `
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmmsg{ font-size:13px !important; }
 }
 
+
+/* The tech tab row: five items, evenly spread, none wider than another.
+   flex:1 with a shared basis is what keeps them equal - space-between lets
+   the longest label take the most room and the row stops looking deliberate. */
+@media (max-width: 860px) {
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmnav{
+    display:flex; justify-content:space-between; gap:2px; padding:0 6px;
+  }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmtab{
+    flex:1 1 0; min-width:0; text-align:center;
+    padding:9px 2px !important; font-size:12px !important;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+}
+
 /* The tab row, white on the gold. */
 .fl-root .fl-tmtab{ color:#FCFCFC !important; }
 .fl-root .fl-tmtab.on{ color:#FCFCFC !important; }
