@@ -1509,17 +1509,19 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <span className="fl-tmrole">{roleWord(suiteRole)}</span>
           </div>
           <div className="fl-tmright">
-            {/* Messages stays here permanently, with a count that lasts until
-                somebody actually reads them. Settings moved into the menu -
-                it is not something you reach for mid-job. */}
-            <button
-              className={"fl-tmmsg" + (page === "messages" ? " on" : "")}
-              onClick={() => { setPage("messages"); setQuery(""); }}
-              aria-label="Messages"
-            >
-              Messages
-              {unreadMsgs ? <span className="fl-msgdot">{unreadMsgs}</span> : null}
-            </button>
+            {/* Messages is on the command centre for the office tier - one
+                messaging system, one unread count, one place to look. A tech
+                keeps it here because a tech never opens the command centre. */}
+            {!isAdmin ? (
+              <button
+                className={"fl-tmmsg" + (page === "messages" ? " on" : "")}
+                onClick={() => { setPage("messages"); setQuery(""); }}
+                aria-label="Messages"
+              >
+                Messages
+                {unreadMsgs ? <span className="fl-msgdot">{unreadMsgs}</span> : null}
+              </button>
+            ) : null}
           </div>
         </div>
 
