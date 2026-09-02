@@ -291,6 +291,38 @@ const STYLE_FIX = `
   border: 1px solid #16243F; border-left: 4px solid #CC9000;
   border-radius: 10px; background: #fff;
 }
+.fl-dashpanels{
+  display:grid; gap:12px; margin-top:14px; max-width:42rem;
+}
+.fl-dashpanel{
+  border:1px solid #16243F; border-radius:10px; background:#fff; padding:14px 16px;
+}
+.fl-dashpanel-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+}
+.fl-dashpanel-head h2{
+  margin:0; font-size:15px; font-weight:700; color:#16243F;
+}
+.fl-dashpanel-head button{
+  background:none; border:none; cursor:pointer; font-family:inherit;
+  font-size:12px; font-weight:600; color:#16243F; text-decoration:underline;
+}
+/* "None" is information. It should read as a calm statement, not an error. */
+.fl-dashnone{ margin:10px 0 0; font-size:13px; color:#64748b; }
+.fl-dashlist{ list-style:none; margin:10px 0 0; padding:0; }
+.fl-dashlist li{
+  display:flex; justify-content:space-between; gap:12px;
+  padding:7px 0; border-bottom:1px solid rgba(22,36,63,.12); font-size:13px;
+}
+.fl-dashlist li:last-child{ border-bottom:none; }
+.fl-dashlist-name{ color:#39415a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fl-dashlist-amt{ flex:none; font-weight:600; color:#16243F; }
+
+@media (min-width: 861px){
+  /* Two across on a desktop, like T and M. */
+  .fl-dashpanels{ grid-template-columns:1fr 1fr; max-width:none; }
+}
+
 .fl-welcome-wave{ font-size:20px; margin-right:6px; }
 .fl-welcome-hi { font-size: 17px; font-weight: 700; color: #16243F; }
 .fl-welcome-p { font-size: 13px; color: #39415a; margin: 6px 0 0; line-height: 1.5; }

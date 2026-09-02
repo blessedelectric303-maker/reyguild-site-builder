@@ -1728,6 +1728,85 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <span className="fl-dashnum">{unreadMsgs}</span>
             </button>
           </div>
+
+          {/* What is actually waiting, not just how much of it. Two columns on
+              a desktop, one on a phone. */}
+          <div className="fl-dashpanels">
+            <section className="fl-dashpanel">
+              <div className="fl-dashpanel-head">
+                <h2>Recent proposals</h2>
+                <button type="button" onClick={() => setPage("estimates")}>View all &rarr;</button>
+              </div>
+              {myEstimates.length === 0 ? (
+                <p className="fl-dashnone">No proposals yet.</p>
+              ) : (
+                <ul className="fl-dashlist">
+                  {myEstimates.slice(0, 4).map((e) => (
+                    <li key={e.id}>
+                      <span className="fl-dashlist-name">{e.client || e.clientContact || "No client"}</span>
+                      <span className="fl-dashlist-amt">{money(e.total)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="fl-dashpanel">
+              <div className="fl-dashpanel-head">
+                <h2>Unpaid invoices</h2>
+                <button type="button" onClick={() => setPage("invoices")}>View all &rarr;</button>
+              </div>
+              {myInvoices.filter((i) => i.status !== "paid").length === 0 ? (
+                <p className="fl-dashnone">Nothing outstanding.</p>
+              ) : (
+                <ul className="fl-dashlist">
+                  {myInvoices.filter((i) => i.status !== "paid").slice(0, 4).map((i) => (
+                    <li key={i.id}>
+                      <span className="fl-dashlist-name">{i.client || i.clientContact || "No client"}</span>
+                      <span className="fl-dashlist-amt">{money(i.total)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {isAdmin ? (
+              <section className="fl-dashpanel">
+                <div className="fl-dashpanel-head">
+                  <h2>Waiting on you</h2>
+                  <button type="button" onClick={() => setPage("alerts")}>Review all &rarr;</button>
+                </div>
+                {(pendingPayouts.length + approvalNotices.length + collectionsDue.length) === 0 ? (
+                  <p className="fl-dashnone">Nothing waiting on you.</p>
+                ) : (
+                  <ul className="fl-dashlist">
+                    {pendingPayouts.length ? <li><span className="fl-dashlist-name">Payouts to approve</span><span className="fl-dashlist-amt">{pendingPayouts.length}</span></li> : null}
+                    {approvalNotices.length ? <li><span className="fl-dashlist-name">Approvals</span><span className="fl-dashlist-amt">{approvalNotices.length}</span></li> : null}
+                    {collectionsDue.length ? <li><span className="fl-dashlist-name">Customers to call</span><span className="fl-dashlist-amt">{collectionsDue.length}</span></li> : null}
+                  </ul>
+                )}
+              </section>
+            ) : null}
+
+            <section className="fl-dashpanel">
+              <div className="fl-dashpanel-head">
+                <h2>Follow-ups due</h2>
+                <button type="button" onClick={() => setPage("followups")}>View all &rarr;</button>
+              </div>
+              {fuDueList.length === 0 ? (
+                <p className="fl-dashnone">Nothing due today.</p>
+              ) : (
+                <ul className="fl-dashlist">
+                  {fuDueList.slice(0, 4).map((f, i) => (
+                    <li key={i}>
+                      <span className="fl-dashlist-name">{f.client || f.name || "Follow-up"}</span>
+                      <span className="fl-dashlist-amt">{f.dueLabel || ""}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
         </div>
       )}
 
