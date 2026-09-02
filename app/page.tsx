@@ -38,7 +38,7 @@ export default async function Home() {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-center p-8">
         <img src="/crest.png" alt="ReyGuild" className="w-28 h-auto mb-6" />
-        <h1 className="rg-wordmark text-5xl tracking-wide"><span className="gold-shine">REY</span><span className="text-white">GUILD</span></h1>
+        <h1 className="rg-wordmark text-5xl tracking-wide"><span className="gold-shine gold-outline">REY</span><span className="text-white">GUILD</span></h1>
         <p className="mt-4 text-slate-300 max-w-md">One login. Every ReyGuild app in one place.</p>
         <Link href="/login" className="mt-6 rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#CC9000" }}>Sign in</Link>
         <div className="mt-10 h-[3px] w-16 rounded bg-[#CC9000]" />
@@ -214,11 +214,11 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto w-full">
         <div className="flex flex-col items-center mb-5">
           {companyName ? (
-            <div className="rg-wordmark gold-shine text-3xl md:text-4xl tracking-wide text-center">{companyName}</div>
+            <div className="rg-wordmark gold-shine gold-outline text-3xl md:text-4xl tracking-wide text-center">{companyName}</div>
           ) : (
             <>
               <img src="/crest.png" alt="ReyGuild" className="w-16 md:w-20 h-auto drop-shadow" />
-              <div className="rg-wordmark mt-1 text-lg tracking-wide"><span className="gold-shine">REY</span><span className="text-white">GUILD</span></div>
+              <div className="rg-wordmark mt-1 text-lg tracking-wide"><span className="gold-shine gold-outline">REY</span><span className="text-white">GUILD</span></div>
             </>
           )}
           <span className="mt-2 rounded-full px-3 py-0.5 text-xs font-semibold text-slate-900" style={{ background: soloMode ? "#CC9000" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} &middot; {roleLabel}</span>
@@ -287,7 +287,7 @@ export default async function Home() {
             everything that exists. */}
 
         <div className="text-center mt-8">
-          <h1 className="rg-wordmark gold-shine text-2xl tracking-wide">YOUR COMMAND CENTER</h1>
+          <h1 className="rg-wordmark gold-shine gold-outline text-2xl tracking-wide">YOUR COMMAND CENTER</h1>
           {trialDaysLeft != null && (
             <p className="mt-1 text-sm font-semibold text-amber-300">Free trial &middot; {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left</p>
           )}

@@ -329,8 +329,19 @@ const STYLE_FIX = `
 .fl-welcome-list { margin: 10px 0 0; padding-left: 18px; }
 .fl-welcome-list li { font-size: 13px; color: #39415a; line-height: 1.5; margin-bottom: 6px; }
 .fl-welcome-btns { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-/* The first one is what a new owner should press. */
-.fl-welcome-btns a:first-child { background: #0F6E56 !important; color: #fff !important; border: none !important; }
+/* Three jobs, three looks - so they can be told apart without reading all
+   three. Navy is where to start, gold is the everyday one, white is the
+   quiet one you only want if the other two did not help. */
+.fl-welcome-btns .wb-create{
+  background:#16243F !important; color:#CC9000 !important; border:none !important;
+}
+.fl-welcome-btns .wb-open{
+  background:#CC9000 !important; color:#16243F !important; border:none !important;
+}
+.fl-welcome-btns .wb-help{
+  background:#fff !important; color:#16243F !important;
+  border:1px solid #16243F !important;
+}
 .fl-welcome-btns button, .fl-welcome-btns a {
   border: none; border-radius: 6px; padding: 9px 14px; cursor: pointer;
   font-family: inherit; font-size: 13px; font-weight: 700; text-decoration: none;

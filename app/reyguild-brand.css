@@ -110,6 +110,15 @@
   letter-spacing:.005em;
 }
 
+/* Gold letters with a white edge, for the command centre - it sits on navy,
+   and the outline is what lifts it off the background. paint-order puts the
+   stroke BEHIND the fill so the white sits outside the letter instead of
+   eating into it. */
+.gold-outline{
+  -webkit-text-stroke:1.5px #FCFCFC;
+  paint-order:stroke fill;
+}
+
 /* THE SHINY GOLD, AS TEXT. Clipped to the letters, so the gleam runs through
    the glyphs rather than behind them. Good at 16px and up - below that the
    gradient turns to mud and .gold-ink is the better choice. */

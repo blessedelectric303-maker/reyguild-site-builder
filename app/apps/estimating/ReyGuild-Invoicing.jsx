@@ -1688,14 +1688,17 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               guides that walk an AI through building the rest with you &mdash;
               one if you already have prices written down, one if you have been
               quoting from your head.</li>
-            <li><strong>Set your numbering.</strong> Pick where your proposal
-              and invoice numbers start, once, and the app takes it from there
-              so two people can never land on the same number.</li>
+            <li><strong>Set your numbering.</strong> Under <strong>Help</strong>,
+              pick where your proposal and invoice numbers start &mdash; once
+              &mdash; and the app takes it from there, so two people can never
+              land on the same number.</li>
           </ul>
           <div className="fl-welcome-btns">
-            <a href="/help#price-list">Create my price list</a>
-            <button type="button" onClick={() => setPage("prices")}>Open the price list</button>
-            <a href="/numbering">Set my numbering</a>
+            <a className="wb-create" href="/help#price-list">Create price list</a>
+            <button type="button" className="wb-open" onClick={() => setPage("prices")}>
+              Open price list
+            </button>
+            <a className="wb-help" href="/help">Help</a>
           </div>
         </div>
       )}
