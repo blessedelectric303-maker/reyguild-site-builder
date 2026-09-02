@@ -56,7 +56,9 @@ export default async function ProcedurePage({ params }: { params: Promise<{ colo
   // opens a coloured button and finds nothing behind it - the templates were
   // sitting there at company_id null the whole time, and only the tech side
   // knew to look. That is what made a new account's procedure boxes empty.
+  let readingTemplate = false;
   if (!proc) {
+    readingTemplate = true;
     const { data: tmpl } = await supabase
       .schema("suite")
       .from("procedures")
@@ -130,6 +132,8 @@ export default async function ProcedurePage({ params }: { params: Promise<{ colo
       userId={user.id}
       settings={((co as any)?.settings as Record<string, any>) || null}
       canEdit={isOwnerOrAdmin(role)}
+      editColor={color}
+      editIsTemplate={readingTemplate}
     />
   );
 }

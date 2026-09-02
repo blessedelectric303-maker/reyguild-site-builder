@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CALL_COLORS, CALL_ORDER, type CallKey } from "@/utils/callColors";
 import SupplyHouses from "@/app/components/SupplyHouses";
+import ProcedureEditor from "@/components/ProcedureEditor";
 
 type Item = {
   id: string;
@@ -46,6 +47,7 @@ function ColorTag({ tag }: { tag: string }) {
 
 export default function ProcedureView({
   procedure, sections, items, skin, companyId, userId, unfilled, settings, canEdit,
+  editColor, editIsTemplate,
 }: {
   procedure: Proc;
   sections: Section[];
@@ -56,6 +58,10 @@ export default function ProcedureView({
   userId: string;
   settings?: Record<string, any> | null;
   canEdit?: boolean;
+  // Editing lives at the BOTTOM of the card, past the words - somebody
+  // reading it on a job never trips over an editor they did not want.
+  editColor?: string;
+  editIsTemplate?: boolean;
 }) {
   const router = useRouter();
   const [pane, setPane] = useState<"none" | "checklist" | "onepage">("none");
@@ -362,6 +368,17 @@ export default function ProcedureView({
           </div>
         ) : null}
       </div>
+      {editColor && canEdit ? (
+        <ProcedureEditor
+          color={editColor}
+          title={procedure?.title || ""}
+          purpose={procedure?.purpose || null}
+          onePager={procedure?.one_pager || null}
+          isTemplate={!!editIsTemplate}
+          canEdit={true}
+        />
+      ) : null}
+
     </main>
   );
 }
