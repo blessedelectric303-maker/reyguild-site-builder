@@ -77,6 +77,9 @@ export default async function AdminLayout({
     ...(isOwner
       ? [{ href: "/tm/admin/audit", label: "Audit Log" }]
       : []),
+    ...(isOwnerOrAdmin
+      ? [{ href: "/checklists", label: "Job Checklists" }]
+      : []),
     { href: "/help", label: "Help" },
   ];
 
