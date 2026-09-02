@@ -99,13 +99,21 @@ export default async function TechJobDetailPage({
     if (job.status === "arrived" || job.status === "in_progress") {
       const { data } = await sb
         .schema("suite")
-        .rpc("job_checklist", { p_job: job.id, p_phase: "arrival" });
+        .rpc("job_checklist", {
+          p_job: job.id,
+          p_phase: "arrival",
+          p_kind: job.jobType === "estimate" ? "estimate" : null,
+        });
       arrival = data || [];
     }
     if (job.status === "in_progress") {
       const { data } = await sb
         .schema("suite")
-        .rpc("job_checklist", { p_job: job.id, p_phase: "completion" });
+        .rpc("job_checklist", {
+          p_job: job.id,
+          p_phase: "completion",
+          p_kind: job.jobType === "estimate" ? "estimate" : null,
+        });
       completion = data || [];
     }
   } catch (e) {
@@ -235,8 +243,10 @@ export default async function TechJobDetailPage({
           jobId={job.id}
           phase="arrival"
           items={arrival}
-          heading="Before you start"
-          blurb="Tick these as you do them. They are the record that it was done."
+          heading={job.jobType === "estimate" ? "Before you start pricing" : "Before you start"}
+          blurb={job.jobType === "estimate"
+            ? "Measure it and photograph it now. A second trip to check something costs more than the job earns."
+            : "Tick these as you do them. They are the record that it was done."}
         />
       )}
 
