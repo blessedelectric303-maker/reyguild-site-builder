@@ -267,6 +267,17 @@ const STYLE_FIX = `
      it is centred on the BAR, not on whatever is left over after the
      burger - otherwise it drifts left by half a button. */
   .fl-hasmenu .fl-tmtop{ position:relative; }
+  .fl-hasmenu .fl-mobtitle{
+    flex:1; min-width:0; text-align:center; padding:0 8px;
+    font-size:14px; font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .fl-hasmenu .fl-mobrand-text{ display:flex; flex-direction:column; line-height:1; }
+  .fl-hasmenu .fl-mobrand-word{ font-size:13px; font-weight:800; }
+  .fl-hasmenu .fl-mobrand-sub{
+    font-size:7px; font-weight:700; letter-spacing:.11em;
+    text-transform:uppercase; margin-top:2px;
+  }
   .fl-hasmenu .fl-mobrand{
     display:flex; align-items:center; gap:8px;
     position:absolute; left:50%; transform:translateX(-50%);
@@ -593,6 +604,90 @@ const STYLE_FIX = `
   .fl-dash { grid-template-columns: minmax(0, 1fr); }
   .fl-leaverow { gap: 8px; }
   .fl-btn-command, .fl-btn-swap, .fl-btn-signout { font-size: 12px; padding: 9px 11px; }
+}
+
+/* ============================================================
+   PROPOSALS & INVOICING: THE CHROME INVERTED
+   Gold where it was navy, navy where it was gold - the yin to T and M's
+   yang. Two apps you can tell apart from across the room, without reading
+   a word of either.
+   Kept in ONE block at the end so it can be flipped back by deleting it,
+   rather than by hunting through forty rules.
+   Everything below is chrome only: the paper, the cards and the text you
+   actually work in stay exactly as they were.
+   ============================================================ */
+
+/* The bar, the sidebar and the drawer. */
+.fl-root .fl-tmhead,
+.fl-root .fl-drawer{
+  background:#CC9000 !important;
+  color:#16243F !important;
+}
+.fl-root .fl-tmtop{ border-bottom-color:rgba(22,36,63,.25) !important; }
+
+/* The wordmark flips with everything else: "Rey" takes the navy, "Guild"
+   takes the deep navy so the two halves still read as two halves. */
+.fl-root .fl-tmhead .fl-rey,
+.fl-root .fl-drawer .fl-rey,
+.fl-root .fl-mobrand-word .fl-rey{ color:#16243F !important; }
+.fl-root .fl-tmhead .fl-guild,
+.fl-root .fl-drawer .fl-guild,
+.fl-root .fl-mobrand-word .fl-guild{ color:#00101F !important; }
+.fl-root .fl-brandsub,
+.fl-root .fl-mobrand-sub,
+.fl-root .fl-drawer-sub,
+.fl-root .fl-portal{ color:rgba(22,36,63,.72) !important; }
+
+/* Who you are. */
+.fl-root .fl-tmname,
+.fl-root .fl-tmselect,
+.fl-root .fl-drawer-name,
+.fl-root .fl-sideme-name,
+.fl-root .fl-mobtitle{ color:#16243F !important; }
+.fl-root .fl-tmrole,
+.fl-root .fl-drawer-role,
+.fl-root .fl-sideme-mail{ color:rgba(22,36,63,.7) !important; }
+.fl-root .fl-tmselect{ background:transparent !important; border-color:rgba(22,36,63,.35) !important; }
+
+/* Navigation. The active marker was gold on navy; now it is navy on gold. */
+.fl-root .fl-tmtab,
+.fl-root .fl-drawer-link{ color:rgba(22,36,63,.8) !important; }
+.fl-root .fl-tmtab:hover,
+.fl-root .fl-drawer-link:hover{ color:#00101F !important; background:rgba(0,16,31,.07) !important; }
+.fl-root .fl-tmtab.on,
+.fl-root .fl-drawer-link.on{
+  color:#00101F !important;
+  background:rgba(0,16,31,.10) !important;
+  border-left-color:#16243F !important;
+  border-bottom-color:#16243F !important;
+}
+.fl-root .fl-tmnav{ border-color:rgba(22,36,63,.2) !important; }
+
+/* The three-line menu button and the small links beside it. */
+.fl-root .fl-burger span{ background:#16243F !important; }
+.fl-root .fl-tmmsg{ color:rgba(22,36,63,.8) !important; }
+.fl-root .fl-tmmsg.on{ color:#00101F !important; }
+
+/* Dividers inside the sidebar. */
+.fl-root .fl-portal,
+.fl-root .fl-sidefoot,
+.fl-root .fl-sideme,
+.fl-root .fl-drawer-who,
+.fl-root .fl-drawer-brand,
+.fl-root .fl-drawer-foot{ border-color:rgba(22,36,63,.25) !important; }
+
+/* The way out. The two coloured buttons swap with everything else; sign out
+   stays white and red, because red is the one colour in here that means
+   something on its own. */
+.fl-root .fl-btn-command{
+  background:#CC9000 !important; color:#16243F !important;
+  border:1px solid #16243F !important;
+}
+.fl-root .fl-leaverow .fl-btn-swap,
+.fl-root .fl-drawer-foot .fl-btn-swap,
+.fl-root .fl-sidefoot .fl-btn-swap{
+  background:#16243F !important; color:#CC9000 !important;
+  border:none !important; box-shadow:none !important;
 }
 `;
 
