@@ -449,7 +449,7 @@ const STYLE_FIX = `
   }
   .fl-grid, .fl-weekly, .so-subnav,
   .fl-leaverow, .fl-signoutrow, .fl-answers { max-width: none !important; }
-  .fl-dash { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .fl-dash { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
   .fl-dashcard { min-height: 84px; }
 }
 

@@ -1725,12 +1725,27 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           <p className="fl-dashdate">{new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
           <div className="fl-dash">
             <button type="button" className="fl-dashcard" onClick={() => setPage("estimates")}>
-              <span className="fl-dashlbl">Estimates</span>
-              <span className="fl-dashnum">{myEstimates.length}</span>
+              <span className="fl-dashlbl">Out for answer</span>
+              <span className="fl-dashnum">
+                {myEstimates.filter((e) => e.status === "sent" && !e.invoiced && !e.archived).length}
+              </span>
+            </button>
+            {/* Accepted and not yet booked. This is the one that costs money
+                when it is ignored - the customer has said yes and is waiting
+                to hear when. */}
+            <button
+              type="button"
+              className={"fl-dashcard" + (toSchedule.length ? " due" : "")}
+              onClick={() => setPage("estimates")}
+            >
+              <span className="fl-dashlbl">Accepted, to book</span>
+              <span className="fl-dashnum">{toSchedule.length}</span>
             </button>
             <button type="button" className="fl-dashcard" onClick={() => setPage("invoices")}>
-              <span className="fl-dashlbl">Invoices</span>
-              <span className="fl-dashnum">{myInvoices.length}</span>
+              <span className="fl-dashlbl">Unpaid</span>
+              <span className="fl-dashnum">
+                {myInvoices.filter((i) => i.status !== "paid" && !i.archived).length}
+              </span>
             </button>
             {isAdmin && (
               <button type="button" className={"fl-dashcard" + ((pendingPayouts.length + lateFollowups.length + collectionsDue.length + approvalNotices.length) ? " alert" : "")} onClick={() => setPage("alerts")}>
@@ -1741,10 +1756,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <button type="button" className={"fl-dashcard" + (fuDueList.length ? " due" : "")} onClick={() => setPage("followups")}>
               <span className="fl-dashlbl">Follow-ups</span>
               <span className="fl-dashnum">{fuDueList.length}</span>
-            </button>
-            <button type="button" className={"fl-dashcard" + (unreadMsgs ? " alert" : "")} onClick={() => setPage("messages")}>
-              <span className="fl-dashlbl">Messages</span>
-              <span className="fl-dashnum">{unreadMsgs}</span>
             </button>
           </div>
 
