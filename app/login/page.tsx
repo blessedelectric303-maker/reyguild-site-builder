@@ -108,7 +108,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900/60 p-8">
         <div className="text-center mb-6">
           <div className="text-[10px] tracking-[0.3em] text-slate-400 mb-2">SERVICE COMPANY SOFTWARE</div>
-          <div className="text-2xl font-extrabold tracking-wide"><span className="gold-shine">REY</span><span className="text-white">GUILD</span></div>
+          <div className="rg-wordmark text-2xl tracking-wide"><span className="gold-shine">REY</span><span className="text-white">GUILD</span></div>
         </div>
 
         <div className="flex rounded-lg bg-slate-800 p-1 mb-6 text-sm">

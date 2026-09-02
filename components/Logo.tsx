@@ -17,7 +17,7 @@ export default function Logo({ size = 40, tagline = true, dark = false, stacked 
         style={{ display: "block", objectFit: "contain" }}
       />
       <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", lineHeight: 1 }}>
-        <span style={{ fontFamily: "'Archivo','Inter',system-ui,sans-serif", fontSize: Math.round(size * 0.52), fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1 }}>
+        <span style={{ fontFamily: "var(--rg-wordmark)", fontSize: Math.round(size * 0.52), fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1 }}>
           <span style={{ color: "#DFA63A" }}>Rey</span>
           <span style={{ color: guildColor }}>Guild</span>
         </span>

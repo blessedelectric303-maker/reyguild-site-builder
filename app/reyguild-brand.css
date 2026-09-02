@@ -35,6 +35,10 @@
   --warn:#D89000;
 
   --crest:url(/crest.png);
+
+  /* The wordmark face. One value, used by every ReyGuild lockup in both
+     apps and at every role. */
+  --rg-wordmark:"Playfair Display", Georgia, "Times New Roman", serif;
 }
 
 /* ============================================================
@@ -96,6 +100,16 @@
 /* Gold LETTERS, not a gold button. The selector above paints the metal
    gradient behind anything carrying that colour inline - right for a button,
    and a slab behind text. .gold-ink opts out. */
+/* Every ReyGuild lockup, in both apps, at every role. */
+.rg-wordmark,
+.fl-brandname,
+.fl-drawer-wordmark,
+.fl-mobrand-word{
+  font-family:var(--rg-wordmark) !important;
+  font-weight:700;
+  letter-spacing:.005em;
+}
+
 /* THE SHINY GOLD, AS TEXT. Clipped to the letters, so the gleam runs through
    the glyphs rather than behind them. Good at 16px and up - below that the
    gradient turns to mud and .gold-ink is the better choice. */
