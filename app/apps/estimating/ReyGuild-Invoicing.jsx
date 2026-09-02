@@ -1533,7 +1533,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                   <span style={{ color: "#F5F3EE" }}>Guild</span>
                 </span>
                 <span style={{ fontFamily: "'JetBrains Mono',ui-monospace,monospace", color: "#FFFFFF", fontSize: 7, fontWeight: 500, letterSpacing: "0.3em", marginTop: 5, paddingLeft: "0.3em", whiteSpace: "nowrap" }}>
-                  Prop &amp; Invos
+                  Pros &amp; Invos
                 </span>
               </span>
             </span>
