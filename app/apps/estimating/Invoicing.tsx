@@ -133,9 +133,70 @@ const STYLE_FIX = `
 .fl-noprint { display: block !important; padding-left: 0 !important; min-height: 100vh; }
 
 /* Content is full width now. Nothing is pinned to a left edge. */
-.fl-noprint > *:not(.fl-tmhead) { max-width: 42rem; margin-left: auto !important; margin-right: auto !important; }
-.fl-grid, .fl-weekly { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
-.so-subnav { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
+/* PHONE: one column at 42rem, like the T and M tech view.
+   DESKTOP: a sidebar down the left and the content filling what is left,
+   like T and M and P and L. Same app, two shapes - not one stretched. */
+@media (max-width: 860px) {
+  .fl-noprint > *:not(.fl-tmhead) { max-width: 42rem; margin-left: auto !important; margin-right: auto !important; }
+  .fl-grid, .fl-weekly { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
+  .so-subnav { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
+
+  /* THE TAB ROW GOES BEHIND THE MENU.
+     For an owner or admin that row is eleven items wide and wraps into three
+     lines of tiny text on a phone - with the burger beside it offering the
+     same links again. One way in, not two.
+     A tech keeps the tabs: five items fit across a phone, and a menu would
+     be an extra tap for nothing. */
+  .fl-hasmenu .fl-tmnav { display: none !important; }
+}
+
+@media (min-width: 861px) {
+  .fl-burger { display: none; }
+
+  .fl-noprint {
+    display: grid !important;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: start;
+    min-height: 100vh;
+  }
+  .fl-tmhead {
+    grid-column: 1; grid-row: 1 / -1;
+    position: sticky; top: 0; align-self: stretch;
+    min-height: 100vh; padding: 20px 0;
+  }
+  .fl-tmtop {
+    display: block !important; max-width: none;
+    padding: 0 18px 18px; border-bottom: 1px solid #1e293b;
+  }
+  .fl-tmleft { margin-bottom: 14px; }
+  .fl-tmwho { text-align: left !important; }
+  .fl-tmright { justify-content: flex-start !important; margin-top: 10px; }
+
+  .fl-tmnav { display: block !important; max-width: none; padding: 14px 10px; }
+  .fl-tmtab {
+    display: block; width: 100%; text-align: left !important;
+    padding: 10px 12px !important; border-bottom: none !important;
+    border-left: 3px solid transparent; border-radius: 6px; font-size: 14px !important;
+  }
+  .fl-tmtab.on { border-left-color: #CC9000 !important; background: rgba(255,255,255,.06); }
+
+  .fl-noprint > *:not(.fl-tmhead) {
+    grid-column: 2; max-width: 78rem; width: 100%;
+    margin-left: auto !important; margin-right: auto !important;
+    padding-left: 28px; padding-right: 28px;
+  }
+  .fl-grid, .fl-weekly, .so-subnav,
+  .fl-leaverow, .fl-signoutrow, .fl-answers { max-width: none !important; }
+  .fl-dash { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .fl-dashcard { min-height: 84px; }
+}
+
+/* A proposal on paper should not have a navigation bar down the side of it. */
+@media print {
+  .fl-tmhead, .fl-leaverow, .fl-signoutrow { display: none !important; }
+  .fl-noprint { display: block !important; }
+  .fl-noprint > *:not(.fl-tmhead) { max-width: none !important; padding: 0 !important; }
+}
 
 /* The header, built to the same shape as T and M and P and L. */
 .fl-tmhead { background: #0f172a; color: #fff; }
