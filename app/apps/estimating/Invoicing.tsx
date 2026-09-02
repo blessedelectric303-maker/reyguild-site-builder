@@ -754,13 +754,22 @@ const STYLE_FIX = `
     font-size:14px !important; font-weight:500 !important;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
+  /* The role and the Settings link are labels, not headings. Smaller and
+     quieter than the name, so the eye lands on the person first - a title
+     that shouts as loud as the name makes you read both to find either. */
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmrole{
     display:block;
-    font-size:11px !important; letter-spacing:.04em;
+    font-size:10px !important; letter-spacing:.05em;
+    color:rgba(252,252,252,.62) !important;
+    text-shadow:none !important;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmright{ flex:none; }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmmsg{ font-size:13px !important; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmmsg{
+    font-size:11px !important;
+    color:rgba(252,252,252,.62) !important;
+    text-shadow:none !important;
+  }
 }
 
 

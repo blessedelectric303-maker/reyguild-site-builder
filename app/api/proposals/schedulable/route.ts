@@ -56,6 +56,8 @@ export async function GET() {
         client: e ? e.client || e.clientContact || "" : "",
         address: e ? e.clientAddr || e.address || "" : "",
         description: e ? e.jobDescription || e.lumpDescription || "" : "",
+        lat: e ? e.addrLat ?? null : null,
+        lng: e ? e.addrLng ?? null : null,
         total: e ? e.total : null,
       };
     });

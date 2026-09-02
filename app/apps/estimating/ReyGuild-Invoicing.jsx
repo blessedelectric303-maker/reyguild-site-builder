@@ -495,7 +495,7 @@ const emptyPriceItem = () => ({
   unit: "ea", price: "", cost: "",
 });
 const emptySupplier = () => ({ id: null, name: "", url: "" });
-const emptyEstimate = () => ({ id: null, estimateNo: "", date: toLocalDate(new Date()), client: "", clientAddr: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
+const emptyEstimate = () => ({ id: null, estimateNo: "", date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
 const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [] });
 const PAY_METHODS = ["Card", "Online deposit", "Check", "Cash", "Other"];
 const NET_DAYS = 15;
@@ -852,6 +852,50 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     if (root) root.style.fontSize = scale === 1 ? "" : (scale * 100) + "%";
     try { window.localStorage.setItem("rg_text_size", textSize); } catch (e) {}
   }, [textSize]);
+
+  // Google Places on the address box, the same one T and M's new job form
+  // uses. Loaded once, on demand - an estimator who never opens the form
+  // never pays for the script.
+  const addrInputRef = useRef(null);
+  const addrAutoRef = useRef(null);
+  const [mapsReady, setMapsReady] = useState(false);
+
+  useEffect(() => {
+    if (page !== "estimates") return;
+    if (window.google && window.google.maps && window.google.maps.places) {
+      setMapsReady(true);
+      return;
+    }
+    const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!key) return; // No key: the box stays an ordinary text field.
+    if (document.getElementById("rg-maps-js")) return;
+    const el = document.createElement("script");
+    el.id = "rg-maps-js";
+    el.src = "https://maps.googleapis.com/maps/api/js?key=" + key + "&libraries=places";
+    el.async = true;
+    el.onload = () => setMapsReady(true);
+    document.head.appendChild(el);
+  }, [page]);
+
+  useEffect(() => {
+    if (!mapsReady || !addrInputRef.current || addrAutoRef.current) return;
+    if (!window.google || !window.google.maps || !window.google.maps.places) return;
+    addrAutoRef.current = new window.google.maps.places.Autocomplete(addrInputRef.current, {
+      types: ["address"],
+      componentRestrictions: { country: "us" },
+      fields: ["formatted_address", "geometry"],
+    });
+    addrAutoRef.current.addListener("place_changed", () => {
+      const place = addrAutoRef.current.getPlace();
+      if (!place || !place.geometry) return;
+      setEstForm((f) => ({
+        ...f,
+        clientAddr: place.formatted_address || f.clientAddr,
+        addrLat: place.geometry.location.lat(),
+        addrLng: place.geometry.location.lng(),
+      }));
+    });
+  }, [mapsReady, page]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   // Field checklists and procedures live in T and M and P and L only - they
@@ -1900,7 +1944,26 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 return (
                   <>
                     <Field label="Contact full name"><input value={estForm.client} placeholder="e.g. Riverside Auto Body" onChange={(e) => setEstForm({ ...estForm, client: e.target.value })} /></Field>
-                    <Field label="Full address"><input value={estForm.clientAddr} placeholder="e.g. 410 N Main St, Fort Gibson OK" onChange={(e) => setEstForm({ ...estForm, clientAddr: e.target.value })} /></Field>
+                    <Field label="Full address">
+                      <input
+                        ref={addrInputRef}
+                        value={estForm.clientAddr}
+                        placeholder="Start typing, then pick from the list"
+                        onChange={(e) => setEstForm({ ...estForm, clientAddr: e.target.value, addrLat: null, addrLng: null })}
+                      />
+                    </Field>
+                    {estForm.clientAddr && estForm.clientAddr.trim() ? (
+                      estForm.addrLat != null ? (
+                        <p className="fl-hint" style={{ color: "#0F6E56" }}>
+                          Confirmed on the map. The crew will be sent here.
+                        </p>
+                      ) : (
+                        <p className="fl-hint" style={{ color: "#B45309" }}>
+                          Pick the address from the dropdown so the crew gets
+                          the right one. Typed addresses are not looked up.
+                        </p>
+                      )
+                    ) : null}
                     {estForm.client.trim() && estForm.clientAddr.trim() && (
                       hit
                         ? <div className="so-match"><span className="so-match-ok">✓ Existing contact found</span><button type="button" className="fl-link" onClick={() => setEstForm({ ...estForm, client: hit.company, clientAddr: hit.address })}>Use it</button></div>

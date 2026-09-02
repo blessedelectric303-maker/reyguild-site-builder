@@ -71,6 +71,9 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
   // it that drifts by a room and two hours.
   const [props, setProps] = useState<any[]>([]);
   const [fProp, setFProp] = useState("");
+  // Coordinates inherited from the proposal, when it has them.
+  const [fLat, setFLat] = useState<number | null>(null);
+  const [fLng, setFLng] = useState<number | null>(null);
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -92,6 +95,13 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
     if (p.client) setFTitle(p.client);
     if (p.address) setFAddr(p.address);
     if (p.description) setFDesc(p.description);
+    // The estimator already picked this address off Google's list. Reusing
+    // those coordinates means the job lands exactly where the proposal said,
+    // rather than wherever a second lookup decides.
+    if (p.lat != null && p.lng != null) {
+      setFLat(p.lat);
+      setFLng(p.lng);
+    }
   }
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -211,6 +221,8 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
           jobDescription: fDesc.trim(),
           material: fMat.trim(),
           proposalRef: fProp,
+          jobLat: fLat,
+          jobLng: fLng,
         }),
       });
       const payload = await res.json().catch(() => ({}));

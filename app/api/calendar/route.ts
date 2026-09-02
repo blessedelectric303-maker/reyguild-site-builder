@@ -172,6 +172,13 @@ export async function POST(req: Request) {
       createdById: me.id,
       customerName: title,
       jobAddress: String(b.address || "").trim(),
+      // Carried through from the proposal, where somebody already picked the
+      // address off Google's list. Saving them here means the geofence has a
+      // position to measure against, and nobody looks the address up twice
+      // and gets two answers.
+      ...(Number.isFinite(Number(b.jobLat)) && Number.isFinite(Number(b.jobLng))
+        ? { lat: Number(b.jobLat), lng: Number(b.jobLng) }
+        : {}),
       jobType: String(b.jobType || "service_call"),
       jobDescription: String(b.jobDescription || "").trim() || null,
       notes: String(b.material || "").trim() || null,
