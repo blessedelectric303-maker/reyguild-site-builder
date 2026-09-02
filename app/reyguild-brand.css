@@ -25,6 +25,18 @@
     #F0CE7A 0%, #CC9000 34%, #8A5E00 58%, #D89000 82%, #F0CE7A 100%);
   --metal-h:linear-gradient(90deg,#C08400,#F0CE7A 45%,#CC9000 70%,#D89000);
 
+  /* THE NAVY, AS METAL. Same reasoning as the gold above: one flat value
+     over a large panel reads as printed card, not as a finished surface.
+     Kept narrow - navy has far less range than gold before it turns muddy,
+     so the steps are subtle on purpose. */
+  --metal-navy:linear-gradient(160deg,
+    #1B2E4F 0%,     /* lit edge   */
+    #16243F 30%,    /* core       */
+    #0A1A30 58%,    /* shadow     */
+    #14263F 82%,    /* bounce     */
+    #1B2E4F 100%    /* lit edge   */
+  );
+
   --white:#FCFCFC;
   --mist:#C3D2E3;
   --mist-dim:#8AA0BA;
@@ -294,4 +306,51 @@
   .rg-splash__ring,
   .rg-splash__sheen{ display:none }
   .rg-splash--out{ opacity:0; visibility:hidden }
+}
+
+
+/* ============================================================
+   NAVY CHROME
+   Every large navy surface takes the metallic navy instead of a flat fill:
+   the command centre, both app shells, the drawers, the phone bars.
+   ONE BLOCK, on purpose - delete it and everything goes back to flat navy
+   with nothing else disturbed.
+   ============================================================ */
+
+/* The command centre and any dark page body. */
+body.rg-navy-chrome,
+.rg-navy-chrome main,
+.bg-slate-900,
+.bg-slate-950,
+aside.bg-slate-900,
+header.bg-slate-900{
+  background-image:var(--metal-navy) !important;
+  background-color:#16243F !important;
+}
+
+/* Anything filled with the flat navy inline - shells, drawers, buttons. */
+[style*="background:#16243F"],
+[style*="background: #16243F"],
+[style*="background-color:#16243F"],
+[style*="background-color: #16243F"]{
+  background-image:var(--metal-navy) !important;
+}
+
+/* Proposals and Invoicing keeps its gold chrome; only its navy BUTTONS take
+   the metal, so the two apps stay opposites. */
+.fl-root .fl-btn-command,
+.fl-root .fl-leaverow .fl-btn-swap,
+.fl-root .fl-drawer-foot .fl-btn-swap,
+.fl-root .fl-sidefoot .fl-btn-swap,
+.fl-root .wb-create{
+  background-image:var(--metal-navy) !important;
+}
+
+/* A lit top edge and a shadow underneath, so the panel sits above the page
+   rather than being painted onto it. The same two lines that sell the gold. */
+aside.bg-slate-900,
+header.bg-slate-900,
+.fl-tmhead,
+.fl-drawer{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 2px 18px rgba(0,0,0,.28);
 }
