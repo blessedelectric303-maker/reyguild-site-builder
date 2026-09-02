@@ -134,6 +134,7 @@ export default async function ProcedurePage({ params }: { params: Promise<{ colo
       canEdit={isOwnerOrAdmin(role)}
       editColor={color}
       editIsTemplate={readingTemplate}
+      longFormKey={"proc-" + color}
     />
   );
 }

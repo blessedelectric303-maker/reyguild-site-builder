@@ -47,7 +47,7 @@ function ColorTag({ tag }: { tag: string }) {
 
 export default function ProcedureView({
   procedure, sections, items, skin, companyId, userId, unfilled, settings, canEdit,
-  editColor, editIsTemplate,
+  editColor, editIsTemplate, longFormKey,
 }: {
   procedure: Proc;
   sections: Section[];
@@ -62,6 +62,9 @@ export default function ProcedureView({
   // reading it on a job never trips over an editor they did not want.
   editColor?: string;
   editIsTemplate?: boolean;
+  // The full written procedure behind this card - about a thousand words.
+  // The tech view has linked to it since zip 20; this one never did.
+  longFormKey?: string;
 }) {
   const router = useRouter();
   const [pane, setPane] = useState<"none" | "checklist" | "onepage">("none");
@@ -368,6 +371,20 @@ export default function ProcedureView({
           </div>
         ) : null}
       </div>
+      {longFormKey ? (
+        <a
+          href={"/guide/" + longFormKey}
+          className="mt-6 block rounded-xl border border-slate-300 bg-white p-4 text-center"
+        >
+          <span className="block text-sm font-bold text-slate-900">
+            Read the full procedure
+          </span>
+          <span className="mt-0.5 block text-xs text-slate-500">
+            Everything behind this card, in detail.
+          </span>
+        </a>
+      ) : null}
+
       {editColor && canEdit ? (
         <ProcedureEditor
           color={editColor}

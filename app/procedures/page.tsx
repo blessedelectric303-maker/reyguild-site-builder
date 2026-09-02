@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { createClient } from "@/utils/supabase/server";
 import BackLink from "@/components/BackLink";
 import { TECH_CARDS, skinFor, type TextPart } from "@/utils/techProcedures";
 
@@ -49,8 +49,29 @@ const GUIDES = [
 ];
 
 export default async function ProceduresPage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login?next=/procedures");
+
+  // Only the office can edit, and the editor sits on each card - but the
+  // cards themselves are worth reading for anybody, so nobody is turned away
+  // from this page.
+  let canEdit = false;
+  try {
+    const { data: mem } = await supabase
+      .schema("suite")
+      .from("memberships")
+      .select("role")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    const r = ((mem as any) || {}).role || "";
+    canEdit = r === "owner" || r === "admin";
+  } catch (e) {
+    canEdit = false;
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6">
@@ -60,9 +81,9 @@ export default async function ProceduresPage() {
         Field procedures
       </h1>
       <p className="mt-1 max-w-2xl text-sm text-slate-500">
-        The cards your crew carries. Open one to read the whole procedure, and
-        edit it if your company does it differently &mdash; your version
-        replaces ours for everybody, and you can put ours back at any time.
+        {canEdit
+          ? "The cards your crew carries. Open one to read the whole procedure, then edit it if your company does it differently - your version is what the crew sees from then on, and you can put ours back at any time."
+          : "The cards your crew carries. Open one to read the whole procedure."}
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
