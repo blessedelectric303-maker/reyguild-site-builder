@@ -669,6 +669,44 @@ const STYLE_FIX = `
 .fl-root .fl-drawer-who,
 .fl-root .fl-drawer-brand,
 .fl-root .fl-drawer-foot{ border-color:rgba(0,16,31,.25) !important; }
+
+/* ------------------------------------------------------------
+   THE TECH HEADER on a phone. Crest on the left with ReyGuild over
+   "Proposals & Invoicing", the person in the middle, Settings on the right.
+   No big word across the top: the crest and the two lines beside it already
+   say which app this is, and the centre is worth more to a name than to a
+   label that never changes.
+   ------------------------------------------------------------ */
+@media (max-width: 860px) {
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmtop{
+    display:flex !important; align-items:center; gap:10px;
+    padding:10px 12px !important;
+  }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmleft{ flex:none; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-logo img{ height:38px; width:auto; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandwrap{
+    display:flex; flex-direction:column; line-height:1.05;
+  }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandname{ font-size:15px; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandsub{
+    font-size:8px; letter-spacing:.11em;
+  }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmwho{
+    flex:1; min-width:0; text-align:center;
+  }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmright{ flex:none; }
+}
+
+/* "Rey" navy, "Guild" white - the crest's own two colours, which is what
+   makes the lockup read as the lockup rather than as two words. Everything
+   else in the bar is white. */
+.fl-root .fl-tmhead .fl-brandname .fl-rey{ color:#00101F !important; }
+.fl-root .fl-tmhead .fl-brandname .fl-guild{ color:#FCFCFC !important; }
+.fl-root .fl-tmhead .fl-brandsub{ color:#FCFCFC !important; }
+
+/* The tab row, white on the gold. */
+.fl-root .fl-tmtab{ color:#FCFCFC !important; }
+.fl-root .fl-tmtab.on{ color:#FCFCFC !important; }
 `;
 
 const InvoicingApp = dynamic(() => import("./ReyGuild-Invoicing"), {
