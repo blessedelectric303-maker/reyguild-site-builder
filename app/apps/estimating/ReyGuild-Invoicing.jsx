@@ -828,12 +828,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const MENU = TABS.concat([
-    { key: "messages", label: "Messages" },
-    { key: "settings", label: "Settings" },
+    { key: "procedures", label: "Procedures" },
   ]);
 
   useEffect(() => {
-    const ok = page === "settings"
+    const ok = page === "settings" || page === "procedures"
       || TABS.some((t) => t.key === page)
       || SETTINGS_PAGES.some((t) => t.key === page);
     if (!ok) setPage(TABS[0] ? TABS[0].key : "estimates");
@@ -1537,7 +1536,16 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                   <button
                     key={m.key}
                     className={"fl-drawer-link" + (page === m.key ? " on" : "")}
-                    onClick={() => { setPage(m.key); setQuery(""); setMenuOpen(false); }}
+                    onClick={() => {
+                      if (m.key === "procedures") {
+                        setPage("settings");
+                        setSettingsSub("procedures");
+                      } else {
+                        setPage(m.key);
+                      }
+                      setQuery("");
+                      setMenuOpen(false);
+                    }}
                   >
                     {m.label}
                   </button>
@@ -1559,11 +1567,23 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
         <div className="fl-portal">{roleWord(suiteRole)} Portal</div>
 
         <nav className="fl-tmnav">
-          {TABS.map((t) => (
+          {MENU.map((t) => (
             <button
               key={t.key}
               className={"fl-tmtab" + (page === t.key ? " on" : "")}
-              onClick={() => { setPage(t.key); setQuery(""); setNavOpen(false); }}
+              onClick={() => {
+                // Procedures is the written guides that sit under Settings.
+                // Open that page directly rather than making somebody find a
+                // sub-tab once they are there.
+                if (t.key === "procedures") {
+                  setPage("settings");
+                  setSettingsSub("procedures");
+                } else {
+                  setPage(t.key);
+                }
+                setQuery("");
+                setNavOpen(false);
+              }}
             >
               {t.label}
               {t.key === "messages" && unreadMsgs ? " (" + unreadMsgs + ")" : ""}
@@ -1572,6 +1592,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               ) : null}
             </button>
           ))}
+          <a className="fl-tmtab" href="/help">Help</a>
         </nav>
 
         {/* THE FOOT OF THE SIDEBAR, in the same order as T and M: leave,

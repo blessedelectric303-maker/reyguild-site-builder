@@ -189,9 +189,11 @@ const STYLE_FIX = `
   .fl-sideme-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
   .fl-sideme-mail { font-size: 11px; color: #94a3b8; word-break: break-all; }
 
-  /* Messages sits with the navigation on a wide screen rather than floating
-     in the corner of a column. */
-  .fl-tmright { padding: 0 18px 10px; }
+  /* Messages sits with the navigation rather than floating in the corner of
+     a column - small and quiet, because it is a place to go, not a heading. */
+  .fl-tmright { padding: 0 18px 12px; justify-content: flex-start !important; }
+  .fl-tmmsg { font-size: 12px !important; font-weight: 600; color: #cbd5e1; }
+  .fl-tmmsg.on { color: #fff; }
   .fl-tmwho { padding: 0 18px; }
 }
 
