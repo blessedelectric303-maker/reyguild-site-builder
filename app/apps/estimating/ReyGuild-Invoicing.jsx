@@ -217,7 +217,7 @@ Core principles:
 `• Your work lives across the top: Estimates, Invoices, Follow-ups, Clients, and the Price List.
 • Estimates are grouped into Pending, Approved, and Declined — tap the buttons to filter.
 • Follow-ups shows what's due; tap an item to log what happened and clear it.
-• Need help, your SOPs, or to switch dark/light mode? It's all under Settings. Open Settings and you'll see Help, SOPs, and Preferences.
+• Need help? It is in the menu, under Help. The two guides that build your price list with an AI are in there, marked in green.
 • Help has a search bar — type a couple of words. If it can't answer it, there's a support email link at the bottom.`,
   },
   {
@@ -315,9 +315,9 @@ const HELP_ARTICLES = [
   { title: "Admin Approvals tab", keywords: "approvals admin payout late follow up duplicate split oversight dismiss",
     body: `The Approvals tab (admin) is your daily checklist: payouts to approve (duplicates flagged in red), follow-ups running more than 3 days late (email the estimator or dismiss with a reason), and estimate approvals.` },
   { title: "SOPs", keywords: "sop procedure training steps walk job admin only audience",
-    body: `Your step-by-step procedures live under Settings → SOPs. Estimators see the estimator SOPs; admins see those plus the admin SOPs (marked with a lock). When you add one, choose who can see it.` },
+    body: `Your procedures live in T&M & P&L under Field Procedures - one place, so what you edit is what the crew reads. The written guides for quoting and closing out are in there too.` },
   { title: "Where to find things", keywords: "where find navigation menu tabs settings help sops account audit preferences lost",
-    body: `Your work is across the top: Estimates, Invoices, Follow-ups, Clients, Price List. Everything else is under Settings. Open Settings and you'll find Help, SOPs, Preferences (dark/light), and — for admins/owner — Account (business info + subscription) and the Audit log. The Warranty and Contract editors live under Price List; the follow-up email editor lives under Follow-ups.` },
+    body: `Your work is in the menu: Dashboard, Approvals, Proposals, Invoices, Price List, Clients, Follow-ups, then the Audit log and Help at the end. The Warranty and Contract editors live under Price List; the follow-up email editor lives under Follow-ups.` },
   { title: "Getting help & support email", keywords: "help support email search article question contact reyguild settings",
     body: `Open Settings → Help. There's a search bar — type a couple of words to find the right article. If it still doesn't answer your question, scroll to the bottom for a support form and a support email link.` },
   { title: "Set up your work email (Gmail)", keywords: "gmail email setup work account no-reply reply fake link outgoing estimator",
@@ -331,7 +331,7 @@ const HELP_ARTICLES = [
   { title: "Editing your emails", keywords: "email template edit placeholder from reply-to no-reply company follow-up review overdue",
     body: `Under Follow-ups (admin) you can reword the follow-up, review, and past-due emails. Don't change the words inside curly braces — placeholders like {first}, {client}, {total}, {company}, and {review_url} fill in automatically. You can also set the From address clients see and the reply-to address their replies land in.` },
   { title: "Setting estimator pay", keywords: "payout pay per invoice rate amount settings team estimator royalty 50 default",
-    body: `Set the default per-invoice payout under Settings → Preferences (admin). To pay someone a different rate, open the Team tab and fill in that person's "Payout per invoice" — blank means they get the default.` },
+    body: `Payouts are set per person on the command centre, under Army / Employees. Blank means they get the company default.` },
   { title: "Copies of what's sent", keywords: "copy sent notification estimate invoice off toggle approvals owner admin overwhelm",
     body: `When the copies setting is on, a copy of every estimate and invoice that goes out appears on the admin's Approvals tab under "Sent — your copies." Turn it off anytime in Settings if it's too much.` },
 ];
@@ -787,9 +787,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     { key: "followups", label: "Follow-ups", show: isAdmin },
     // Owner only. An administrator is one of the people the audit log exists
     // to keep a record OF.
-    // Owner only, and a LINK - the real log lives on the T and M side. A
-    // second copy here would be a second thing to keep correct and a second
-    // answer to "who changed that".
+    // Owner only, and last - a LINK to the real log on the T and M side. It
+    // is what you open when something has gone wrong, not part of the daily
+    // run, so it sits at the end.
     { key: "audit", label: "Audit Log", href: "/tm/admin/audit", show: role === "Owner" },
   ].filter((t) => t.show);
 
@@ -1621,7 +1621,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               key={t.key}
               className={"fl-tmtab" + (page === t.key ? " on" : "")}
               onClick={() => {
-                // Procedures is the written guides that sit under Settings.
+                // Kept for older saved pages; procedures live in T&M now.
                 // Open that page directly rather than making somebody find a
                 // sub-tab once they are there.
                 setPage(t.key);
@@ -1675,20 +1675,25 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       {page === "dashboard" && isAdmin
         && estimates.length === 0 && invoices.length === 0 && (
         <div className="fl-welcome">
-          <div className="fl-welcome-hi">Welcome to Proposals &amp; Invoicing</div>
+          <div className="fl-welcome-hi">
+            <span className="fl-welcome-wave">&#128075;</span> Welcome to Proposals &amp; Invoicing
+          </div>
           <p className="fl-welcome-p">
             This is where quotes go out and money comes in. Two things worth
             doing before your first job:
           </p>
           <ul className="fl-welcome-list">
             <li><strong>Build your price list.</strong> It starts with three
-              lines and nothing else. There are two guides under Settings that
-              walk an AI through building the rest with you.</li>
+              lines and nothing else. Under <strong>Help</strong> there are two
+              guides that walk an AI through building the rest with you &mdash;
+              one if you already have prices written down, one if you have been
+              quoting from your head.</li>
             <li><strong>Set your numbering.</strong> Pick where your proposal
               and invoice numbers start, once, and the app takes it from there
               so two people can never land on the same number.</li>
           </ul>
           <div className="fl-welcome-btns">
+            <a href="/help#price-list">Create my price list</a>
             <button type="button" onClick={() => setPage("prices")}>Open the price list</button>
             <a href="/numbering">Set my numbering</a>
           </div>

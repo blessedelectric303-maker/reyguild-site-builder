@@ -40,14 +40,30 @@ export default async function HelpPage() {
     guides = [];
   }
 
+  // The two that walk an AI through building a price list. Marked out because
+  // a new owner is sent straight here to find them.
+  const PRICE_GUIDES = ["guide-pricelist-have", "guide-pricelist-none"];
+
   const card = (d: Doc) => (
     <Link
       key={d.doc_key}
       href={"/guide/" + d.doc_key}
-      className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4 hover:border-slate-500"
+      className={
+        "flex items-center gap-3 rounded-xl border p-4 " +
+        (PRICE_GUIDES.includes(d.doc_key)
+          ? "border-emerald-600 bg-emerald-950/25 hover:border-emerald-400"
+          : "border-slate-700 bg-slate-900/60 hover:border-slate-500")
+      }
     >
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-white">{d.title}</span>
+        <span
+          className={
+            "block text-sm font-semibold " +
+            (PRICE_GUIDES.includes(d.doc_key) ? "text-emerald-300" : "text-white")
+          }
+        >
+          {d.title}
+        </span>
         {d.summary ? (
           <span className="mt-0.5 block text-xs leading-snug text-slate-400">{d.summary}</span>
         ) : null}
@@ -79,7 +95,7 @@ export default async function HelpPage() {
 
       {guides.length > 0 ? (
         <>
-          <h2 className="mt-8 text-sm font-bold uppercase tracking-wide text-slate-300">
+          <h2 id="price-list" className="mt-8 scroll-mt-4 text-sm font-bold uppercase tracking-wide text-slate-300">
             How to do the work
           </h2>
           <p className="mt-1 text-xs text-slate-500">

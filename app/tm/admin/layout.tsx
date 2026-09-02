@@ -68,18 +68,17 @@ export default async function AdminLayout({
           },
         ]
       : []),
-    // OWNER ONLY. The audit log is the record of who changed what - roles,
-    // rates, deletions. An administrator is one of the people it exists to
-    // keep a record OF, so they do not get to read it.
-    ...(isOwner
-      ? [{ href: "/tm/admin/audit", label: "Audit Log" }]
-      : []),
     ...(isOwnerOrAdmin
       ? [{ href: "/checklists", label: "Field Checklists" }]
       : []),
     // The office needs to read the cards too - they are who answers when a
     // customer asks what happens next, and who edits one when it changes.
     { href: "/procedures", label: "Field Procedures" },
+    // OWNER ONLY, and near the end - it is what you open when something has
+    // gone wrong, not part of the daily run.
+    ...(isOwner
+      ? [{ href: "/tm/admin/audit", label: "Audit Log" }]
+      : []),
     { href: "/help", label: "Help" },
   ];
 
