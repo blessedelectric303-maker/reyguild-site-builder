@@ -691,59 +691,36 @@ const STYLE_FIX = `
 }
 
 /* ------------------------------------------------------------
-   THE TECH HEADER on a phone, measured off T and M's.
-   T and M draws its lockup with <Logo size={24} />, which works out to a
-   24px crest, a 12px wordmark and a 7px tagline in the mono face at 0.3em
-   tracking. Those exact numbers are reproduced below rather than
-   approximated, so the two apps line up when somebody switches between them
-   - a lockup that is two pixels different reads as a mistake, not a variant.
-   The only deliberate differences: "Rey" is chrome blue instead of gold,
-   and the tagline says which app this is.
+   THE TECH HEADER, measured off T and M's.
+   The lockup itself is drawn with inline styles in the markup now - every
+   CSS attempt to match it lost to an older rule further up this sheet, and
+   inline wins outright. What is left here is the row around it.
+   T and M: name at 14px, role at 11px, both truncated so neither can wrap
+   onto a second line and shove the row out of shape.
    ------------------------------------------------------------ */
 @media (max-width: 860px) {
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmtop{
     display:flex !important; align-items:center; gap:10px;
     padding:10px 12px !important;
   }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmleft{
-    flex:none; display:inline-flex; align-items:center; gap:9px;
-  }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-logo{ line-height:0; }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-logo img{
-    height:24px; width:auto; display:block; object-fit:contain;
-  }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandwrap{
-    display:inline-flex; flex-direction:column; align-items:center;
-    line-height:1;
-  }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandname{
-    font-family:var(--rg-wordmark);
-    font-size:12px; font-weight:800; letter-spacing:-0.01em; line-height:1;
-  }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandsub{
-    font-family:var(--rey-font-mono);
-    font-size:7px; font-weight:500; letter-spacing:0.3em;
-    text-transform:none; margin-top:5px; padding-left:0.3em;
-    white-space:nowrap;
-  }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmleft{ flex:none; }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmwho{
     flex:1; min-width:0; text-align:center;
   }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmname,
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmselect{
+    display:block; width:100%;
+    font-size:14px !important; font-weight:500 !important;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmrole{
+    display:block;
+    font-size:11px !important; letter-spacing:.04em;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmright{ flex:none; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmmsg{ font-size:13px !important; }
 }
-
-/* "Rey" in chrome blue, "Guild" in the same off-white T and M uses. The flat
-   colour underneath is the fallback for anywhere background-clip is not
-   supported - without it the word renders transparent and disappears. */
-.fl-root .fl-tmhead .fl-brandname .fl-rey{
-  color:#00101F !important;
-  background:var(--metal-navy);
-  -webkit-background-clip:text;
-  background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-.fl-root .fl-tmhead .fl-brandname .fl-guild{ color:#F5F3EE !important; }
-.fl-root .fl-tmhead .fl-brandsub{ color:#FFFFFF !important; }
 
 /* The tab row, white on the gold. */
 .fl-root .fl-tmtab{ color:#FCFCFC !important; }

@@ -368,6 +368,11 @@ header.bg-slate-900,
    proportional figures makes totals wander.
    ============================================================ */
 body,
+button,
+input,
+select,
+textarea,
+a,
 .fl-root,
 .fl-root input,
 .fl-root select,

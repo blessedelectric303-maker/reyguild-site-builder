@@ -1516,10 +1516,26 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             </button>
           ) : null}
           <div className="fl-tmleft">
-            <span className="fl-logo"><img src={LOGO} alt="ReyGuild" /></span>
-            <span className="fl-brandwrap">
-              <span className="fl-brandname"><span className="fl-rey">Rey</span><span className="fl-guild">Guild</span></span>
-              <span className="fl-brandsub">Proposals &amp; Invoicing</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
+              <img
+                src={LOGO}
+                alt="ReyGuild"
+                width={17}
+                height={24}
+                style={{ display: "block", objectFit: "contain", height: 24, width: "auto" }}
+              />
+              <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", lineHeight: 1 }}>
+                <span style={{ fontFamily: "var(--rg-wordmark)", fontSize: 12, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1 }}>
+                  {/* Navy here, gold in T and M - the one difference between
+                      the two lockups, and the thing that tells you which app
+                      you are in without reading a word. */}
+                  <span style={{ color: "#16243F" }}>Rey</span>
+                  <span style={{ color: "#F5F3EE" }}>Guild</span>
+                </span>
+                <span style={{ fontFamily: "'JetBrains Mono',ui-monospace,monospace", color: "#FFFFFF", fontSize: 7, fontWeight: 500, letterSpacing: "0.3em", marginTop: 5, paddingLeft: "0.3em", whiteSpace: "nowrap" }}>
+                  PROPOSALS &amp; INVOICING
+                </span>
+              </span>
             </span>
           </div>
           <div className="fl-tmwho">
