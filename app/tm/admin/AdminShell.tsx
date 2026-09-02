@@ -33,6 +33,15 @@ export default function AdminShell({
   }, [pathname]);
 
 
+  // The page you are on, for the middle of the mobile bar. Longest matching
+  // href wins, so /tm/admin/jobs/123 still reads "Jobs" rather than falling
+  // back to the dashboard.
+  const currentLabel =
+    [...navItems]
+      .sort((a, b) => b.href.length - a.href.length)
+      .find((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
+      ?.label || "";
+
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
@@ -140,20 +149,18 @@ export default function AdminShell({
             </span>
           )}
         </button>
-        {/* The crest centred with a word either side - T&M on the left, P&L
-            on the right. Absolutely positioned so it centres on the BAR
-            rather than on what is left after the burger. Same shape as
-            Proposals and Invoicing, so the two apps read as one product. */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 whitespace-nowrap">
-          <span className="text-[11px] font-bold uppercase tracking-[0.1em] leading-none" style={{ color: "#CC9000" }}>
-            T&amp;M
-          </span>
-          <Logo dark size={30} />
-          <span className="text-[11px] font-bold uppercase tracking-[0.1em] leading-none text-slate-200">
-            P&amp;L
+        {/* Where you are, in the middle. A page name earns that spot because
+            it is the one thing a top bar is actually for. */}
+        <div className="flex-1 truncate px-2 text-center text-sm font-semibold">
+          {currentLabel}
+        </div>
+        {/* The mark on the right, in both apps. */}
+        <div className="flex flex-none items-center gap-2">
+          <Logo dark size={28} />
+          <span className="text-[9px] font-bold uppercase leading-none tracking-[0.14em] text-slate-300">
+            T&amp;M<br />&amp; P&amp;L
           </span>
         </div>
-        <div className="flex-1" />
       </header>
 
       {/* Mobile drawer + backdrop */}

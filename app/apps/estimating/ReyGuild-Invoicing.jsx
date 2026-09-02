@@ -829,6 +829,12 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     } catch (e) { /* it stays on the list, which is the safe failure */ }
   }
 
+  // The label for the middle of the phone bar, taken from the menu itself so
+  // renaming a tab renames the title with it.
+  const currentLabel =
+    (TABS.find((t) => t.key === page) || {}).label
+    || (page === "settings" ? "Settings" : "");
+
   const [menuOpen, setMenuOpen] = useState(false);
   const MENU = TABS.concat([
     { key: "procedures", label: "Procedures" },
@@ -1511,10 +1517,17 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             )}
             <span className="fl-tmrole">{roleWord(suiteRole)}</span>
           </div>
+          {/* Where you are, in the middle - the same spot T and M uses. */}
+          <span className="fl-mobtitle">{currentLabel}</span>
+          {/* The mark on the right, crest then name then what this app is. */}
           <span className="fl-mobrand">
-            <span className="fl-mobrand-l">Proposals</span>
             <img src={LOGO} alt="ReyGuild" />
-            <span className="fl-mobrand-r">Invoicing</span>
+            <span className="fl-mobrand-text">
+              <span className="fl-mobrand-word">
+                <span className="fl-rey">Rey</span><span className="fl-guild">Guild</span>
+              </span>
+              <span className="fl-mobrand-sub">Proposals &amp; Invoicing</span>
+            </span>
           </span>
           <div className="fl-tmright">
             {/* Messages is on the command centre for the office tier - one

@@ -221,23 +221,26 @@ const STYLE_FIX = `
     display:flex !important; align-items:center; justify-content:space-between;
     padding:10px 12px !important;
   }
-  /* The crest sits in the MIDDLE of the bar with a word either side, so the
-     mark reads as one thing across a single line. Absolutely positioned so
-     it is centred on the BAR, not on whatever is left over after the
-     burger - otherwise it drifts left by half a button. */
-  .fl-hasmenu .fl-tmtop{ position:relative; }
+  /* Burger, then where you are, then the mark - the same three-part bar as
+     T and M. The title takes the middle because it is the one thing a top
+     bar is actually for; the crest was decoration sitting in the best spot. */
+  .fl-hasmenu .fl-mobtitle{
+    flex:1; min-width:0; text-align:center; padding:0 8px;
+    font-size:14px; font-weight:600; color:#e2e8f0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
   .fl-hasmenu .fl-mobrand{
-    display:flex; align-items:center; gap:8px;
-    position:absolute; left:50%; transform:translateX(-50%);
-    line-height:0; white-space:nowrap;
+    display:flex; align-items:center; gap:7px; flex:none; line-height:0;
   }
-  .fl-hasmenu .fl-mobrand img{ height:30px; width:auto; }
-  .fl-hasmenu .fl-mobrand-l,
-  .fl-hasmenu .fl-mobrand-r{
-    font-size:11px; font-weight:700; letter-spacing:.1em;
-    text-transform:uppercase; color:#CC9000; line-height:1;
+  .fl-hasmenu .fl-mobrand img{ height:28px; width:auto; }
+  .fl-hasmenu .fl-mobrand-text{ display:flex; flex-direction:column; line-height:1; }
+  .fl-hasmenu .fl-mobrand-word{ font-size:13px; font-weight:800; }
+  /* Letter-spaced to sit the same width as the wordmark above it, so the two
+     lines read as one mark rather than a caption. */
+  .fl-hasmenu .fl-mobrand-sub{
+    font-size:7px; font-weight:700; letter-spacing:.11em;
+    text-transform:uppercase; color:#94a3b8; margin-top:2px;
   }
-  .fl-hasmenu .fl-mobrand-r{ color:#e2e8f0; }
   .fl-hasmenu .fl-tmright{ flex:none; }
 }
 
