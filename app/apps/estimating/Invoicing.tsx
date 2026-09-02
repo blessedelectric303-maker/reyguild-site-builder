@@ -377,8 +377,14 @@ export default function Invoicing() {
         // The name shown above the role. The invoicing app only knew its own
         // "people" list, so anybody never added there showed a blank.
         const meta: any = (su as any)?.user_metadata || {};
-        const myName = String(meta.full_name || meta.name || "").trim()
-          || String(su?.email || "").split("@")[0];
+        let myName = String(meta.full_name || meta.name || "").trim();
+        try {
+          const { data: dn } = await supabase.schema("suite").rpc("my_display_name");
+          if (dn && String(dn).trim()) myName = String(dn).trim();
+        } catch {
+          // Fall through to the metadata name below.
+        }
+        if (!myName) myName = String(su?.email || "").split("@")[0];
         if (!companyId) {
           if (alive) setErr("No company found for this account. Open Settings and set up your company first.");
           return;

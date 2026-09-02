@@ -668,6 +668,14 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const canPreview = lockedRole === "Owner" || lockedRole === "Admin";
   const role = canPreview ? (currentUser ? currentUser.role : lockedRole) : lockedRole;
   const myName = currentUser ? currentUser.name : "";
+
+  // WHAT TO CALL THIS PERSON.
+  // The internal people list has the owner's row named "Owner", so falling
+  // back to it printed "Owner" above the role "Owner / Manager" - the same
+  // word twice. The real signed-in name wins, and if there is none we show
+  // nothing rather than a job title pretending to be a name.
+  const displayName = String(signedInName || "").trim()
+    || (String(myName || "").trim().toLowerCase() === "owner" ? "" : String(myName || "").trim());
   const isAdmin = role === "Owner" || role === "Admin";
   function logAudit(action, detail) {
     const entry = { id: uid(), ts: Date.now(), who: myName || "Owner", role, action, detail: detail || "" };
@@ -1491,7 +1499,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           Then one row of evenly spread tabs. Leaving the app lives in
           Settings, not in the header - T and M never had it up there either. Two apps that look different for no reason is
           two apps to learn. */}
-      <header className="fl-tmhead">
+      <header className={"fl-tmhead" + (isAdmin ? " fl-hasmenu" : "")}>
         <div className="fl-tmtop">
           <button className="fl-burger" onClick={() => setMenuOpen(true)} aria-label="Menu">
             <span /><span /><span />
@@ -1511,7 +1519,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             ) : (
-              <span className="fl-tmname">{signedInName || myName || ""}</span>
+              <span className="fl-tmname">{displayName}</span>
             )}
             <span className="fl-tmrole">{roleWord(suiteRole)}</span>
           </div>
@@ -1535,7 +1543,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <div className="fl-scrim" onClick={() => setMenuOpen(false)} />
             <aside className="fl-drawer">
               <div className="fl-drawer-who">
-                <div className="fl-drawer-name">{signedInName || myName || ""}</div>
+                <div className="fl-drawer-name">{displayName}</div>
                 <div className="fl-drawer-role">{roleWord(suiteRole)}</div>
               </div>
               <nav className="fl-drawer-nav">
