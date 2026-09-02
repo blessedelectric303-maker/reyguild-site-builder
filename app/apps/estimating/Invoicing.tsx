@@ -683,11 +683,11 @@ const STYLE_FIX = `
     padding:10px 12px !important;
   }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmleft{ flex:none; }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-logo img{ height:38px; width:auto; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-logo img{ height:48px; width:auto; }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandwrap{
     display:flex; flex-direction:column; line-height:1.05;
   }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandname{ font-size:15px; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandname{ font-size:18px; }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandsub{
     font-size:8px; letter-spacing:.11em;
   }
@@ -700,7 +700,17 @@ const STYLE_FIX = `
 /* "Rey" navy, "Guild" white - the crest's own two colours, which is what
    makes the lockup read as the lockup rather than as two words. Everything
    else in the bar is white. */
-.fl-root .fl-tmhead .fl-brandname .fl-rey{ color:#00101F !important; }
+/* Chrome blue: the navy gradient clipped to the letters, so "Rey" is metal
+   the same way the bar behind it is. The flat colour underneath is the
+   fallback for anywhere background-clip is not supported - without it the
+   word would vanish. */
+.fl-root .fl-tmhead .fl-brandname .fl-rey{
+  color:#00101F !important;
+  background:var(--metal-navy);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
 .fl-root .fl-tmhead .fl-brandname .fl-guild{ color:#FCFCFC !important; }
 .fl-root .fl-tmhead .fl-brandsub{ color:#FCFCFC !important; }
 
