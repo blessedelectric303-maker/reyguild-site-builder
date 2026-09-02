@@ -165,6 +165,21 @@ const STYLE_FIX = `
   background:#0f172a; color:#e2e8f0; z-index:70;
   display:flex; flex-direction:column; box-shadow:0 0 40px rgba(0,0,0,.5);
 }
+.fl-drawer-brand{
+  display:flex; align-items:center; gap:10px;
+  padding:18px 16px 14px; border-bottom:1px solid #1e293b;
+}
+.fl-drawer-crest{ line-height:0; flex:none; }
+.fl-drawer-crest img{ height:42px; width:auto; }
+.fl-drawer-brandtext{ display:flex; flex-direction:column; min-width:0; }
+.fl-drawer-wordmark{ font-size:20px; font-weight:800; line-height:1.05; }
+/* The subtitle is letter-spaced to sit the same width as the wordmark above
+   it, the way T and M's "T&M & P&L" does - two lines that line up read as
+   one mark rather than a label stuck underneath. */
+.fl-drawer-sub{
+  font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  color:#94a3b8; margin-top:3px;
+}
 .fl-drawer-who{ padding:18px 16px; border-bottom:1px solid #1e293b; }
 .fl-drawer-name{ font-size:15px; font-weight:600; color:#fff; }
 .fl-drawer-role{

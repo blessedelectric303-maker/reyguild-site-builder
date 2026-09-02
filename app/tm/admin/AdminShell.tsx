@@ -72,8 +72,11 @@ export default function AdminShell({
       <>
         <div className="px-6 py-5 border-b border-slate-800">
           <Logo dark size={40} />
-          <div className="text-xs text-slate-400 mt-2 capitalize">
-            {user.role} portal
+          <div className="mt-3 text-base font-semibold text-white truncate">
+            {user.name}
+          </div>
+          <div className="text-[11px] uppercase tracking-wider text-slate-400">
+            {user.role === "owner" ? "Owner / Manager" : user.role}
           </div>
         </div>
         <NavLinks onClick={() => setDrawerOpen(false)} />

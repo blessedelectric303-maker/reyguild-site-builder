@@ -80,6 +80,9 @@ export default async function AdminLayout({
     ...(isOwnerOrAdmin
       ? [{ href: "/checklists", label: "Job Checklists" }]
       : []),
+    // The office needs to read the cards too - they are who answers when a
+    // customer asks what happens next, and who edits one when it changes.
+    { href: "/tm/admin/procedures", label: "Procedures" },
     { href: "/help", label: "Help" },
   ];
 

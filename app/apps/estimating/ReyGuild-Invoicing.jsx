@@ -1537,8 +1537,20 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           <>
             <div className="fl-scrim" onClick={() => setMenuOpen(false)} />
             <aside className="fl-drawer">
+              {/* The crest and the app name above the person - T and M leads
+                  with the mark, and this drawer went straight into a name, so
+                  the two did not read as the same product. */}
+              <div className="fl-drawer-brand">
+                <span className="fl-drawer-crest"><img src={LOGO} alt="ReyGuild" /></span>
+                <span className="fl-drawer-brandtext">
+                  <span className="fl-drawer-wordmark">
+                    <span className="fl-rey">Rey</span><span className="fl-guild">Guild</span>
+                  </span>
+                  <span className="fl-drawer-sub">Proposals &amp; Invoicing</span>
+                </span>
+              </div>
               <div className="fl-drawer-who">
-                <div className="fl-drawer-name">{signedInName || myName || ""}</div>
+                <div className="fl-drawer-name">{displayName}</div>
                 <div className="fl-drawer-role">{roleWord(suiteRole)}</div>
               </div>
               <nav className="fl-drawer-nav">
