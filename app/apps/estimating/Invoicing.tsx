@@ -134,6 +134,80 @@ const STYLE_FIX = `
 
 /* Content is full width now. Nothing is pinned to a left edge. */
 
+
+/* THE THREE-LINE MENU AND ITS DRAWER.
+   These styles went missing when the stylesheet was rebuilt - the markup
+   stayed, so the button rendered as three empty spans with no size and no
+   colour, which looks exactly like nothing at all. */
+.fl-burger{
+  display:flex; flex-direction:column; justify-content:center; gap:4px;
+  width:36px; height:36px; padding:8px; border:0; background:none;
+  cursor:pointer; flex:none;
+}
+.fl-burger span{ display:block; height:2px; background:#e2e8f0; border-radius:2px; }
+.fl-burger:hover span{ background:#fff; }
+
+.fl-msgdot{
+  position:absolute; top:-8px; right:-14px; min-width:17px; padding:0 5px;
+  border-radius:9px; background:#dc2626; color:#fff;
+  font-size:10px; font-weight:700; line-height:17px; text-align:center;
+}
+.fl-tmmsg{
+  position:relative; background:none; border:none; cursor:pointer;
+  font-family:inherit; font-size:11px; font-weight:600; color:#94a3b8;
+  text-decoration:none; padding:2px 0;
+}
+.fl-tmmsg.on{ color:#fff; }
+
+.fl-scrim{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:60; }
+.fl-drawer{
+  position:fixed; top:0; left:0; bottom:0; width:17rem; max-width:85%;
+  background:#0f172a; color:#e2e8f0; z-index:70;
+  display:flex; flex-direction:column; box-shadow:0 0 40px rgba(0,0,0,.5);
+}
+.fl-drawer-who{ padding:18px 16px; border-bottom:1px solid #1e293b; }
+.fl-drawer-name{ font-size:15px; font-weight:600; color:#fff; }
+.fl-drawer-role{
+  font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#94a3b8;
+}
+.fl-drawer-nav{ flex:1; overflow-y:auto; padding:10px; }
+.fl-drawer-link{
+  display:block; width:100%; text-align:left; background:none; border:none;
+  border-left:3px solid transparent; border-radius:6px; cursor:pointer;
+  font-family:inherit; font-size:14px; font-weight:600; color:#cbd5e1;
+  padding:11px 13px; text-decoration:none;
+}
+.fl-drawer-link:hover{ background:rgba(255,255,255,.05); color:#fff; }
+.fl-drawer-link.on{
+  background:rgba(255,255,255,.07); color:#fff; border-left-color:#CC9000;
+}
+.fl-drawer-foot{
+  border-top:1px solid #1e293b; padding:14px; display:grid; gap:8px;
+}
+.fl-drawer-foot a{
+  display:block; text-align:center; border-radius:6px; padding:10px 12px;
+  font-size:12px; font-weight:700; text-decoration:none;
+}
+
+/* THE PHONE HEADER.
+   Brand on one side and the name on the other were both wrapping onto three
+   lines and colliding. On a phone the brand lives in the drawer, so the bar
+   carries the burger and who you are - nothing else. */
+@media (max-width: 860px) {
+  .fl-hasmenu .fl-tmleft{ display:none !important; }
+  .fl-hasmenu .fl-tmtop{
+    display:flex !important; align-items:center; gap:10px;
+    padding:10px 12px !important;
+  }
+  .fl-hasmenu .fl-tmwho{
+    flex:1; text-align:left !important; min-width:0;
+  }
+  .fl-hasmenu .fl-tmname,
+  .fl-hasmenu .fl-tmselect{ font-size:16px !important; }
+  .fl-hasmenu .fl-tmrole{ font-size:10px !important; }
+  .fl-hasmenu .fl-tmright{ flex:none; }
+}
+
 /* The welcome, for an owner or admin with nothing in the app yet. It goes
    on its own once there is a proposal or an invoice - a banner you have to
    dismiss outstays its welcome, and one that never leaves teaches people to
