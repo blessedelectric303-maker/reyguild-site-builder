@@ -295,6 +295,34 @@ const STYLE_FIX = `
   border: 1px solid #16243F; border-left: 4px solid #CC9000;
   border-radius: 10px; background: #fff;
 }
+
+/* SETTINGS, as a list of cards. A pill tells you a section's name; a card
+   tells you what is inside it, which is the difference between a menu you
+   read and one you guess at. */
+.fl-setwrap{ max-width:42rem; margin:0 auto; }
+.fl-sethead{ margin:6px 0 2px; font-size:26px; font-weight:800; color:#16243F; }
+.fl-setwho{ margin:0 0 16px; font-size:15px; color:#64748b; }
+.fl-setcard{
+  display:flex; align-items:center; gap:12px; width:100%;
+  margin-bottom:10px; padding:16px 18px; cursor:pointer;
+  background:#fff; border:1px solid #16243F; border-radius:12px;
+  font-family:inherit; text-align:left;
+}
+.fl-setcard:hover{ border-color:#CC9000; }
+.fl-setcard-text{ flex:1; min-width:0; }
+.fl-setcard-title{
+  display:block; font-size:17px; font-weight:700; color:#16243F;
+}
+.fl-setcard-sub{
+  display:block; margin-top:3px; font-size:13px; line-height:1.45; color:#64748b;
+}
+.fl-setcard-go{ flex:none; font-size:18px; color:#64748b; }
+.fl-setback{
+  display:inline-block; margin:6px 0 12px; padding:0;
+  background:none; border:none; cursor:pointer; font-family:inherit;
+  font-size:14px; font-weight:600; color:#16243F; text-decoration:underline;
+}
+
 .fl-dashpanels{
   display:grid; gap:12px; margin-top:14px; max-width:42rem;
 }
@@ -726,13 +754,22 @@ const STYLE_FIX = `
     font-size:14px !important; font-weight:500 !important;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
+  /* The role and the Settings link are labels, not headings. Smaller and
+     quieter than the name, so the eye lands on the person first - a title
+     that shouts as loud as the name makes you read both to find either. */
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmrole{
     display:block;
-    font-size:11px !important; letter-spacing:.04em;
+    font-size:10px !important; letter-spacing:.05em;
+    color:rgba(252,252,252,.62) !important;
+    text-shadow:none !important;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmright{ flex:none; }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmmsg{ font-size:13px !important; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmmsg{
+    font-size:11px !important;
+    color:rgba(252,252,252,.62) !important;
+    text-shadow:none !important;
+  }
 }
 
 

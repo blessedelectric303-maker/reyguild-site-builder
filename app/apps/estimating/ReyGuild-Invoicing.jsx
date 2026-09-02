@@ -567,7 +567,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const [royaltyTo, setRoyaltyTo] = useState(() => toLocalDate(new Date()));
   const [audit, setAudit] = useState([]);
   const [auditQuery, setAuditQuery] = useState("");
-  const [settingsSub, setSettingsSub] = useState("help");
+  const [settingsSub, setSettingsSub] = useState("");
   const [previewFor, setPreviewFor] = useState(null); // record id whose preview is open
   const [messages, setMessages] = useState([]);
   const [msgSeen, setMsgSeen] = useState({});
@@ -2600,11 +2600,49 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       {/* ════════════════════ SETTINGS HUB sub-nav ════════════════════ */}
       {page === "settings" && (
         <>
-          <div className="so-subnav">
-            <button className={"fl-pill" + (settingsSub === "help" ? " active" : "")} onClick={() => setSettingsSub("help")}>Help</button>
-            <button className={"fl-pill" + (settingsSub === "prefs" ? " active" : "")} onClick={() => setSettingsSub("prefs")}>Preferences</button>
-            {can.managePeople && <button className={"fl-pill" + (settingsSub === "audit" ? " active" : "")} onClick={() => setSettingsSub("audit")}>Audit log</button>}
-          </div>
+          {!settingsSub ? (
+            <div className="fl-setwrap">
+              <h1 className="fl-sethead">Settings</h1>
+              <p className="fl-setwho">{displayName}</p>
+
+              <button type="button" className="fl-setcard" onClick={() => setSettingsSub("help")}>
+                <span className="fl-setcard-text">
+                  <span className="fl-setcard-title">Help</span>
+                  <span className="fl-setcard-sub">
+                    How the app works, the questions that come up most, and how
+                    to reach ReyGuild.
+                  </span>
+                </span>
+                <span className="fl-setcard-go">&rarr;</span>
+              </button>
+
+              <button type="button" className="fl-setcard" onClick={() => setSettingsSub("prefs")}>
+                <span className="fl-setcard-text">
+                  <span className="fl-setcard-title">Preferences</span>
+                  <span className="fl-setcard-sub">
+                    Text size, and your own account details.
+                  </span>
+                </span>
+                <span className="fl-setcard-go">&rarr;</span>
+              </button>
+
+              {can.managePeople ? (
+                <button type="button" className="fl-setcard" onClick={() => setSettingsSub("audit")}>
+                  <span className="fl-setcard-text">
+                    <span className="fl-setcard-title">Audit log</span>
+                    <span className="fl-setcard-sub">
+                      Who changed what, and when.
+                    </span>
+                  </span>
+                  <span className="fl-setcard-go">&rarr;</span>
+                </button>
+              ) : null}
+            </div>
+          ) : (
+            <button type="button" className="fl-setback" onClick={() => setSettingsSub("")}>
+              &larr; Settings
+            </button>
+          )}
 
           {/* Clients, Team, Follow-ups and Approvals used to sit in the top
               row. They are things you go and do occasionally, not the four
