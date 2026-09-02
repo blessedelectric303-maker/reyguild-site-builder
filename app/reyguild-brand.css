@@ -51,6 +51,10 @@
   /* The wordmark face. One value, used by every ReyGuild lockup in both
      apps and at every role. */
   --rg-wordmark:"Playfair Display", Georgia, "Times New Roman", serif;
+
+  /* The app face, both halves. Same family as the wordmark so headings and
+     body sit together instead of arguing. */
+  --rg-font-app:"Playfair Display", Georgia, "Times New Roman", serif;
 }
 
 /* ============================================================
@@ -354,3 +358,40 @@ header.bg-slate-900,
 .fl-drawer{
   box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 2px 18px rgba(0,0,0,.28);
 }
+
+
+/* ============================================================
+   ONE TYPEFACE, BOTH APPS
+   T and M was sans, Proposals and Invoicing was serif, and neither was
+   chosen. This settles it - the serif, which is the one Ben picked.
+   Numbers keep tabular spacing so a column of money lines up; a serif with
+   proportional figures makes totals wander.
+   ============================================================ */
+body,
+.fl-root,
+.fl-root input,
+.fl-root select,
+.fl-root textarea,
+.fl-root button{
+  font-family:var(--rg-font-app) !important;
+}
+
+h1, h2, h3, .mil,
+.fl-root h1, .fl-root h2, .fl-root h3{
+  font-family:var(--rg-font-app) !important;
+}
+
+/* Anywhere a figure has to line up under another figure. */
+.fl-dashnum,
+.fl-dashlist-amt,
+.so-line-amt,
+.so-totals,
+.so-totals-grand,
+table td,
+table th{
+  font-variant-numeric:tabular-nums;
+}
+
+/* The mono face stays where it earns its place: the tagline under the crest
+   and anything that is really a code. */
+.rg-mono{ font-family:var(--rey-font-mono) !important; }
