@@ -33,15 +33,6 @@ export default function AdminShell({
   }, [pathname]);
 
 
-  // The page you are on, for the middle of the mobile bar. Longest matching
-  // href wins, so /tm/admin/jobs/123 still reads "Jobs" rather than falling
-  // back to the dashboard.
-  const currentLabel =
-    [...navItems]
-      .sort((a, b) => b.href.length - a.href.length)
-      .find((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
-      ?.label || "";
-
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
@@ -52,7 +43,7 @@ export default function AdminShell({
 
   function NavLinks({ onClick }: { onClick?: () => void }) {
     return (
-      <nav className="flex-1 px-3 py-4 space-y-1 text-sm">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 space-y-1 text-sm">
         {navItems.map((item) => (
           <Link
             key={item.href}
@@ -79,7 +70,7 @@ export default function AdminShell({
   function SidebarContent() {
     return (
       <>
-        <div className="px-6 py-5 border-b border-slate-800">
+        <div className="flex-none px-6 py-5 border-b border-slate-800">
           <Logo dark size={40} />
           <div className="mt-3 text-base font-semibold text-white truncate">
             {user.name}
@@ -95,7 +86,7 @@ export default function AdminShell({
             between them is not hunting for a button that moved.
             Command centre used to sit at the TOP, above the navigation, which
             put "leave" where your eye lands first. */}
-        <div className="border-t border-slate-800 p-4 space-y-2">
+        <div className="flex-none border-t border-slate-800 p-4 space-y-2">
           <a href="/" className="block rounded-md px-3 py-2 text-center text-xs font-bold"
              style={{ background: "#16243F", color: "#CC9000", border: "1px solid #CC9000" }}>
             &larr; Back to command center
@@ -107,7 +98,7 @@ export default function AdminShell({
           <LogoutButton className="block w-full rounded-md border border-red-400 bg-white px-3 py-2 text-center text-xs font-bold text-red-600" />
         </div>
 
-        <div className="border-t border-slate-800 p-4">
+        <div className="flex-none border-t border-slate-800 p-4">
           <div className="text-sm font-medium truncate">{user.name}</div>
           <div className="text-xs text-slate-400 truncate">{user.email}</div>
         </div>
@@ -149,18 +140,27 @@ export default function AdminShell({
             </span>
           )}
         </button>
-        {/* Where you are, in the middle. A page name earns that spot because
-            it is the one thing a top bar is actually for. */}
-        <div className="flex-1 truncate px-2 text-center text-sm font-semibold">
-          {currentLabel}
-        </div>
-        {/* The mark on the right, in both apps. */}
-        <div className="flex flex-none items-center gap-2">
-          <Logo dark size={28} />
-          <span className="text-[9px] font-bold uppercase leading-none tracking-[0.14em] text-slate-300">
-            T&amp;M<br />&amp; P&amp;L
+        {/* The crest centred with a word either side - T&M on the left, P&L
+            on the right. Absolutely positioned so it centres on the BAR
+            rather than on what is left after the burger. Same shape as
+            Proposals and Invoicing, so the two apps read as one product. */}
+        {/* Crest in the middle with a word either side - the same shape as
+            Proposals and Invoicing. The Logo component always draws the
+            wordmark and the tagline with it, so using it here printed "T&M"
+            and "P&L" twice over. The crest image on its own is what this
+            lockup needs. */}
+        <div className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap">
+          <span className="text-[13px] font-bold uppercase leading-none tracking-[0.12em]" style={{ color: "#CC9000" }}>
+            T&amp;M
+          </span>
+          <img src="/reyguild-crest.png" alt="ReyGuild" height={30} width={22}
+               style={{ height: 30, width: "auto", display: "block" }} />
+          <span className="text-[13px] font-bold uppercase leading-none tracking-[0.12em] text-white">
+            P&amp;L
           </span>
         </div>
+        {/* Balances the burger so the crest sits truly centred. */}
+        <div className="w-9 flex-none" />
       </header>
 
       {/* Mobile drawer + backdrop */}
@@ -170,7 +170,7 @@ export default function AdminShell({
             onClick={() => setDrawerOpen(false)}
             className="md:hidden fixed inset-0 bg-black/50 z-40"
             aria-hidden="true"/>
-          <aside className="md:hidden fixed top-0 left-0 bottom-0 w-72 max-w-[85%] bg-slate-900 text-slate-100 flex flex-col z-50 shadow-xl">
+          <aside className="md:hidden fixed top-0 left-0 bottom-0 w-72 max-w-[85%] bg-slate-900 text-slate-100 flex flex-col z-50 shadow-xl overflow-y-auto">
             <div className="flex justify-end px-2 pt-2">
               <button
                 type="button"
