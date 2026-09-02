@@ -379,10 +379,15 @@ export default function Invoicing() {
         const meta: any = (su as any)?.user_metadata || {};
         let myName = String(meta.full_name || meta.name || "").trim();
         try {
-          const { data: dn } = await supabase.schema("suite").rpc("my_display_name");
-          if (dn && String(dn).trim()) myName = String(dn).trim();
+          const { data: dn, error: dnErr } = await supabase
+            .schema("suite")
+            .rpc("my_display_name");
+          // supabase-js RETURNS errors rather than throwing them, so a 404
+          // from a function that is not deployed yet lands here silently.
+          // Falling back is correct; pretending it worked is not.
+          if (!dnErr && dn && String(dn).trim()) myName = String(dn).trim();
         } catch {
-          // Fall through to the metadata name.
+          // Network failure. Same fallback.
         }
         if (!myName) myName = String(su?.email || "").split("@")[0];
         if (!companyId) {

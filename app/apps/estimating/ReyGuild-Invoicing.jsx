@@ -792,6 +792,40 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // sidebar and the menu could drift, and they did.
   const SETTINGS_PAGES = [];
 
+  // WHAT THE CUSTOMER SAID.
+  // A proposal answered by email is worthless if nobody in the office
+  // notices. This is the count behind the badge on Proposals, and the list
+  // on the tab itself.
+  const [answers, setAnswers] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    const pull = async () => {
+      try {
+        const r = await fetch("/api/proposal/responses");
+        const j = await r.json();
+        if (alive) setAnswers(Array.isArray(j.items) ? j.items : []);
+      } catch (e) { /* leave the badge alone rather than clearing it */ }
+    };
+    pull();
+    // Slow on purpose. This is a "somebody replied" nudge, not a live feed,
+    // and an estimator on a phone should not pay for a poll every few seconds.
+    const t = setInterval(pull, 120000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+
+  const toSchedule = answers.filter((a) => a.needs_scheduling);
+
+  async function clearAnswer(refId) {
+    try {
+      await fetch("/api/proposal/responses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ref_id: refId }),
+      });
+      setAnswers((list) => list.filter((a) => a.ref_id !== refId));
+    } catch (e) { /* it stays on the list, which is the safe failure */ }
+  }
+
   const [menuOpen, setMenuOpen] = useState(false);
   const MENU = TABS.concat([
     { key: "messages", label: "Messages" },
