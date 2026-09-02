@@ -87,9 +87,9 @@
   box-shadow:none !important;
 }
 
-/* Gold TEXT. Add .gold-ink to anything that should be gold LETTERS rather
-   than a gold button - the metal gradient is a fill, and a fill behind text
-   is a slab. */
+/* Gold LETTERS, not a gold button. The selector above paints the metal
+   gradient behind anything carrying that colour inline - right for a button,
+   and a slab behind text. .gold-ink opts out. */
 .gold-ink{
   background:none !important;
   box-shadow:none !important;

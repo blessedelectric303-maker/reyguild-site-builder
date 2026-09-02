@@ -79,7 +79,7 @@ export default async function AdminLayout({
       : []),
     // The office needs to read the cards too - they are who answers when a
     // customer asks what happens next, and who edits one when it changes.
-    { href: "/tm/admin/procedures", label: "Field Procedures" },
+    { href: "/procedures", label: "Field Procedures" },
     { href: "/help", label: "Help" },
   ];
 

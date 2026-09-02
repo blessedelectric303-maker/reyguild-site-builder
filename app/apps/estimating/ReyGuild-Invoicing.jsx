@@ -781,7 +781,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     { key: "invoices", label: "Invoices", show: true },
     { key: "prices", label: "Price List", show: true },
     { key: "clients", label: "Clients", show: true },
-    { key: "team", label: "Team", show: isAdmin },
     { key: "followups", label: "Follow-ups", show: isAdmin },
     // Owner only. An administrator is one of the people the audit log exists
     // to keep a record OF.
@@ -837,7 +836,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const MENU = TABS.concat([
-    { key: "procedures", label: "Procedures" },
+    { key: "fieldproc", label: "Field Procedures", href: "/procedures" },
+    { key: "fieldcheck", label: "Field Checklists", href: "/checklists" },
   ]);
 
   useEffect(() => {
