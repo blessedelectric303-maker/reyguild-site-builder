@@ -45,8 +45,14 @@
 .btn-gold,
 /* Anything still filled with a flat gold, inline or otherwise. React renders
    an inline style object into a real style attribute, so this catches them. */
-[style*="CC9000"]:not(.gold-ink),
-[style*="cc9000"]:not(.gold-ink),
+[style*="background:#CC9000"],
+[style*="background: #CC9000"],
+[style*="background:#cc9000"],
+[style*="background: #cc9000"],
+[style*="background-color:#CC9000"],
+[style*="background-color: #CC9000"],
+[style*="background-color:#cc9000"],
+[style*="background-color: #cc9000"],
 .fl-btn-swap,
 .fl-guide-gold{
   background:var(--metal) !important;
@@ -90,6 +96,17 @@
 /* Gold LETTERS, not a gold button. The selector above paints the metal
    gradient behind anything carrying that colour inline - right for a button,
    and a slab behind text. .gold-ink opts out. */
+/* THE SHINY GOLD, AS TEXT. Clipped to the letters, so the gleam runs through
+   the glyphs rather than behind them. Good at 16px and up - below that the
+   gradient turns to mud and .gold-ink is the better choice. */
+.gold-shine{
+  background:var(--metal);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:var(--gold-500);
+}
+
 .gold-ink{
   background:none !important;
   box-shadow:none !important;
