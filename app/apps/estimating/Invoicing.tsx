@@ -267,29 +267,21 @@ const STYLE_FIX = `
      it is centred on the BAR, not on whatever is left over after the
      burger - otherwise it drifts left by half a button. */
   .fl-hasmenu .fl-tmtop{ position:relative; }
-  .fl-hasmenu .fl-mobtitle{
-    flex:1; min-width:0; text-align:center; padding:0 8px;
-    font-size:14px; font-weight:600;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  .fl-hasmenu .fl-mobrand-text{ display:flex; flex-direction:column; line-height:1; }
-  .fl-hasmenu .fl-mobrand-word{ font-size:13px; font-weight:800; }
-  .fl-hasmenu .fl-mobrand-sub{
-    font-size:7px; font-weight:700; letter-spacing:.11em;
-    text-transform:uppercase; margin-top:2px;
-  }
+  /* Crest centred with a word either side. Absolutely positioned so it
+     centres on the BAR, not on the space left after the burger - otherwise
+     it drifts left by half a button and looks subtly wrong. */
+  .fl-hasmenu .fl-tmtop{ position:relative; }
   .fl-hasmenu .fl-mobrand{
-    display:flex; align-items:center; gap:8px;
+    display:flex; align-items:center; gap:9px;
     position:absolute; left:50%; transform:translateX(-50%);
     line-height:0; white-space:nowrap;
   }
   .fl-hasmenu .fl-mobrand img{ height:30px; width:auto; }
   .fl-hasmenu .fl-mobrand-l,
   .fl-hasmenu .fl-mobrand-r{
-    font-size:11px; font-weight:700; letter-spacing:.1em;
-    text-transform:uppercase; color:#CC9000; line-height:1;
+    font-size:12px; font-weight:700; letter-spacing:.09em;
+    text-transform:uppercase; line-height:1;
   }
-  .fl-hasmenu .fl-mobrand-r{ color:#e2e8f0; }
   .fl-hasmenu .fl-tmright{ flex:none; }
 }
 
@@ -608,87 +600,75 @@ const STYLE_FIX = `
 
 /* ============================================================
    PROPOSALS & INVOICING: THE CHROME INVERTED
-   Gold where it was navy, navy where it was gold - the yin to T and M's
-   yang. Two apps you can tell apart from across the room, without reading
-   a word of either.
-   Kept in ONE block at the end so it can be flipped back by deleting it,
-   rather than by hunting through forty rules.
-   Everything below is chrome only: the paper, the cards and the text you
-   actually work in stay exactly as they were.
+   Gold where it was navy - but the GLEAMING gold, not the flat one. A flat
+   fill over a whole sidebar reads yellow and cheap; the gradient is what
+   makes it read as metal. Ben's own brand note says exactly this.
+   Kept in ONE block so it can be flipped back by deleting it.
    ============================================================ */
 
-/* The bar, the sidebar and the drawer. */
 .fl-root .fl-tmhead,
 .fl-root .fl-drawer{
-  background:#CC9000 !important;
-  color:#16243F !important;
+  background:var(--metal) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 2px 18px rgba(0,0,0,.28) !important;
 }
-.fl-root .fl-tmtop{ border-bottom-color:rgba(22,36,63,.25) !important; }
+.fl-root .fl-tmtop{ border-bottom-color:rgba(0,16,31,.28) !important; }
 
-/* The wordmark flips with everything else: "Rey" takes the navy, "Guild"
-   takes the deep navy so the two halves still read as two halves. */
-.fl-root .fl-tmhead .fl-rey,
-.fl-root .fl-drawer .fl-rey,
-.fl-root .fl-mobrand-word .fl-rey{ color:#16243F !important; }
-.fl-root .fl-tmhead .fl-guild,
-.fl-root .fl-drawer .fl-guild,
-.fl-root .fl-mobrand-word .fl-guild{ color:#00101F !important; }
-.fl-root .fl-brandsub,
-.fl-root .fl-mobrand-sub,
-.fl-root .fl-drawer-sub,
-.fl-root .fl-portal{ color:rgba(22,36,63,.72) !important; }
+/* PROPOSALS in navy, INVOICING in white, crest between them. Two different
+   colours because they are two different halves of the app, not one phrase
+   split across a logo. */
+.fl-root .fl-mobrand-l{ color:#00101F !important; }
+.fl-root .fl-mobrand-r{ color:#FCFCFC !important; }
 
-/* Who you are. */
+/* THE MENU, IN WHITE. On the gleaming gold white reads cleanly at any size,
+   where navy fights the light end of the gradient. */
+.fl-root .fl-tmtab,
+.fl-root .fl-drawer-link,
 .fl-root .fl-tmname,
 .fl-root .fl-tmselect,
 .fl-root .fl-drawer-name,
 .fl-root .fl-sideme-name,
-.fl-root .fl-mobtitle{ color:#16243F !important; }
+.fl-root .fl-brandname,
+.fl-root .fl-drawer-wordmark{
+  color:#FCFCFC !important;
+  text-shadow:0 1px 2px rgba(0,16,31,.35);
+}
+.fl-root .fl-tmhead .fl-rey,
+.fl-root .fl-tmhead .fl-guild,
+.fl-root .fl-drawer .fl-rey,
+.fl-root .fl-drawer .fl-guild{ color:#FCFCFC !important; }
+
 .fl-root .fl-tmrole,
 .fl-root .fl-drawer-role,
-.fl-root .fl-sideme-mail{ color:rgba(22,36,63,.7) !important; }
-.fl-root .fl-tmselect{ background:transparent !important; border-color:rgba(22,36,63,.35) !important; }
+.fl-root .fl-sideme-mail,
+.fl-root .fl-brandsub,
+.fl-root .fl-drawer-sub,
+.fl-root .fl-portal{
+  color:rgba(252,252,252,.85) !important;
+  text-shadow:0 1px 2px rgba(0,16,31,.3);
+}
 
-/* Navigation. The active marker was gold on navy; now it is navy on gold. */
-.fl-root .fl-tmtab,
-.fl-root .fl-drawer-link{ color:rgba(22,36,63,.8) !important; }
+/* The one you are on: deeper, so it reads as pressed into the metal. */
 .fl-root .fl-tmtab:hover,
-.fl-root .fl-drawer-link:hover{ color:#00101F !important; background:rgba(0,16,31,.07) !important; }
+.fl-root .fl-drawer-link:hover{ background:rgba(0,16,31,.10) !important; }
 .fl-root .fl-tmtab.on,
 .fl-root .fl-drawer-link.on{
-  color:#00101F !important;
-  background:rgba(0,16,31,.10) !important;
-  border-left-color:#16243F !important;
-  border-bottom-color:#16243F !important;
+  color:#FCFCFC !important;
+  background:rgba(0,16,31,.20) !important;
+  border-left-color:#00101F !important;
+  border-bottom-color:#00101F !important;
 }
-.fl-root .fl-tmnav{ border-color:rgba(22,36,63,.2) !important; }
 
-/* The three-line menu button and the small links beside it. */
-.fl-root .fl-burger span{ background:#16243F !important; }
-.fl-root .fl-tmmsg{ color:rgba(22,36,63,.8) !important; }
-.fl-root .fl-tmmsg.on{ color:#00101F !important; }
+.fl-root .fl-burger span{ background:#FCFCFC !important; }
+.fl-root .fl-tmmsg{ color:rgba(252,252,252,.9) !important; }
+.fl-root .fl-tmmsg.on{ color:#FCFCFC !important; }
 
-/* Dividers inside the sidebar. */
+.fl-root .fl-tmnav,
 .fl-root .fl-portal,
 .fl-root .fl-sidefoot,
 .fl-root .fl-sideme,
 .fl-root .fl-drawer-who,
 .fl-root .fl-drawer-brand,
-.fl-root .fl-drawer-foot{ border-color:rgba(22,36,63,.25) !important; }
-
-/* The way out. The two coloured buttons swap with everything else; sign out
-   stays white and red, because red is the one colour in here that means
-   something on its own. */
-.fl-root .fl-btn-command{
-  background:#CC9000 !important; color:#16243F !important;
-  border:1px solid #16243F !important;
-}
-.fl-root .fl-leaverow .fl-btn-swap,
-.fl-root .fl-drawer-foot .fl-btn-swap,
-.fl-root .fl-sidefoot .fl-btn-swap{
-  background:#16243F !important; color:#CC9000 !important;
-  border:none !important; box-shadow:none !important;
-}
+.fl-root .fl-drawer-foot{ border-color:rgba(0,16,31,.25) !important; }
 `;
 
 const InvoicingApp = dynamic(() => import("./ReyGuild-Invoicing"), {

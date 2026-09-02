@@ -1537,15 +1537,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             )}
             <span className="fl-tmrole">{roleWord(suiteRole)}</span>
           </div>
-          <span className="fl-mobtitle">{currentLabel}</span>
           <span className="fl-mobrand">
+            <span className="fl-mobrand-l">Proposals</span>
             <img src={LOGO} alt="ReyGuild" />
-            <span className="fl-mobrand-text">
-              <span className="fl-mobrand-word">
-                <span className="fl-rey">Rey</span><span className="fl-guild">Guild</span>
-              </span>
-              <span className="fl-mobrand-sub">Proposals &amp; Invoicing</span>
-            </span>
+            <span className="fl-mobrand-r">Invoicing</span>
           </span>
           <div className="fl-tmright">
             {/* Messages is on the command centre for the office tier - one
