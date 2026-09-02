@@ -704,9 +704,22 @@ const STYLE_FIX = `
     padding:10px 12px !important;
   }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmleft{ flex:none; }
+  /* Centred on the BAR, not on what is left after the lockup. The lockup and
+     the Settings link are different widths, so a flex-centred name lands
+     wherever the leftovers happen to fall - which is why it looked off even
+     after the tagline was shortened. Absolute centring is immune to both.
+     The 44% cap keeps it clear of whichever neighbour is wider. */
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmtop{ position:relative; }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmwho{
-    flex:1; min-width:0; text-align:center;
+    position:absolute; left:50%; transform:translateX(-50%);
+    max-width:44%; min-width:0; text-align:center;
+    pointer-events:none;
   }
+  /* The acting-as dropdown still needs to be clickable. */
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmselect{ pointer-events:auto; }
+  /* The lockup and Settings take the ends; nothing competes for the middle. */
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmleft{ flex:none; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmright{ flex:none; margin-left:auto; }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmname,
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmselect{
     display:block; width:100%;

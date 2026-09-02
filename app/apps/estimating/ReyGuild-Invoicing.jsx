@@ -1529,11 +1529,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                   {/* Navy here, gold in T and M - the one difference between
                       the two lockups, and the thing that tells you which app
                       you are in without reading a word. */}
-                  <span style={{ color: "#16243F" }}>Rey</span>
+                  <span style={{ color: "#00101F" }}>Rey</span>
                   <span style={{ color: "#F5F3EE" }}>Guild</span>
                 </span>
                 <span style={{ fontFamily: "'JetBrains Mono',ui-monospace,monospace", color: "#FFFFFF", fontSize: 7, fontWeight: 500, letterSpacing: "0.3em", marginTop: 5, paddingLeft: "0.3em", whiteSpace: "nowrap" }}>
-                  PROPOSALS &amp; INVOICING
+                  Prop &amp; Invos
                 </span>
               </span>
             </span>
