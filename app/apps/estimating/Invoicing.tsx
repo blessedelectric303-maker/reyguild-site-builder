@@ -634,8 +634,14 @@ const STYLE_FIX = `
   text-shadow:0 1px 2px rgba(0,16,31,.35);
 }
 .fl-root .fl-tmhead .fl-rey,
+.fl-root .fl-drawer .fl-rey{
+  color:#00101F !important;
+  background:var(--metal-navy);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
 .fl-root .fl-tmhead .fl-guild,
-.fl-root .fl-drawer .fl-rey,
 .fl-root .fl-drawer .fl-guild{ color:#FCFCFC !important; }
 
 .fl-root .fl-tmrole,
@@ -670,6 +676,19 @@ const STYLE_FIX = `
 .fl-root .fl-drawer-who,
 .fl-root .fl-drawer-brand,
 .fl-root .fl-drawer-foot{ border-color:rgba(0,16,31,.25) !important; }
+
+
+/* The switch button in the office view: gold with a navy outline and navy
+   letters. It sits ON gold, so the outline is what makes it a button rather
+   than a patch of the same colour with words on it. */
+.fl-root .fl-drawer-foot .fl-btn-swap,
+.fl-root .fl-sidefoot .fl-btn-swap{
+  background:var(--metal) !important;
+  color:#00101F !important;
+  border:1.5px solid #00101F !important;
+  text-shadow:none !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4) !important;
+}
 
 /* ------------------------------------------------------------
    THE TECH HEADER on a phone, measured off T and M's.
