@@ -835,13 +835,15 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     || (page === "settings" ? "Settings" : "");
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const MENU = TABS.concat([
-    { key: "fieldproc", label: "Field Procedures", href: "/procedures" },
-    { key: "fieldcheck", label: "Field Checklists", href: "/checklists" },
-  ]);
+  // Field checklists and procedures live in T and M and P and L only - they
+  // are what happens when somebody turns up at a property, and one home for
+  // them means nobody has to work out which app they were meant to open.
+  // The menu IS the tab list. Field checklists and field procedures used to
+  // hang off the end of it; they live in T and M now, with the jobs.
+  const MENU = TABS;
 
   useEffect(() => {
-    const ok = page === "settings" || page === "procedures"
+    const ok = page === "settings"
       || TABS.some((t) => t.key === page)
       || SETTINGS_PAGES.some((t) => t.key === page);
     if (!ok) setPage(TABS[0] ? TABS[0].key : "estimates");
