@@ -107,10 +107,7 @@ export default function AdminShell({
           <LogoutButton className="block w-full rounded-md border border-red-400 bg-white px-3 py-2 text-center text-xs font-bold text-red-600" />
         </div>
 
-        <div className="flex-none border-t border-slate-800 p-4">
-          <div className="text-sm font-medium truncate">{user.name}</div>
-          <div className="text-xs text-slate-400 truncate">{user.email}</div>
-        </div>
+
       </>
     );
   }
@@ -159,7 +156,7 @@ export default function AdminShell({
             and "P&L" twice over. The crest image on its own is what this
             lockup needs. */}
         <div className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap">
-          <span className="text-[13px] font-bold uppercase leading-none tracking-[0.12em]" style={{ color: "#CC9000" }}>
+          <span className="gold-ink text-[13px] font-bold uppercase leading-none tracking-[0.12em]" style={{ color: "#CC9000" }}>
             T&amp;M
           </span>
           <img src="/reyguild-crest.png" alt="ReyGuild" height={30} width={22}

@@ -45,8 +45,8 @@
 .btn-gold,
 /* Anything still filled with a flat gold, inline or otherwise. React renders
    an inline style object into a real style attribute, so this catches them. */
-[style*="CC9000"],
-[style*="cc9000"],
+[style*="CC9000"]:not(.gold-ink),
+[style*="cc9000"]:not(.gold-ink),
 .fl-btn-swap,
 .fl-guide-gold{
   background:var(--metal) !important;
@@ -85,6 +85,15 @@
   background:none !important;
   color:var(--gold-500) !important;
   box-shadow:none !important;
+}
+
+/* Gold TEXT. Add .gold-ink to anything that should be gold LETTERS rather
+   than a gold button - the metal gradient is a fill, and a fill behind text
+   is a slab. */
+.gold-ink{
+  background:none !important;
+  box-shadow:none !important;
+  color:var(--gold-500) !important;
 }
 
 /* Gold TEXT keeps the flat core colour - a gradient clipped to thin glyphs

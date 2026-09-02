@@ -55,9 +55,6 @@ export default async function AdminLayout({
           },
         ]
       : []),
-    ...(isOwnerOrAdmin
-      ? [{ href: "/tm/admin/users", label: "Employees" }]
-      : []),
     { href: "/tm/admin/materials", label: "Materials" },
     ...(isOwnerOrAdmin
       ? [{ href: "/tm/admin/timesheets", label: "Timesheets" }]
@@ -78,11 +75,11 @@ export default async function AdminLayout({
       ? [{ href: "/tm/admin/audit", label: "Audit Log" }]
       : []),
     ...(isOwnerOrAdmin
-      ? [{ href: "/checklists", label: "Job Checklists" }]
+      ? [{ href: "/checklists", label: "Field Checklists" }]
       : []),
     // The office needs to read the cards too - they are who answers when a
     // customer asks what happens next, and who edits one when it changes.
-    { href: "/tm/admin/procedures", label: "Procedures" },
+    { href: "/tm/admin/procedures", label: "Field Procedures" },
     { href: "/help", label: "Help" },
   ];
 

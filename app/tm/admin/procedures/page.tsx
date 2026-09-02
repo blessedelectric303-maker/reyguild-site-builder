@@ -31,6 +31,22 @@ function paint(parts: TextPart[]) {
   ));
 }
 
+// The written guides, loaded by SQL 36. Listed here rather than fetched so
+// the page still renders on a company that has not run that file - a missing
+// guide gives an empty page, not a broken one.
+const GUIDES = [
+  { key: "guide-proposal", title: "How to build a proposal",
+    blurb: "Pricing a job from the price list, what the customer sees, and what they never do." },
+  { key: "guide-invoice", title: "How to build an invoice",
+    blurb: "Turning finished work into a bill, and what has to be on it." },
+  { key: "guide-convert", title: "Turning an accepted proposal into an invoice",
+    blurb: "What carries across, what changes, and what to check before it goes out." },
+  { key: "guide-pricelist-have", title: "Building your price list from what you already have",
+    blurb: "If you have prices written down somewhere, start here." },
+  { key: "guide-pricelist-none", title: "Building a price list from scratch",
+    blurb: "If you have been quoting from your head, start here." },
+];
+
 export default async function AdminProceduresPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -83,11 +99,34 @@ export default async function AdminProceduresPage() {
         })}
       </div>
 
-      <p className="mt-6 max-w-2xl text-xs leading-relaxed text-slate-500">
-        Every card also has a full written procedure behind it &mdash; roughly a
-        thousand words each, worth reading once away from a job. The link is at
-        the bottom of the card&rsquo;s one-page summary.
+      <p className="mt-4 max-w-2xl text-xs leading-relaxed text-slate-500">
+        Every card also has the full written procedure behind it &mdash; around a
+        thousand words each, worth reading once away from a job. The link sits
+        at the bottom of the card&rsquo;s one-page summary.
       </p>
+
+      {/* The second set. Different question, so a separate block rather than
+          more tiles in the same grid. */}
+      <h2 className="mt-8 text-base font-semibold text-slate-900">
+        Quoting and closing out
+      </h2>
+      <p className="mt-1 max-w-2xl text-sm text-slate-500">
+        How a job gets priced, and how it gets turned into an invoice once the
+        work is done.
+      </p>
+
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
+        {GUIDES.map((g) => (
+          <Link
+            key={g.key}
+            href={"/guide/" + g.key}
+            className="rounded-xl border border-slate-200 bg-white p-4 hover:border-slate-400"
+          >
+            <span className="block text-sm font-semibold text-slate-900">{g.title}</span>
+            <span className="mt-0.5 block text-xs leading-snug text-slate-500">{g.blurb}</span>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
