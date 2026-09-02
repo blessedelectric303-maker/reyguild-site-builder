@@ -672,25 +672,40 @@ const STYLE_FIX = `
 .fl-root .fl-drawer-foot{ border-color:rgba(0,16,31,.25) !important; }
 
 /* ------------------------------------------------------------
-   THE TECH HEADER on a phone. Crest on the left with ReyGuild over
-   "Proposals & Invoicing", the person in the middle, Settings on the right.
-   No big word across the top: the crest and the two lines beside it already
-   say which app this is, and the centre is worth more to a name than to a
-   label that never changes.
+   THE TECH HEADER on a phone, measured off T and M's.
+   T and M draws its lockup with <Logo size={24} />, which works out to a
+   24px crest, a 12px wordmark and a 7px tagline in the mono face at 0.3em
+   tracking. Those exact numbers are reproduced below rather than
+   approximated, so the two apps line up when somebody switches between them
+   - a lockup that is two pixels different reads as a mistake, not a variant.
+   The only deliberate differences: "Rey" is chrome blue instead of gold,
+   and the tagline says which app this is.
    ------------------------------------------------------------ */
 @media (max-width: 860px) {
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmtop{
     display:flex !important; align-items:center; gap:10px;
     padding:10px 12px !important;
   }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmleft{ flex:none; }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-logo img{ height:48px; width:auto; }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandwrap{
-    display:flex; flex-direction:column; line-height:1.05;
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmleft{
+    flex:none; display:inline-flex; align-items:center; gap:9px;
   }
-  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandname{ font-size:18px; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-logo{ line-height:0; }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-logo img{
+    height:24px; width:auto; display:block; object-fit:contain;
+  }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandwrap{
+    display:inline-flex; flex-direction:column; align-items:center;
+    line-height:1;
+  }
+  .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandname{
+    font-family:var(--rg-wordmark);
+    font-size:12px; font-weight:800; letter-spacing:-0.01em; line-height:1;
+  }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-brandsub{
-    font-size:8px; letter-spacing:.11em;
+    font-family:var(--rey-font-mono);
+    font-size:7px; font-weight:500; letter-spacing:0.3em;
+    text-transform:none; margin-top:5px; padding-left:0.3em;
+    white-space:nowrap;
   }
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmwho{
     flex:1; min-width:0; text-align:center;
@@ -698,13 +713,9 @@ const STYLE_FIX = `
   .fl-root .fl-tmhead:not(.fl-hasmenu) .fl-tmright{ flex:none; }
 }
 
-/* "Rey" navy, "Guild" white - the crest's own two colours, which is what
-   makes the lockup read as the lockup rather than as two words. Everything
-   else in the bar is white. */
-/* Chrome blue: the navy gradient clipped to the letters, so "Rey" is metal
-   the same way the bar behind it is. The flat colour underneath is the
-   fallback for anywhere background-clip is not supported - without it the
-   word would vanish. */
+/* "Rey" in chrome blue, "Guild" in the same off-white T and M uses. The flat
+   colour underneath is the fallback for anywhere background-clip is not
+   supported - without it the word renders transparent and disappears. */
 .fl-root .fl-tmhead .fl-brandname .fl-rey{
   color:#00101F !important;
   background:var(--metal-navy);
@@ -712,8 +723,8 @@ const STYLE_FIX = `
   background-clip:text;
   -webkit-text-fill-color:transparent;
 }
-.fl-root .fl-tmhead .fl-brandname .fl-guild{ color:#FCFCFC !important; }
-.fl-root .fl-tmhead .fl-brandsub{ color:#FCFCFC !important; }
+.fl-root .fl-tmhead .fl-brandname .fl-guild{ color:#F5F3EE !important; }
+.fl-root .fl-tmhead .fl-brandsub{ color:#FFFFFF !important; }
 
 /* The tab row, white on the gold. */
 .fl-root .fl-tmtab{ color:#FCFCFC !important; }
