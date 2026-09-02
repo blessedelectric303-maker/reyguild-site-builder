@@ -49,6 +49,26 @@ export const NON_CALL_COLORS: Record<string, CallColor> = {
   answering: { label: "The Answering Kit", bg: "#FFFFFF", text: "#0b1220" },
   sops: { label: "SOPs", bg: "#1E293B", text: "#ffffff" },
   replies: { label: "Scripts", bg: "#1E293B", text: "#ffffff" },
+  // Clock In is a card the crew carries but it is not a call type. Without
+  // an entry here its page had no skin, and a colour with no skin redirects
+  // to "/" - which is exactly what it did.
+  clockin: { label: "Clock In / Clock Out", bg: "#FFFFFF", text: "#0b1220" },
+
+  // THE tech_ NAMES.
+  // suite.procedures.color stores tech_emergency, tech_estimate and so on,
+  // and the procedure page uses the URL for BOTH the skin lookup and the
+  // database query. Strip the prefix and the row is not found; keep it and
+  // the skin was not found - which is why every card redirected to "/".
+  // Widening the map fixes it without renaming a single database row.
+  tech_emergency: { label: "Emergency", bg: "#F0302A", text: "#ffffff" },
+  tech_estimate: { label: "Proposal", bg: "#1BBF55", text: "#0b1220" },
+  tech_service_call: { label: "Service Call", bg: "#2183E8", text: "#ffffff" },
+  tech_warranty_call: { label: "Warranty", bg: "#FF9012", text: "#0b1220" },
+  tech_concern: { label: "Concern / Complaint", bg: "#F2BE00", text: "#0b1220" },
+  tech_question: { label: "Question", bg: "#9B44CE", text: "#ffffff" },
+  tech_material: { label: "Material", bg: "#6E6E6E", text: "#ffffff" },
+  tech_absence: { label: "Absence", bg: "#FF2E9A", text: "#ffffff" },
+  tech_clockin: { label: "Clock In / Clock Out", bg: "#FFFFFF", text: "#0b1220" },
 };
 
 export function colorFor(key: string): CallColor | null {
