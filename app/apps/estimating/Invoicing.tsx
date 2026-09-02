@@ -133,6 +133,68 @@ const STYLE_FIX = `
 .fl-noprint { display: block !important; padding-left: 0 !important; min-height: 100vh; }
 
 /* Content is full width now. Nothing is pinned to a left edge. */
+
+/* The welcome, for an owner or admin with nothing in the app yet. It goes
+   on its own once there is a proposal or an invoice - a banner you have to
+   dismiss outstays its welcome, and one that never leaves teaches people to
+   stop reading banners. */
+.fl-welcome {
+  max-width: 42rem; margin: 16px auto 0; padding: 18px 20px;
+  border: 1px solid #16243F; border-left: 4px solid #CC9000;
+  border-radius: 10px; background: #fff;
+}
+.fl-welcome-hi { font-size: 17px; font-weight: 700; color: #16243F; }
+.fl-welcome-p { font-size: 13px; color: #39415a; margin: 6px 0 0; line-height: 1.5; }
+.fl-welcome-list { margin: 10px 0 0; padding-left: 18px; }
+.fl-welcome-list li { font-size: 13px; color: #39415a; line-height: 1.5; margin-bottom: 6px; }
+.fl-welcome-btns { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.fl-welcome-btns button, .fl-welcome-btns a {
+  border: none; border-radius: 6px; padding: 9px 14px; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 700; text-decoration: none;
+  background: #CC9000; color: #16243F;
+}
+.fl-welcome-btns a { background: #fff; color: #16243F; border: 1px solid #16243F; }
+
+/* THE SIDEBAR FURNITURE, matched to T and M and P and L. */
+.fl-brandwrap { display: flex; flex-direction: column; line-height: 1.15; }
+.fl-brandsub {
+  font-size: 9px; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: #94a3b8; margin-top: 3px;
+}
+.fl-portal { display: none; }
+.fl-sidefoot { display: none; }
+.fl-sideme { display: none; }
+
+@media (min-width: 861px) {
+  /* The sidebar is a column: header, nav, then the foot pinned to the bottom
+     - which is where T and M puts leaving and who you are. */
+  .fl-tmhead { display: flex !important; flex-direction: column; }
+  .fl-tmnav { flex: 1 1 auto; }
+
+  .fl-portal {
+    display: block; padding: 0 18px 12px;
+    font-size: 12px; color: #94a3b8; text-transform: capitalize;
+  }
+
+  .fl-sidefoot {
+    display: grid; gap: 8px; padding: 14px;
+    border-top: 1px solid #1e293b;
+  }
+  .fl-sidefoot a {
+    display: block; text-align: center; border-radius: 6px;
+    padding: 10px 12px; font-size: 12px; font-weight: 700; text-decoration: none;
+  }
+
+  .fl-sideme { display: block; padding: 12px 16px 4px; border-top: 1px solid #1e293b; }
+  .fl-sideme-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .fl-sideme-mail { font-size: 11px; color: #94a3b8; word-break: break-all; }
+
+  /* Messages sits with the navigation on a wide screen rather than floating
+     in the corner of a column. */
+  .fl-tmright { padding: 0 18px 10px; }
+  .fl-tmwho { padding: 0 18px; }
+}
+
 /* PHONE: one column at 42rem, like the T and M tech view.
    DESKTOP: a sidebar down the left and the content filling what is left,
    like T and M and P and L. Same app, two shapes - not one stretched. */

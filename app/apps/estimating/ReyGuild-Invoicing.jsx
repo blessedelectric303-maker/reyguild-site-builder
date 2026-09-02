@@ -1489,7 +1489,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           ) : null}
           <div className="fl-tmleft">
             <span className="fl-logo"><img src={LOGO} alt="ReyGuild" /></span>
-            <span className="fl-brandname"><span className="fl-rey">Rey</span><span className="fl-guild">Guild</span></span>
+            <span className="fl-brandwrap">
+              <span className="fl-brandname"><span className="fl-rey">Rey</span><span className="fl-guild">Guild</span></span>
+              <span className="fl-brandsub">Proposals &amp; Invoicing</span>
+            </span>
           </div>
           <div className="fl-tmwho">
             {canPreview ? (
@@ -1498,7 +1501,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 value={currentUserId}
                 onChange={(e) => setCurrentUserId(e.target.value)}
               >
-                <option value="">{profile.name || "Owner"}</option>
+                <option value="">{displayName || profile.name || "Me"}</option>
                 {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             ) : (
@@ -1552,6 +1555,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           </>
         ) : null}
 
+        {/* Which portal you are in, the way T and M says "Owner Portal". */}
+        <div className="fl-portal">{roleWord(suiteRole)} Portal</div>
+
         <nav className="fl-tmnav">
           {TABS.map((t) => (
             <button
@@ -1567,6 +1573,22 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             </button>
           ))}
         </nav>
+
+        {/* THE FOOT OF THE SIDEBAR, in the same order as T and M: leave,
+            cross over, sign out - then who you are, last, where a name
+            belongs. Only the office tier is offered the command centre;
+            everybody else is redirected out of it. */}
+        <div className="fl-sidefoot">
+          {isAdmin ? (
+            <a href="/" className="fl-btn-command">&larr; Back to command center</a>
+          ) : null}
+          <a href="/tm/enter" className="fl-btn-swap">Switch to T&amp;M &amp; P&amp;L</a>
+          <a href="/auth/signout" className="fl-btn-signout">Sign out</a>
+        </div>
+        <div className="fl-sideme">
+          <div className="fl-sideme-name">{displayName || profile.name || ""}</div>
+          <div className="fl-sideme-mail">{profile.email || ""}</div>
+        </div>
       </header>
 
       {isAdmin && collectionsDue.length > 0 && (
@@ -1576,6 +1598,29 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       )}
 
 
+
+      {page === "dashboard" && isAdmin
+        && estimates.length === 0 && invoices.length === 0 && (
+        <div className="fl-welcome">
+          <div className="fl-welcome-hi">Welcome to Proposals &amp; Invoicing</div>
+          <p className="fl-welcome-p">
+            This is where quotes go out and money comes in. Two things worth
+            doing before your first job:
+          </p>
+          <ul className="fl-welcome-list">
+            <li><strong>Build your price list.</strong> It starts with three
+              lines and nothing else. There are two guides under Settings that
+              walk an AI through building the rest with you.</li>
+            <li><strong>Set your numbering.</strong> Pick where your proposal
+              and invoice numbers start, once, and the app takes it from there
+              so two people can never land on the same number.</li>
+          </ul>
+          <div className="fl-welcome-btns">
+            <button type="button" onClick={() => setPage("prices")}>Open the price list</button>
+            <a href="/numbering">Set my numbering</a>
+          </div>
+        </div>
+      )}
 
       {page === "dashboard" && (
         <div className="fl-dashwrap">
