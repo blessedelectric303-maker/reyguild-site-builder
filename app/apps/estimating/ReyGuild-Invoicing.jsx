@@ -829,6 +829,12 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     } catch (e) { /* it stays on the list, which is the safe failure */ }
   }
 
+  // What to call the page you are on. Read from the same list that builds
+  // the menu, so renaming a tab renames the heading with it.
+  const currentLabel =
+    (TABS.find((t) => t.key === page) || {}).label
+    || (page === "settings" ? "Settings" : "");
+
   const [menuOpen, setMenuOpen] = useState(false);
   const MENU = TABS.concat([
     { key: "procedures", label: "Procedures" },
@@ -1641,6 +1647,13 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           <div className="fl-sideme-mail">{profile.email || ""}</div>
         </div>
       </header>
+
+      {/* Where you are, in the white, centred. Not in the navy bar - that
+          carries the mark. Phone only: the desktop sidebar already shows
+          which page is active, so this would say it twice. */}
+      {currentLabel ? (
+        <div className="fl-pagehead">{currentLabel}</div>
+      ) : null}
 
       {isAdmin && collectionsDue.length > 0 && (
         <div className="so-banner" onClick={() => setPage("alerts")}>

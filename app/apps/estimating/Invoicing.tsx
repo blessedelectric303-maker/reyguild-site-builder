@@ -173,6 +173,17 @@ const STYLE_FIX = `
 .fl-mobrand-word .fl-guild{ color:#FCFCFC !important; }
 .fl-mobrand-word .fl-rey{ color:#CC9000 !important; }
 
+.fl-pagehead{
+  display:none;
+  text-align:center; font-size:16px; font-weight:700; color:#16243F;
+  margin:14px auto 0; max-width:42rem;
+}
+@media (max-width: 860px){
+  /* Phone only. On a desktop the sidebar already highlights the page. */
+  .fl-hasmenu ~ .fl-pagehead,
+  .fl-pagehead{ display:block; }
+}
+
 .fl-drawer-brand{
   display:flex; align-items:center; gap:10px;
   padding:18px 16px 14px; border-bottom:1px solid #1e293b;

@@ -33,6 +33,15 @@ export default function AdminShell({
   }, [pathname]);
 
 
+  // The page you are on, for the heading at the top of the content. Longest
+  // matching href wins, so /tm/admin/jobs/123 still reads "Jobs" rather than
+  // falling back to the dashboard.
+  const currentLabel =
+    [...navItems]
+      .sort((a, b) => b.href.length - a.href.length)
+      .find((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
+      ?.label || "";
+
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
@@ -199,6 +208,9 @@ export default function AdminShell({
 
       <main className="flex-1 bg-slate-50 overflow-auto flex flex-col">
         <div className="px-4 md:px-8 py-4 md:py-6 max-w-7xl mx-auto w-full flex-1">
+          <div className="md:hidden mb-3 text-center text-base font-bold text-slate-900">
+            {currentLabel}
+          </div>
           {children}
         </div>
         <Footer />
