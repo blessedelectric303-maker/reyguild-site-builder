@@ -133,9 +133,96 @@ const STYLE_FIX = `
 .fl-noprint { display: block !important; padding-left: 0 !important; min-height: 100vh; }
 
 /* Content is full width now. Nothing is pinned to a left edge. */
-.fl-noprint > *:not(.fl-tmhead) { max-width: 42rem; margin-left: auto !important; margin-right: auto !important; }
-.fl-grid, .fl-weekly { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
-.so-subnav { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
+/* PHONE: one column, 42rem, exactly like the T and M tech view.
+   DESKTOP: a left sidebar and the content filling what is left, exactly like
+   T and M and P and L. Same app, two shapes - not one shape stretched. */
+@media (max-width: 860px) {
+  .fl-noprint > *:not(.fl-tmhead) { max-width: 42rem; margin-left: auto !important; margin-right: auto !important; }
+  .fl-grid, .fl-weekly { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
+  .so-subnav { max-width: 42rem !important; margin-left: auto !important; margin-right: auto !important; }
+  .fl-leaverow, .fl-signoutrow, .fl-answers { max-width: 42rem; }
+}
+
+@media (min-width: 861px) {
+  /* The shell: sidebar down the left, everything else beside it. */
+  .fl-noprint {
+    display: grid !important;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: start;
+    min-height: 100vh;
+  }
+  /* The dark bar becomes the sidebar. */
+  .fl-tmhead {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    position: sticky;
+    top: 0;
+    align-self: stretch;
+    min-height: 100vh;
+    padding: 20px 0;
+  }
+  .fl-tmtop {
+    display: block !important;
+    max-width: none;
+    padding: 0 18px 18px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .fl-tmleft { margin-bottom: 14px; }
+  .fl-tmwho { text-align: left !important; }
+  .fl-tmright { justify-content: flex-start !important; margin-top: 10px; }
+  /* Tabs stack down the sidebar instead of running across. */
+  .fl-tmnav {
+    display: block !important;
+    max-width: none;
+    padding: 14px 10px;
+  }
+  .fl-tmtab {
+    display: block;
+    width: 100%;
+    text-align: left !important;
+    padding: 10px 12px !important;
+    border-bottom: none !important;
+    border-left: 3px solid transparent;
+    border-radius: 6px;
+    font-size: 14px !important;
+  }
+  .fl-tmtab.on {
+    border-left-color: #CC9000 !important;
+    background: rgba(255,255,255,.06);
+  }
+  /* Everything that is not the sidebar goes in the right-hand column, with
+     room to breathe rather than a 42rem ribbon down the middle. */
+  .fl-noprint > *:not(.fl-tmhead) {
+    grid-column: 2;
+    max-width: 78rem;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100%;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+  .fl-grid, .fl-weekly, .so-subnav,
+  .fl-leaverow, .fl-signoutrow, .fl-answers {
+    max-width: none !important;
+  }
+  /* Four across on a wide screen, not two. */
+  .fl-dash { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+
+  /* Wider tables get room; on a phone they scroll instead. */
+  .fl-root table { width: 100%; }
+
+  /* The dashboard cards were sized for a thumb. On a desktop they can be
+     shorter and denser without being hard to read. */
+  .fl-dashcard { min-height: 84px; }
+}
+
+/* Anything printed ignores the sidebar entirely - a proposal on paper should
+   not have a navigation bar down the side of it. */
+@media print {
+  .fl-tmhead, .fl-leaverow, .fl-signoutrow { display: none !important; }
+  .fl-noprint { display: block !important; }
+  .fl-noprint > *:not(.fl-tmhead) { max-width: none !important; padding: 0 !important; }
+}
 
 /* The header, built to the same shape as T and M and P and L. */
 .fl-tmhead { background: #0f172a; color: #fff; }
