@@ -785,7 +785,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     { key: "followups", label: "Follow-ups", show: isAdmin },
     // Owner only. An administrator is one of the people the audit log exists
     // to keep a record OF.
-    { key: "audit", label: "Audit Log", show: role === "Owner" },
+    // Owner only, and a LINK - the real log lives on the T and M side. A
+    // second copy here would be a second thing to keep correct and a second
+    // answer to "who changed that".
+    { key: "audit", label: "Audit Log", href: "/tm/admin/audit", show: role === "Owner" },
   ].filter((t) => t.show);
 
   // Everything that used to live here is in TABS now. Two lists meant the
@@ -1508,7 +1511,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             )}
             <span className="fl-tmrole">{roleWord(suiteRole)}</span>
           </div>
-          <span className="fl-mobrand"><img src={LOGO} alt="ReyGuild" /></span>
+          <span className="fl-mobrand">
+            <span className="fl-mobrand-l">Proposals</span>
+            <img src={LOGO} alt="ReyGuild" />
+            <span className="fl-mobrand-r">Invoicing</span>
+          </span>
           <div className="fl-tmright">
             {/* Messages is on the command centre for the office tier - one
                 messaging system, one unread count, one place to look. A tech
@@ -1536,6 +1543,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               </div>
               <nav className="fl-drawer-nav">
                 {MENU.map((m) => (
+                  m.href ? (
+                    <a key={m.key} className="fl-drawer-link" href={m.href}>{m.label}</a>
+                  ) : (
                   <button
                     key={m.key}
                     className={"fl-drawer-link" + (page === m.key ? " on" : "")}
@@ -1552,6 +1562,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                   >
                     {m.label}
                   </button>
+                  )
                 ))}
                 <a className="fl-drawer-link" href="/help">Help</a>
               </nav>
@@ -1571,6 +1582,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
         <nav className="fl-tmnav">
           {MENU.map((t) => (
+            t.href ? (
+              <a key={t.key} className="fl-tmtab" href={t.href}>{t.label}</a>
+            ) : (
             <button
               key={t.key}
               className={"fl-tmtab" + (page === t.key ? " on" : "")}
@@ -1594,6 +1608,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 <span className="fl-badge">{answers.length}</span>
               ) : null}
             </button>
+            )
           ))}
           <a className="fl-tmtab" href="/help">Help</a>
         </nav>

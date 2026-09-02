@@ -111,7 +111,7 @@ export default function AdminShell({
       </aside>
 
       {/* Mobile top bar - hidden on desktop */}
-      <header className="md:hidden bg-slate-900 text-slate-100 flex items-center justify-between px-4 py-3 sticky top-0 z-30">
+      <header className="md:hidden bg-slate-900 text-slate-100 flex items-center justify-between px-4 py-3 sticky top-0 z-30 relative">
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
@@ -137,10 +137,20 @@ export default function AdminShell({
             </span>
           )}
         </button>
+        {/* The crest centred with a word either side - T&M on the left, P&L
+            on the right. Absolutely positioned so it centres on the BAR
+            rather than on what is left after the burger. Same shape as
+            Proposals and Invoicing, so the two apps read as one product. */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 whitespace-nowrap">
+          <span className="text-[11px] font-bold uppercase tracking-[0.1em] leading-none" style={{ color: "#CC9000" }}>
+            T&amp;M
+          </span>
+          <Logo dark size={30} />
+          <span className="text-[11px] font-bold uppercase tracking-[0.1em] leading-none text-slate-200">
+            P&amp;L
+          </span>
+        </div>
         <div className="flex-1" />
-        {/* The crest on the right. Same in both apps, so a glance at the top
-            of the screen tells you which one you are in. */}
-        <Logo dark size={30} />
       </header>
 
       {/* Mobile drawer + backdrop */}

@@ -206,10 +206,23 @@ const STYLE_FIX = `
     display:flex !important; align-items:center; justify-content:space-between;
     padding:10px 12px !important;
   }
+  /* The crest sits in the MIDDLE of the bar with a word either side, so the
+     mark reads as one thing across a single line. Absolutely positioned so
+     it is centred on the BAR, not on whatever is left over after the
+     burger - otherwise it drifts left by half a button. */
+  .fl-hasmenu .fl-tmtop{ position:relative; }
   .fl-hasmenu .fl-mobrand{
-    display:block; flex:none; line-height:0;
+    display:flex; align-items:center; gap:8px;
+    position:absolute; left:50%; transform:translateX(-50%);
+    line-height:0; white-space:nowrap;
   }
   .fl-hasmenu .fl-mobrand img{ height:30px; width:auto; }
+  .fl-hasmenu .fl-mobrand-l,
+  .fl-hasmenu .fl-mobrand-r{
+    font-size:11px; font-weight:700; letter-spacing:.1em;
+    text-transform:uppercase; color:#CC9000; line-height:1;
+  }
+  .fl-hasmenu .fl-mobrand-r{ color:#e2e8f0; }
   .fl-hasmenu .fl-tmright{ flex:none; }
 }
 
