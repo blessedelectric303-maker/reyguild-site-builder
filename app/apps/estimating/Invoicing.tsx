@@ -179,7 +179,8 @@ const STYLE_FIX = `
    the default. */
 .fl-leaverow .fl-btn-swap{
   background:var(--metal, linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A));
-  color:#16243F !important; border:none;
+  color:#FCFCFC !important; border:none;
+  text-shadow:0 1px 3px rgba(0,16,31,.55);
   box-shadow:0 8px 22px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.45);
 }
 .fl-leaverow .fl-btn-signout{
