@@ -806,6 +806,27 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
   const toSchedule = answers.filter((a) => a.needs_scheduling);
 
+  // THE THREE-LINE MENU.
+  // Everything in one list, in the order somebody works: what is waiting,
+  // then the work, then the people, then the housekeeping. Leaving the app
+  // is at the FOOT of it, never the top - the top is where your eye lands
+  // and it should land on work, not on the exit.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const MENU = [
+    { key: "dashboard", label: "Dashboard", show: isAdmin },
+    { key: "alerts", label: "Approvals", show: isAdmin },
+    { key: "estimates", label: "Proposals", show: true },
+    { key: "invoices", label: "Invoices", show: true },
+    { key: "prices", label: "Price List", show: true },
+    { key: "clients", label: "Clients", show: true },
+    { key: "team", label: "Team", show: isAdmin },
+    { key: "followups", label: "Follow-ups", show: isAdmin },
+    // Owner only. An administrator is one of the people the audit log exists
+    // to keep a record OF.
+    { key: "audit", label: "Audit Log", show: lockedRole === "Owner" },
+    { key: "settings", label: "Settings", show: true },
+  ].filter((m) => m.show);
+
   async function clearAnswer(refId) {
     try {
       await fetch("/api/proposal/responses", {
@@ -1473,6 +1494,13 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           two apps to learn. */}
       <header className="fl-tmhead">
         <div className="fl-tmtop">
+          <button
+            className="fl-burger"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Menu"
+          >
+            <span /><span /><span />
+          </button>
           <div className="fl-tmleft">
             <span className="fl-logo"><img src={LOGO} alt="ReyGuild" /></span>
             <span className="fl-brandname"><span className="fl-rey">Rey</span><span className="fl-guild">Guild</span></span>
@@ -1488,19 +1516,58 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             ) : (
-              <span className="fl-tmname">{myName || signedInName || ""}</span>
+              <span className="fl-tmname">{signedInName || myName || ""}</span>
             )}
-            <span className="fl-tmrole">{role}</span>
+            <span className="fl-tmrole">{roleWord(suiteRole)}</span>
           </div>
           <div className="fl-tmright">
+            {/* Messages lives here permanently, with a count that stays until
+                somebody actually reads them. Settings moved into the menu -
+                it is not something you reach for mid-job. */}
             <button
-              className={"fl-tmset" + (page === "settings" ? " on" : "")}
-              onClick={() => { setPage("settings"); setQuery(""); }}
+              className={"fl-tmmsg" + (page === "messages" ? " on" : "")}
+              onClick={() => { setPage("messages"); setQuery(""); }}
+              aria-label="Messages"
             >
-              Settings
+              Messages
+              {unreadMsgs ? <span className="fl-msgdot">{unreadMsgs}</span> : null}
             </button>
           </div>
         </div>
+
+        {menuOpen ? (
+          <>
+            <div className="fl-scrim" onClick={() => setMenuOpen(false)} />
+            <aside className="fl-drawer">
+              <div className="fl-drawer-who">
+                <div className="fl-drawer-name">{signedInName || myName || ""}</div>
+                <div className="fl-drawer-role">{roleWord(suiteRole)}</div>
+              </div>
+
+              <nav className="fl-drawer-nav">
+                {MENU.map((m) => (
+                  <button
+                    key={m.key}
+                    className={"fl-drawer-link" + (page === m.key ? " on" : "")}
+                    onClick={() => { setPage(m.key); setQuery(""); setMenuOpen(false); }}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+                <a className="fl-drawer-link" href="/help">Help</a>
+              </nav>
+
+              {/* Leaving, at the foot. Same three, same order, as T and M. */}
+              <div className="fl-drawer-foot">
+                {isAdmin ? (
+                  <a href="/" className="fl-btn-command">&larr; Back to command center</a>
+                ) : null}
+                <a href="/tm/enter" className="fl-btn-swap">Switch to T&amp;M &amp; P&amp;L</a>
+                <a href="/auth/signout" className="fl-btn-signout">Sign out</a>
+              </div>
+            </aside>
+          </>
+        ) : null}
 
         <nav className="fl-tmnav">
           {TABS.map((t) => (
@@ -2320,7 +2387,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
         <>
           <div className="so-subnav">
             <button className={"fl-pill" + (settingsSub === "procedures" ? " active" : "")} onClick={() => setSettingsSub("procedures")}>Procedures</button>
-            <button className={"fl-pill" + (settingsSub === "preferences" ? " active" : "")} onClick={() => setSettingsSub("preferences")}>Preferences</button>
             <button className={"fl-pill" + (settingsSub === "help" ? " active" : "")} onClick={() => setSettingsSub("help")}>Help</button>
             {can.editProfile && <button className={"fl-pill" + (settingsSub === "account" ? " active" : "")} onClick={() => setSettingsSub("account")}>Account</button>}
             {can.managePeople && <button className={"fl-pill" + (settingsSub === "audit" ? " active" : "")} onClick={() => setSettingsSub("audit")}>Audit log</button>}
@@ -2994,49 +3060,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       )}
 
       {/* ════════════════════ SETTINGS ════════════════════ */}
-      {page === "settings" && settingsSub === "preferences" && (
-        <div className="fl-grid">
-          <section className="fl-panel">
-            <div className="fl-panel-head"><h2>Appearance</h2></div>
-            <div className="fl-form">
-              <p className="fl-hint">Choose how the app looks. Your choice is saved on this device.</p>
-              <Seg value={theme === "dark" ? "Dark" : "Light"} options={["Light", "Dark"]} onChange={(v) => applyTheme(v === "Dark" ? "dark" : "light")} />
-              <p className="fl-hint">Light is the warm paper look you have now. Dark uses a navy-blue background that's easier on the eyes at night.</p>
-            </div>
-          </section>
-          {isAdmin && (
-            <section className="fl-panel">
-              <div className="fl-panel-head"><h2>Estimator pay</h2></div>
-              <div className="fl-form">
-                <p className="fl-hint">How much an estimator earns for each invoice they send (you still approve each one on the Approvals tab). Changing this affects new payouts only — ones already created keep their amount.</p>
-                <Field label="Payout per invoice ($)"><input inputMode="decimal" value={payoutDraft} onChange={(e) => setPayoutDraft(e.target.value)} /></Field>
-                <p className="fl-foot-note" style={{ marginTop: -4 }}>Currently {money(payoutAmt)} per invoice.</p>
-                {err && <p className="fl-error">{err}</p>}
-                <div className="fl-actions"><button className="fl-primary" onClick={savePayout}>Save payout amount</button></div>
-              </div>
-            </section>
-          )}
-          {isAdmin && (
-            <section className="fl-panel">
-              <div className="fl-panel-head"><h2>Notifications</h2></div>
-              <div className="fl-form">
-                <p className="fl-hint">Get a copy of every estimate and invoice that goes out, on the Approvals tab. Turn it off if it gets to be too much.</p>
-                <Seg value={notifySent ? "On" : "Off"} options={["On", "Off"]} onChange={() => toggleNotifySent()} />
-                <p className="fl-foot-note" style={{ marginTop: -4 }}>Copies of sent estimates/invoices are currently <strong>{notifySent ? "on" : "off"}</strong>.</p>
-              </div>
-            </section>
-          )}
-          <section className="fl-list">
-            <div className="fl-panel-head"><h2>Preview</h2></div>
-            <article className="fl-card">
-              <div className="fl-comm-summary">
-                <div className="hot"><span className="fl-comm-num">Aa</span><span className="fl-comm-lbl">{theme === "dark" ? "Dark — navy" : "Light — paper"}</span></div>
-              </div>
-              <p className="fl-notes">This card shows the current theme. Switch on the left to see it change instantly.</p>
-            </article>
-          </section>
-        </div>
-      )}
+      {/* The Appearance panel lived here - a light/dark toggle. Removed:
+          the app has one look and it is the right one. A theme switch is a
+          setting somebody has to have an opinion about, and a second set of
+          colours to keep correct forever. */}
 
       {/* ════════════════════ AUDIT LOG (owner) ════════════════════ */}
       {page === "settings" && settingsSub === "audit" && can.managePeople && (

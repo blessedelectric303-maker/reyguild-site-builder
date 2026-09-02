@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
-import HelpButton from "@/components/HelpButton";
 import Footer from "@/components/Footer";
 import Logo from "@/components/Logo";
 
@@ -83,17 +82,29 @@ export default function AdminShell({
             {user.role} portal
           </div>
         </div>
-        <div className="px-3 pt-3">
-          <a href="/" className="block rounded-md px-3 py-2 text-center text-xs font-semibold text-slate-900" style={{ background: "#CC9000" }}>&larr; Command center</a>
-        </div>
         <NavLinks onClick={() => setDrawerOpen(false)} />
+        {/* LEAVING THE APP, at the foot of the menu.
+            Back to the command centre, then across to the other app, then
+            sign out - the same three in the same order as Proposals and
+            Invoicing, so somebody switching between the two is not hunting
+            for a button that moved.
+            Command centre used to sit at the TOP of this list, above the
+            navigation, which put "leave" in the place your eye lands first. */}
+        <div className="border-t border-slate-800 p-4 space-y-2">
+          <a href="/" className="block rounded-md px-3 py-2 text-center text-xs font-bold"
+             style={{ background: "#16243F", color: "#CC9000", border: "1px solid #CC9000" }}>
+            &larr; Back to command center
+          </a>
+          <a href="/apps/estimating" className="block rounded-md px-3 py-2 text-center text-xs font-bold"
+             style={{ background: "#CC9000", color: "#16243F" }}>
+            Switch to Proposals &amp; Invoicing
+          </a>
+          <LogoutButton className="block w-full rounded-md border border-red-400 bg-white px-3 py-2 text-center text-xs font-bold text-red-600" />
+        </div>
+
         <div className="border-t border-slate-800 p-4">
           <div className="text-sm font-medium truncate">{user.name}</div>
-          <div className="text-xs text-slate-400 mb-3 truncate">{user.email}</div>
-          <div className="mb-3">
-            <HelpButton className="text-sm text-slate-300 hover:text-white underline" />
-          </div>
-          <LogoutButton />
+          <div className="text-xs text-slate-400 truncate">{user.email}</div>
         </div>
       </>
     );

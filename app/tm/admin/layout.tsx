@@ -27,6 +27,8 @@ export default async function AdminLayout({
 
   const isOwnerOrAdmin = ADMIN_ROLES.includes(user.role as any);
 
+  const isOwner = String(user.role || "").toLowerCase() === "owner";
+
   // Count pending time off requests for the badge (only for admins/owners)
   const pendingTimeOffCount = isOwnerOrAdmin
     ? await prisma.timeOffRequest.count({
@@ -69,9 +71,13 @@ export default async function AdminLayout({
           },
         ]
       : []),
-    ...(isOwnerOrAdmin
+    // OWNER ONLY. The audit log is the record of who changed what - roles,
+    // rates, deletions. An administrator is one of the people it exists to
+    // keep a record OF, so they do not get to read it.
+    ...(isOwner
       ? [{ href: "/tm/admin/audit", label: "Audit Log" }]
       : []),
+    { href: "/help", label: "Help" },
   ];
 
   return (
