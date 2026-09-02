@@ -193,18 +193,23 @@ const STYLE_FIX = `
    Brand on one side and the name on the other were both wrapping onto three
    lines and colliding. On a phone the brand lives in the drawer, so the bar
    carries the burger and who you are - nothing else. */
+.fl-mobrand{ display:none; }
+
 @media (max-width: 860px) {
+  /* Burger left, crest right, nothing between. Who you are is in the drawer,
+     the way T and M does it - a name and title in the top bar is something
+     you read once and then never again, and it was wrapping onto three lines
+     to say it. */
   .fl-hasmenu .fl-tmleft{ display:none !important; }
+  .fl-hasmenu .fl-tmwho{ display:none !important; }
   .fl-hasmenu .fl-tmtop{
-    display:flex !important; align-items:center; gap:10px;
+    display:flex !important; align-items:center; justify-content:space-between;
     padding:10px 12px !important;
   }
-  .fl-hasmenu .fl-tmwho{
-    flex:1; text-align:left !important; min-width:0;
+  .fl-hasmenu .fl-mobrand{
+    display:block; flex:none; line-height:0;
   }
-  .fl-hasmenu .fl-tmname,
-  .fl-hasmenu .fl-tmselect{ font-size:16px !important; }
-  .fl-hasmenu .fl-tmrole{ font-size:10px !important; }
+  .fl-hasmenu .fl-mobrand img{ height:30px; width:auto; }
   .fl-hasmenu .fl-tmright{ flex:none; }
 }
 

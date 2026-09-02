@@ -1508,6 +1508,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             )}
             <span className="fl-tmrole">{roleWord(suiteRole)}</span>
           </div>
+          <span className="fl-mobrand"><img src={LOGO} alt="ReyGuild" /></span>
           <div className="fl-tmright">
             {/* Messages is on the command centre for the office tier - one
                 messaging system, one unread count, one place to look. A tech

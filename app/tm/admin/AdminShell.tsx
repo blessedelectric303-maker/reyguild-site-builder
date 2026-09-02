@@ -32,12 +32,6 @@ export default function AdminShell({
     setDrawerOpen(false);
   }, [pathname]);
 
-  // Find current page label for the mobile top bar
-  const currentLabel =
-    [...navItems]
-      .sort((a, b) => b.href.length - a.href.length)
-      .find((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
-      ?.label || "";
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
@@ -143,11 +137,10 @@ export default function AdminShell({
             </span>
           )}
         </button>
-        <div className="font-semibold text-sm truncate flex-1 text-center px-2">
-          {currentLabel || "ReyGuild"}
-        </div>
-        {/* Spacer to balance the menu button */}
-        <div className="w-10" />
+        <div className="flex-1" />
+        {/* The crest on the right. Same in both apps, so a glance at the top
+            of the screen tells you which one you are in. */}
+        <Logo dark size={30} />
       </header>
 
       {/* Mobile drawer + backdrop */}
