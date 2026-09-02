@@ -669,11 +669,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const role = canPreview ? (currentUser ? currentUser.role : lockedRole) : lockedRole;
   const myName = currentUser ? currentUser.name : "";
 
-  // WHAT TO CALL THIS PERSON.
-  // The internal people list has the owner's row named "Owner", so falling
-  // back to it printed "Owner" above the role "Owner / Manager" - the same
-  // word twice. The real signed-in name wins, and if there is none we show
-  // nothing rather than a job title pretending to be a name.
+  // WHAT TO CALL THIS PERSON. The internal people list names the owner's row
+  // "Owner", so falling back to it printed "Owner" above the role
+  // "Owner / Manager" - the same word twice. The real signed-in name wins,
+  // and with none we show nothing rather than a job title posing as a name.
   const displayName = String(signedInName || "").trim()
     || (String(myName || "").trim().toLowerCase() === "owner" ? "" : String(myName || "").trim());
   const isAdmin = role === "Owner" || role === "Admin";
@@ -777,50 +776,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // "Numbers" is gone entirely. So are My pay and Royalties.
   const TABS = [
     { key: "dashboard", label: "Dashboard", show: isAdmin },
-    { key: "estimates", label: "Proposals", show: true },
-    { key: "invoices", label: "Invoices", show: true },
-    { key: "prices", label: "Price List", show: true },
-    // Between Price List and Messages, as asked. Clients is somewhere an
-    // estimator goes several times a day - it does not belong buried in
-    // Settings with the things you touch once a month.
-    { key: "clients", label: "Clients", show: true },
-    { key: "messages", label: "Messages", show: true },
-  ].filter((t) => t.show);
-
-  // Reachable, but from inside Settings rather than from the row.
-  // WHAT THE CUSTOMER SAID.
-  // A proposal answered by email is worthless if nobody in the office
-  // notices. This is the count behind the badge on the Proposals tab, and
-  // the list on the tab itself.
-  const [answers, setAnswers] = useState([]);
-  useEffect(() => {
-    let alive = true;
-    const pull = async () => {
-      try {
-        const r = await fetch("/api/proposal/responses");
-        const j = await r.json();
-        if (alive) setAnswers(Array.isArray(j.items) ? j.items : []);
-      } catch (e) { /* leave the badge alone rather than clearing it */ }
-    };
-    pull();
-    // Slow on purpose. This is a "somebody replied" nudge, not a live feed,
-    // and an estimator on a phone should not be paying for a poll every
-    // few seconds.
-    const t = setInterval(pull, 120000);
-    return () => { alive = false; clearInterval(t); };
-  }, []);
-
-
-
-  const toSchedule = answers.filter((a) => a.needs_scheduling);
-
-  // THE THREE-LINE MENU. Everything in one list, in the order somebody works:
-  // what is waiting, then the work, then the people, then the housekeeping.
-  // Leaving the app is at the FOOT - the top is where your eye lands and it
-  // should land on work, not on the exit.
-  const [menuOpen, setMenuOpen] = useState(false);
-  const MENU = [
-    { key: "dashboard", label: "Dashboard", show: isAdmin },
     { key: "alerts", label: "Approvals", show: isAdmin },
     { key: "estimates", label: "Proposals", show: true },
     { key: "invoices", label: "Invoices", show: true },
@@ -830,26 +785,18 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     { key: "followups", label: "Follow-ups", show: isAdmin },
     // Owner only. An administrator is one of the people the audit log exists
     // to keep a record OF.
-    { key: "audit", label: "Audit Log", show: lockedRole === "Owner" },
-    { key: "settings", label: "Settings", show: true },
-  ].filter((m) => m.show);
-
-  async function clearAnswer(refId) {
-    try {
-      await fetch("/api/proposal/responses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ref_id: refId }),
-      });
-      setAnswers((list) => list.filter((a) => a.ref_id !== refId));
-    } catch (e) { /* it stays on the list, which is the safe failure */ }
-  }
-
-  const SETTINGS_PAGES = [
-    { key: "team", label: "Team", show: isAdmin },
-    { key: "followups", label: "Follow-ups", show: isAdmin },
-    { key: "alerts", label: "Approvals", show: isAdmin },
+    { key: "audit", label: "Audit Log", show: role === "Owner" },
   ].filter((t) => t.show);
+
+  // Everything that used to live here is in TABS now. Two lists meant the
+  // sidebar and the menu could drift, and they did.
+  const SETTINGS_PAGES = [];
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const MENU = TABS.concat([
+    { key: "messages", label: "Messages" },
+    { key: "settings", label: "Settings" },
+  ]);
 
   useEffect(() => {
     const ok = page === "settings"
@@ -1501,9 +1448,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           two apps to learn. */}
       <header className={"fl-tmhead" + (isAdmin ? " fl-hasmenu" : "")}>
         <div className="fl-tmtop">
-          <button className="fl-burger" onClick={() => setMenuOpen(true)} aria-label="Menu">
-            <span /><span /><span />
-          </button>
+          {isAdmin ? (
+            <button className="fl-burger" onClick={() => setMenuOpen(true)} aria-label="Menu">
+              <span /><span /><span />
+            </button>
+          ) : null}
           <div className="fl-tmleft">
             <span className="fl-logo"><img src={LOGO} alt="ReyGuild" /></span>
             <span className="fl-brandname"><span className="fl-rey">Rey</span><span className="fl-guild">Guild</span></span>
@@ -1543,7 +1492,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <div className="fl-scrim" onClick={() => setMenuOpen(false)} />
             <aside className="fl-drawer">
               <div className="fl-drawer-who">
-                <div className="fl-drawer-name">{displayName}</div>
+                <div className="fl-drawer-name">{signedInName || myName || ""}</div>
                 <div className="fl-drawer-role">{roleWord(suiteRole)}</div>
               </div>
               <nav className="fl-drawer-nav">

@@ -382,7 +382,7 @@ export default function Invoicing() {
           const { data: dn } = await supabase.schema("suite").rpc("my_display_name");
           if (dn && String(dn).trim()) myName = String(dn).trim();
         } catch {
-          // Fall through to the metadata name below.
+          // Fall through to the metadata name.
         }
         if (!myName) myName = String(su?.email || "").split("@")[0];
         if (!companyId) {
