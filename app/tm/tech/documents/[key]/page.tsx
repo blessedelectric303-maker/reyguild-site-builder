@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import DocumentBody from "@/components/DocumentBody";
 import { companyTokensForCurrentUser } from "@/utils/companyTokens";
 import SignBlock from "@/components/SignBlock";
+import DocumentEditor from "@/components/DocumentEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,41 @@ export default async function TechDocumentPage({
     );
   }
 
+  // Who is reading, and whose copy of the document this is. An owner or
+  // admin gets the editor; a tech never sees the button, because the database
+  // would refuse them and a button that turns you away is worse than none.
+  let canEditDoc = false;
+  let isOurs = true;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user: su },
+    } = await supabase.auth.getUser();
+    const { data: mem } = await supabase
+      .schema("suite")
+      .from("memberships")
+      .select("role,company_id")
+      .eq("user_id", su?.id || "")
+      .limit(1)
+      .maybeSingle();
+    const r = ((mem as any) || {}).role || "";
+    canEditDoc = r === "owner" || r === "admin";
+
+    const cid = ((mem as any) || {}).company_id;
+    if (cid) {
+      const { data: own } = await supabase
+        .schema("suite")
+        .from("documents")
+        .select("id")
+        .eq("company_id", cid)
+        .eq("doc_key", key)
+        .maybeSingle();
+      isOurs = !own;
+    }
+  } catch (e) {
+    canEditDoc = false;
+  }
+
   const tokens = await companyTokensForCurrentUser();
 
   return (
@@ -76,6 +112,17 @@ export default async function TechDocumentPage({
           you want.
         </p>
       )}
+
+      <DocumentEditor
+        docKey={doc.doc_key}
+        title={doc.title}
+        summary={doc.summary}
+        body={doc.body || ""}
+        isTemplate={isOurs}
+        requiresSignature={!!doc.requires_signature}
+        canEdit={canEditDoc}
+      />
+
     </div>
   );
 }
