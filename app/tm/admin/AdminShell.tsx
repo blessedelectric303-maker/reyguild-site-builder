@@ -83,13 +83,12 @@ export default function AdminShell({
           </div>
         </div>
         <NavLinks onClick={() => setDrawerOpen(false)} />
-        {/* LEAVING THE APP, at the foot of the menu.
-            Back to the command centre, then across to the other app, then
-            sign out - the same three in the same order as Proposals and
-            Invoicing, so somebody switching between the two is not hunting
-            for a button that moved.
-            Command centre used to sit at the TOP of this list, above the
-            navigation, which put "leave" in the place your eye lands first. */}
+        {/* LEAVING THE APP, at the foot of the menu. Back to the command
+            centre, across to the other app, then sign out - the same three in
+            the same order as Proposals and Invoicing, so somebody switching
+            between them is not hunting for a button that moved.
+            Command centre used to sit at the TOP, above the navigation, which
+            put "leave" where your eye lands first. */}
         <div className="border-t border-slate-800 p-4 space-y-2">
           <a href="/" className="block rounded-md px-3 py-2 text-center text-xs font-bold"
              style={{ background: "#16243F", color: "#CC9000", border: "1px solid #CC9000" }}>
