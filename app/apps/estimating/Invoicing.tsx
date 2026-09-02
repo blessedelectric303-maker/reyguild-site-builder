@@ -173,6 +173,28 @@ const STYLE_FIX = `
 .fl-mobrand-word .fl-guild{ color:#FCFCFC !important; }
 .fl-mobrand-word .fl-rey{ color:#CC9000 !important; }
 
+
+/* THE TWO WAYS OUT, for somebody with no command centre to go back to.
+   Even halves - neither is the safer choice, so neither gets to look like
+   the default. */
+.fl-leaverow .fl-btn-swap{
+  background:var(--metal, linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A));
+  color:#16243F !important; border:none;
+  box-shadow:0 8px 22px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.45);
+}
+.fl-leaverow .fl-btn-signout{
+  background:#fff; color:#DC2626 !important; border:1px solid #DC2626;
+}
+
+/* The text size picker. */
+.fl-seg{ display:flex; gap:6px; }
+.fl-seg-btn{
+  flex:1; border:1px solid #16243F; background:#fff; color:#16243F;
+  border-radius:6px; padding:10px 8px; cursor:pointer;
+  font-family:inherit; font-size:13px; font-weight:600;
+}
+.fl-seg-btn.on{ background:#16243F; color:#fff; }
+
 .fl-pagehead{
   display:none;
   text-align:center; font-size:16px; font-weight:700; color:#16243F;

@@ -567,7 +567,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const [royaltyTo, setRoyaltyTo] = useState(() => toLocalDate(new Date()));
   const [audit, setAudit] = useState([]);
   const [auditQuery, setAuditQuery] = useState("");
-  const [settingsSub, setSettingsSub] = useState("procedures");
+  const [settingsSub, setSettingsSub] = useState("help");
   const [previewFor, setPreviewFor] = useState(null); // record id whose preview is open
   const [messages, setMessages] = useState([]);
   const [msgSeen, setMsgSeen] = useState({});
@@ -781,6 +781,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     { key: "invoices", label: "Invoices", show: true },
     { key: "prices", label: "Price List", show: true },
     { key: "clients", label: "Clients", show: true },
+    // A tech reaches Messages from the row; the office reaches it from the
+    // command centre, so it is not offered twice to anybody.
+    { key: "messages", label: "Messages", show: !isAdmin },
     { key: "followups", label: "Follow-ups", show: isAdmin },
     // Owner only. An administrator is one of the people the audit log exists
     // to keep a record OF.
@@ -833,6 +836,22 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const currentLabel =
     (TABS.find((t) => t.key === page) || {}).label
     || (page === "settings" ? "Settings" : "");
+
+  // Text size, saved per device. Applied as a multiplier on the root font so
+  // every size in the app scales together rather than one screen at a time.
+  const [textSize, setTextSize] = useState("normal");
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("rg_text_size");
+      if (saved) setTextSize(saved);
+    } catch (e) { /* storage blocked; the default is fine */ }
+  }, []);
+  useEffect(() => {
+    const scale = textSize === "large" ? 1.12 : textSize === "larger" ? 1.24 : 1;
+    const root = document.querySelector(".fl-root");
+    if (root) root.style.fontSize = scale === 1 ? "" : (scale * 100) + "%";
+    try { window.localStorage.setItem("rg_text_size", textSize); } catch (e) {}
+  }, [textSize]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   // Field checklists and procedures live in T and M and P and L only - they
@@ -1245,7 +1264,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // ── appearance + help ──────────────────────────────────────────────────────
   function saveSettings(patch) { save(STORAGE.settings, { theme, payout: payoutAmt, ...patch }, () => {}); }
   function saveSettings(patch) { save(STORAGE.settings, { theme, payout: payoutAmt, notifySent, account, royaltyRange: { from: royaltyFrom, to: royaltyTo }, ...patch }, () => {}); }
-  function applyTheme(t) { setTheme(t); saveSettings({ theme: t }); }
   function setSub(status) { const a = { ...account, status, startedAt: account.startedAt || toLocalDate(new Date()) }; setAccount(a); saveSettings({ account: a }); logAudit("Subscription " + status, ""); }
   function saveAccount() { saveSettings({ account }); setErr("Account saved."); }
   function toggleNotifySent() { const v = !notifySent; setNotifySent(v); saveSettings({ notifySent: v }); }
@@ -1530,12 +1548,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 keeps it here because a tech never opens the command centre. */}
             {!isAdmin ? (
               <button
-                className={"fl-tmmsg" + (page === "messages" ? " on" : "")}
-                onClick={() => { setPage("messages"); setQuery(""); }}
-                aria-label="Messages"
+                className={"fl-tmmsg" + (page === "settings" ? " on" : "")}
+                onClick={() => { setPage("settings"); setQuery(""); }}
+                aria-label="Settings"
               >
-                Messages
-                {unreadMsgs ? <span className="fl-msgdot">{unreadMsgs}</span> : null}
+                Settings
               </button>
             ) : null}
           </div>
@@ -1570,12 +1587,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                     key={m.key}
                     className={"fl-drawer-link" + (page === m.key ? " on" : "")}
                     onClick={() => {
-                      if (m.key === "procedures") {
-                        setPage("settings");
-                        setSettingsSub("procedures");
-                      } else {
-                        setPage(m.key);
-                      }
+                      setPage(m.key);
                       setQuery("");
                       setMenuOpen(false);
                     }}
@@ -1612,12 +1624,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 // Procedures is the written guides that sit under Settings.
                 // Open that page directly rather than making somebody find a
                 // sub-tab once they are there.
-                if (t.key === "procedures") {
-                  setPage("settings");
-                  setSettingsSub("procedures");
-                } else {
-                  setPage(t.key);
-                }
+                setPage(t.key);
                 setQuery("");
                 setNavOpen(false);
               }}
@@ -2480,9 +2487,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       {page === "settings" && (
         <>
           <div className="so-subnav">
-            <button className={"fl-pill" + (settingsSub === "procedures" ? " active" : "")} onClick={() => setSettingsSub("procedures")}>Procedures</button>
             <button className={"fl-pill" + (settingsSub === "help" ? " active" : "")} onClick={() => setSettingsSub("help")}>Help</button>
-            {can.editProfile && <button className={"fl-pill" + (settingsSub === "account" ? " active" : "")} onClick={() => setSettingsSub("account")}>Account</button>}
+            <button className={"fl-pill" + (settingsSub === "prefs" ? " active" : "")} onClick={() => setSettingsSub("prefs")}>Preferences</button>
             {can.managePeople && <button className={"fl-pill" + (settingsSub === "audit" ? " active" : "")} onClick={() => setSettingsSub("audit")}>Audit log</button>}
           </div>
 
@@ -2504,25 +2510,47 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
           {/* Procedures: the written guides, each on its own page. Small boxes
               with a title you tap, not walls of text you scroll past. */}
-          {settingsSub === "procedures" && (
-            <div className="fl-weekly">
-              <p className="fl-foot-note" style={{ marginTop: 0 }}>
-                How the work gets quoted, billed and handed over. Tap one to read it.
-              </p>
-              <div className="fl-guides">
-                {[
-                  ["guide-proposal", "How to build a proposal", "Walking the job, and the three lines that go at the bottom of every one."],
-                  ["guide-invoice", "How to build an invoice", "When to raise one, what to bill, and never taking payment yourself."],
-                  ["guide-convert", "Turning a proposal into an invoice", "Do not retype it. What carries across and what changes."],
-                  ["guide-pricelist-have", "Price list: I already have one", "An AI prompt that converts your list into the format this app imports."],
-                  ["guide-pricelist-none", "Price list: starting from nothing", "An AI prompt that interviews you and builds one from scratch."],
-                ].map(([key, title, blurb]) => (
-                  <a key={key} className="fl-guide" href={"/guide/" + key}>
-                    <span className="fl-guide-t">{title}</span>
-                    <span className="fl-guide-b">{blurb}</span>
-                  </a>
-                ))}
-              </div>
+          {/* PREFERENCES. Text size and who you are - the two things that are
+              about the person rather than the company. No light and dark: the
+              app has one look, and a second set of colours is a second set to
+              keep correct forever. */}
+          {settingsSub === "prefs" && (
+            <div className="fl-grid">
+              <section className="fl-panel">
+                <div className="fl-panel-head"><h2>Text size</h2></div>
+                <div className="fl-form">
+                  <p className="fl-hint">
+                    Saved on this device only. Handy in a van in daylight, or
+                    on a desk where you want more on the screen at once.
+                  </p>
+                  <div className="fl-seg">
+                    {[["normal","Normal"],["large","Large"],["larger","Largest"]].map(([k,label]) => (
+                      <button
+                        key={k}
+                        type="button"
+                        className={"fl-seg-btn" + (textSize === k ? " on" : "")}
+                        onClick={() => setTextSize(k)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <section className="fl-panel">
+                <div className="fl-panel-head"><h2>Your details</h2></div>
+                <div className="fl-form">
+                  <Field label="Name"><input value={displayName} readOnly /></Field>
+                  <Field label="Email"><input value={profile.email || ""} readOnly /></Field>
+                  <Field label="Role"><input value={roleWord(suiteRole)} readOnly /></Field>
+                  <p className="fl-hint">
+                    Your name and number are set by the office under Army /
+                    Employees, so one person is not called two things in two
+                    places. Ask them to change it and it changes everywhere.
+                  </p>
+                </div>
+              </section>
             </div>
           )}
 
