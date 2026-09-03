@@ -928,7 +928,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const fuDueList = myEstimates.map((e) => ({ e, step: fuDueStep(e) })).filter((x) => x.step).sort((a, b) => a.step.dueTs - b.step.dueTs);
   const fuUpcoming = myEstimates.filter((e) => fuActive(e)).map((e) => ({ e, step: fuNext(e) })).filter((x) => x.step && !x.step.due).sort((a, b) => a.step.dueTs - b.step.dueTs);
 
-  const clientNames = Array.from(new Set(clients.map((c) => c.company).filter(Boolean)));
   const priceNames = priceList.map((p) => p.name).filter(Boolean);
   const repNames = Array.from(new Set([...people.map((p) => p.name), myName].map((s) => (s || "").trim()).filter(Boolean))).sort();
   const priceByName = (name) => priceList.find((p) => p.name === name);
@@ -1120,6 +1119,12 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
   // each rep sees only their own clients; admins see all
   const myClients = can.seeAllWork ? clients : clients.filter((c) => (c.owner || "") === myName);
+
+  // The names offered while typing. Built from myClients, so it obeys the
+  // same rule as the client page: the office sees everybody, a tech sees only
+  // their own. Declared here rather than higher up because it depends on
+  // myClients, and reading it earlier is a dead-zone crash.
+  const clientNames = Array.from(new Set(myClients.map((c) => c.company).filter(Boolean)));
   // effective legal text (their saved version, or the premade template prefilled with their company name)
   const warrantyText = () => (profile.warranty && profile.warranty.trim()) ? profile.warranty : defaultWarranty(profile.name);
   const contractText = () => (profile.contract && profile.contract.trim()) ? profile.contract : defaultContract(profile.name);
@@ -1983,15 +1988,41 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 <Field label="Estimate #"><input value={estForm.estimateNo} placeholder="EST-1001" onChange={(e) => setEstForm({ ...estForm, estimateNo: e.target.value })} /></Field>
                 <Field label="Date"><input type="date" value={estForm.date} onChange={(e) => setEstForm({ ...estForm, date: e.target.value })} /></Field>
               </div>
-              {can.seeAllWork ? (
-                <Field label="Client">
-                  <input list="so-clients" value={estForm.client} placeholder="Pick or type a client" onChange={(e) => setEstForm({ ...estForm, client: e.target.value })} />
-                </Field>
-              ) : (() => {
+              {(() => {
                 const hit = matchContact(estForm.client, estForm.clientAddr);
                 return (
                   <>
-                    <Field label="Contact full name"><input value={estForm.client} placeholder="e.g. Riverside Auto Body" onChange={(e) => setEstForm({ ...estForm, client: e.target.value })} /></Field>
+                    {/* Start typing and anybody already on your list appears,
+                        so the same customer is not entered twice under two
+                        spellings. The office sees every client; a tech sees
+                        only their own - which is the rule everywhere else in
+                        this app. */}
+                    <Field label="Contact full name">
+                      <input
+                        list="so-clients"
+                        value={estForm.client}
+                        placeholder="Start typing - existing clients appear"
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          const known = myClients.find(
+                            (c) => (c.company || "").toLowerCase() === v.trim().toLowerCase()
+                          );
+                          // Picking a known client fills the rest in rather
+                          // than making somebody retype what we already hold.
+                          setEstForm((f) => ({
+                            ...f,
+                            client: v,
+                            ...(known ? {
+                              clientAddr: known.address || f.clientAddr,
+                              clientEmail: known.email || f.clientEmail,
+                              clientPhone: known.phone || f.clientPhone,
+                              addrLat: known.lat ?? f.addrLat,
+                              addrLng: known.lng ?? f.addrLng,
+                            } : {}),
+                          }));
+                        }}
+                      />
+                    </Field>
                     <Field label="Full address">
                       <input
                         ref={addrInputRef}
