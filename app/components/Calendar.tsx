@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
 type Ev = {
@@ -72,6 +72,44 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
   const [props, setProps] = useState<any[]>([]);
   const [fProp, setFProp] = useState("");
   // Coordinates inherited from the proposal, when it has them.
+  const [fEmail, setFEmail] = useState("");
+  const [fPhone, setFPhone] = useState("");
+  const calAddrRef = useRef<HTMLInputElement | null>(null);
+  const calAutoRef = useRef<any>(null);
+  const [mapsReady, setMapsReady] = useState(false);
+
+  // Loaded once, only when somebody opens the form.
+  useEffect(() => {
+    if ((window as any).google?.maps?.places) { setMapsReady(true); return; }
+    const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!key) return; // No key: an ordinary text box, not a broken one.
+    if (document.getElementById("rg-maps-js")) return;
+    const el = document.createElement("script");
+    el.id = "rg-maps-js";
+    el.src = "https://maps.googleapis.com/maps/api/js?key=" + key + "&libraries=places";
+    el.async = true;
+    el.onload = () => setMapsReady(true);
+    document.head.appendChild(el);
+  }, []);
+
+  useEffect(() => {
+    if (!mapsReady || !calAddrRef.current || calAutoRef.current) return;
+    const g = (window as any).google;
+    if (!g?.maps?.places) return;
+    calAutoRef.current = new g.maps.places.Autocomplete(calAddrRef.current, {
+      types: ["address"],
+      componentRestrictions: { country: "us" },
+      fields: ["formatted_address", "geometry"],
+    });
+    calAutoRef.current.addListener("place_changed", () => {
+      const place = calAutoRef.current.getPlace();
+      if (!place?.geometry) return;
+      setFAddr(place.formatted_address || "");
+      setFLat(place.geometry.location.lat());
+      setFLng(place.geometry.location.lng());
+    });
+  }, [mapsReady]);
+
   const [fLat, setFLat] = useState<number | null>(null);
   const [fLng, setFLng] = useState<number | null>(null);
   useEffect(() => {
@@ -98,6 +136,8 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
     // The estimator already picked this address off Google's list. Reusing
     // those coordinates means the job lands exactly where the proposal said,
     // rather than wherever a second lookup decides.
+    if (p.email) setFEmail(p.email);
+    if (p.phone) setFPhone(p.phone);
     if (p.lat != null && p.lng != null) {
       setFLat(p.lat);
       setFLng(p.lng);
@@ -223,6 +263,8 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
           proposalRef: fProp,
           jobLat: fLat,
           jobLng: fLng,
+          customerEmail: fEmail,
+          customerPhone: fPhone,
         }),
       });
       const payload = await res.json().catch(() => ({}));
@@ -417,7 +459,25 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                   ) : null}
 
                   <input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="Job / customer name" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
-                  <input value={fAddr} onChange={(e) => setFAddr(e.target.value)} placeholder="Address" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
+                  <input
+                    ref={calAddrRef}
+                    value={fAddr}
+                    onChange={(e) => { setFAddr(e.target.value); setFLat(null); setFLng(null); }}
+                    placeholder="Start typing, then pick from the list"
+                    className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100"
+                  />
+                  {fAddr.trim() ? (
+                    fLat != null ? (
+                      <p className="text-[11px] text-emerald-400">
+                        Confirmed on the map.
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-amber-400">
+                        Pick it from the dropdown so the crew is sent to the
+                        right place.
+                      </p>
+                    )
+                  ) : null}
                   <input value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="Start time - 9:00 AM or 09:00" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <textarea value={fDesc} onChange={(e) => setFDesc(e.target.value)} rows={2} placeholder="Job description - what is happening on this job" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
                   <textarea value={fMat} onChange={(e) => setFMat(e.target.value)} rows={2} placeholder="Material - what to pick up and where" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />

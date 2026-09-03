@@ -56,6 +56,8 @@ export async function GET() {
         client: e ? e.client || e.clientContact || "" : "",
         address: e ? e.clientAddr || e.address || "" : "",
         description: e ? e.jobDescription || e.lumpDescription || "" : "",
+        email: e ? e.clientEmail || "" : "",
+        phone: e ? e.clientPhone || "" : "",
         lat: e ? e.addrLat ?? null : null,
         lng: e ? e.addrLng ?? null : null,
         total: e ? e.total : null,

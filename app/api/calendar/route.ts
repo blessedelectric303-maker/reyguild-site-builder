@@ -171,6 +171,12 @@ export async function POST(req: Request) {
       orgId: me.orgId,
       createdById: me.id,
       customerName: title,
+      // Carried from the proposal so the office is not looking the customer
+      // up again to phone them about a job they already quoted.
+      ...(String(b.customerEmail || "").trim()
+        ? { customerEmail: String(b.customerEmail).trim() } : {}),
+      ...(String(b.customerPhone || "").trim()
+        ? { customerPhone: String(b.customerPhone).trim() } : {}),
       jobAddress: String(b.address || "").trim(),
       // Carried through from the proposal, where somebody already picked the
       // address off Google's list. Saving them here means the geofence has a

@@ -495,7 +495,7 @@ const emptyPriceItem = () => ({
   unit: "ea", price: "", cost: "",
 });
 const emptySupplier = () => ({ id: null, name: "", url: "" });
-const emptyEstimate = () => ({ id: null, estimateNo: "", date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
+const emptyEstimate = () => ({ id: null, estimateNo: "", date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
 const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [] });
 const PAY_METHODS = ["Card", "Online deposit", "Check", "Cash", "Other"];
 const NET_DAYS = 15;
@@ -1952,6 +1952,34 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                         onChange={(e) => setEstForm({ ...estForm, clientAddr: e.target.value, addrLat: null, addrLng: null })}
                       />
                     </Field>
+                    <div className="fl-two">
+                      <Field label="Email - where the proposal goes">
+                        <input
+                          type="email"
+                          inputMode="email"
+                          value={estForm.clientEmail}
+                          placeholder="name@example.com"
+                          onChange={(e) => setEstForm({ ...estForm, clientEmail: e.target.value })}
+                        />
+                      </Field>
+                      <Field label="Phone">
+                        <input
+                          type="tel"
+                          inputMode="tel"
+                          value={estForm.clientPhone}
+                          placeholder="(555) 555-0123"
+                          onChange={(e) => setEstForm({ ...estForm, clientPhone: e.target.value })}
+                        />
+                      </Field>
+                    </div>
+                    {!String(estForm.clientEmail || "").trim() ? (
+                      <p className="fl-hint" style={{ color: "#B45309" }}>
+                        Without an email this proposal cannot be sent, the
+                        customer has no Accept button, and the follow-ups have
+                        nobody to chase.
+                      </p>
+                    ) : null}
+
                     {estForm.clientAddr && estForm.clientAddr.trim() ? (
                       estForm.addrLat != null ? (
                         <p className="fl-hint" style={{ color: "#0F6E56" }}>
