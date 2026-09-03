@@ -952,13 +952,58 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
 
   // ── estimates ─────────────────────────────────────────────────────────────────
+  const [sending, setSending] = useState(false);
+
+  // Save, then send. The link in the email points at the saved record, so
+  // the order matters - send first and the customer gets a link to nothing.
+  async function sendProposal() {
+    const to = String(estForm.clientEmail || "").trim();
+    if (!to) { setErr("Add a customer email first."); return; }
+    setSending(true);
+    setErr("");
+    try {
+      const id = await saveEstimate("Submitted");
+      const ref = id || estForm.id;
+      if (!ref) { setErr("Save the proposal first."); setSending(false); return; }
+      const res = await fetch("/api/proposal/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          refId: String(ref),
+          to,
+          clientName: estForm.client || "",
+          total: money(estTotals.total),
+          description: estForm.jobDescription || "",
+        }),
+      });
+      const j = await res.json();
+      if (!res.ok) setErr(j.error || "The email did not send.");
+      else setErr("Sent to " + j.sentTo + ". They can accept from that email.");
+    } catch (e) {
+      setErr("Could not reach the mail service.");
+    }
+    setSending(false);
+  }
+
   async function saveEstimate(status) {
     if (!estForm.client.trim()) { setErr("Enter the contact's full name first."); return; }
     setErr("");
     const rec = { ...estForm, status: status || estForm.status, createdBy: estForm.createdBy || myName || "Owner" };
     // if this is a brand-new full name + full address, add it to the shared contact list so it pops up next time
     if (rec.client.trim() && rec.clientAddr && rec.clientAddr.trim() && !matchContact(rec.client, rec.clientAddr)) {
-      save(STORAGE.clients, [{ ...emptyClient(), id: uid(), company: rec.client.trim(), address: rec.clientAddr.trim(), owner: myName || "Owner" }, ...clients], setClients);
+      save(STORAGE.clients, [{
+        ...emptyClient(), id: uid(),
+        company: rec.client.trim(),
+        address: rec.clientAddr.trim(),
+        // The whole point of asking for these is that they are kept. Without
+        // them a customer made from a proposal has no way to be contacted,
+        // and the next proposal for them starts blank again.
+        email: String(rec.clientEmail || "").trim(),
+        phone: String(rec.clientPhone || "").trim(),
+        lat: rec.addrLat ?? null,
+        lng: rec.addrLng ?? null,
+        owner: myName || "Owner",
+      }, ...clients], setClients);
     }
     if (rec.id) save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
     else {
@@ -966,8 +1011,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
         const num = await takeNumber("estimate");
         if (num) rec.estimateNo = num;
       }
-      save(STORAGE.estimates, [{ ...rec, id: uid() }, ...estimates], setEstimates);
+      const newId = uid();
+      save(STORAGE.estimates, [{ ...rec, id: newId }, ...estimates], setEstimates);
+      return newId;
     }
+    return rec.id;
     logAudit(rec.id ? "Edited estimate" : "Created estimate", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
     setEstForm(emptyEstimate());
   }
@@ -2055,6 +2103,19 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <div className="fl-actions">
                 <button className="fl-primary" onClick={() => saveEstimate("Draft")}>{estForm.id ? "Save" : "Save draft"}</button>
                 <button className="fl-ghost" onClick={() => saveEstimate("Submitted")}>Submit</button>
+                {/* Saves first, then emails. Sending an unsaved proposal
+                    would put a link in a customer's inbox pointing at
+                    something that does not exist yet. */}
+                <button
+                  className="fl-primary"
+                  disabled={sending || !String(estForm.clientEmail || "").trim()}
+                  title={String(estForm.clientEmail || "").trim()
+                    ? "Email this to the customer with an Accept button"
+                    : "Add a customer email first"}
+                  onClick={sendProposal}
+                >
+                  {sending ? "Sending..." : "Send to customer"}
+                </button>
                 {estForm.id && <button className="fl-ghost" onClick={() => { setEstForm(emptyEstimate()); setErr(""); }}>Cancel</button>}
               </div>
             </div>
