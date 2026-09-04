@@ -859,6 +859,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const addrInputRef = useRef(null);
   const addrAutoRef = useRef(null);
   const [mapsReady, setMapsReady] = useState(false);
+  // Set when the Maps key is absent, so the screen can say so rather than
+  // leaving somebody to wonder why the dropdown never appears.
+  const [mapsMissing, setMapsMissing] = useState(false);
 
   useEffect(() => {
     if (page !== "estimates") return;
@@ -867,7 +870,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       return;
     }
     const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!key) return; // No key: the box stays an ordinary text field.
+    if (!key) { setMapsMissing(true); return; }
     if (document.getElementById("rg-maps-js")) return;
     const el = document.createElement("script");
     el.id = "rg-maps-js";
@@ -2032,7 +2035,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                       />
                     </Field>
                     <div className="fl-two">
-                      <Field label="Email - where the proposal goes">
+                      <Field label="Email">
                         <input
                           type="email"
                           inputMode="email"
@@ -2053,9 +2056,16 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                     </div>
                     {!String(estForm.clientEmail || "").trim() ? (
                       <p className="fl-hint" style={{ color: "#B45309" }}>
-                        Without an email this proposal cannot be sent, the
-                        customer has no Accept button, and the follow-ups have
-                        nobody to chase.
+                        The proposal is emailed here. Without it there is no
+                        Accept button and the follow-ups have nobody to chase.
+                      </p>
+                    ) : null}
+
+                    {mapsMissing ? (
+                      <p className="fl-hint" style={{ color: "#B45309" }}>
+                        Address lookup is off: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+                        is not set in Vercel. You can still type an address,
+                        but it will not be checked against the map.
                       </p>
                     ) : null}
 

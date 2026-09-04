@@ -66,14 +66,21 @@ export async function POST(req: NextRequest) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     return NextResponse.json(
-      { error: "Email is not set up yet. RESEND_API_KEY is missing." },
+      { error: "Sending is not switched on yet. Add RESEND_API_KEY to your "
+             + "Vercel environment variables and redeploy - the proposal is "
+             + "saved either way." },
       { status: 500 }
     );
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tm.serviceopspro.com";
   const link = appUrl + "/p/" + signProposal(companyId, refId);
-  const from = process.env.EMAIL_FROM || "ReyGuild <noreply@reyguild.com>";
+  // The verified sender. A per-company from address needs its own DNS
+  // records with the mail service, and an unverified one is rejected - which
+  // reads as the app being broken. The company's own address goes in
+  // reply-to instead, so a customer hitting Reply reaches them, not us.
+  const from = "ReyGuild <noreply@reyguild.com>";
+  const replyTo = String(((co as any) || {}).email || "").trim();
 
   // Plain, short, and the button is the point. A proposal email that reads
   // like marketing gets treated like marketing.
@@ -104,6 +111,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         from,
+        ...(replyTo ? { reply_to: replyTo } : {}),
         to: [to],
         subject: "Your proposal from " + companyName,
         html,

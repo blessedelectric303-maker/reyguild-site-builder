@@ -299,6 +299,13 @@ const STYLE_FIX = `
 /* SETTINGS, as a list of cards. A pill tells you a section's name; a card
    tells you what is inside it, which is the difference between a menu you
    read and one you guess at. */
+
+/* Two fields side by side, with their boxes aligned even when one label
+   wraps and the other does not. Stretch, not centre - the inputs line up on
+   their tops the way a form is read. */
+.fl-root .fl-two{ align-items:end; }
+.fl-root .fl-two > *{ min-width:0; }
+
 .fl-setwrap{ max-width:42rem; margin:0 auto; }
 .fl-sethead{ margin:6px 0 2px; font-size:26px; font-weight:800; color:#16243F; }
 .fl-setwho{ margin:0 0 16px; font-size:15px; color:#64748b; }
