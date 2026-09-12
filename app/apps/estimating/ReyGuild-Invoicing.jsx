@@ -435,8 +435,10 @@ Thank you again for the opportunity to provide an estimate {estimate_no} for {to
 
 We'd be glad to answer any questions or make adjustments — just reply here and we'll take care of it.
 
-Thanks,
-{company}`;
+Thank you,
+{company}
+
+We look forward to your business.`;
 const DEFAULT_FOLLOWUP_2 =
 `Hi {first},
 
@@ -1229,7 +1231,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     const legal = (kind === "estimate" && r.attachLegal !== false)
       ? `\n\n${"=".repeat(28)}\n${warrantyText()}\n\n${"=".repeat(28)}\n${contractText()}`
       : "";
-    return `${letterhead()}Hi${first},\n\nHere is your ${kind}${no ? " (#" + no + ")" : ""}:\n\n${desc}${docLines(r)}${r.notes ? "\n\n" + r.notes : ""}${legal}\n\nThanks,\n${sign}`;
+    return `${letterhead()}Hi${first},\n\nHere is your ${kind}${no ? " (#" + no + ")" : ""}:\n\n${desc}${docLines(r)}${r.notes ? "\n\n" + r.notes : ""}${legal}\n\nThank you,\n${sign}\n\n${
+      kind === "invoice" ? "We appreciate your business." : "We look forward to your business."
+    }`;
   }
   function sendDocMailto(r, kind, toSelf) {
     const c = clientOf(r.client);
@@ -1986,6 +1990,16 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
         <div className="fl-grid">
           <section className="fl-panel" ref={formRef}>
             <div className="fl-panel-head"><h2>{estForm.id ? "Edit estimate" : "New estimate"}</h2></div>
+            {/* A document with no company name on it looks like a scam to the
+                person receiving it. Say so here, where somebody is about to
+                send one. */}
+            {!String(profile.name || "").trim() ? (
+              <p className="fl-hint" style={{ color: "#B45309", margin: "10px 16px 0" }}>
+                Your letterhead is empty, so proposals go out with no company
+                name, address or logo on them. Fill it in under Settings and it
+                appears on every document from then on.
+              </p>
+            ) : null}
             <div className="fl-form">
               <div className="fl-two">
                 <Field label="Estimate #"><input value={estForm.estimateNo} placeholder="EST-1001" onChange={(e) => setEstForm({ ...estForm, estimateNo: e.target.value })} /></Field>

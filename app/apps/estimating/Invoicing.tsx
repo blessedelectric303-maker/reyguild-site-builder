@@ -306,6 +306,33 @@ const STYLE_FIX = `
 .fl-root .fl-two{ align-items:end; }
 .fl-root .fl-two > *{ min-width:0; }
 
+
+/* GOOGLE'S ADDRESS DROPDOWN.
+   It draws itself into .pac-container, outside our markup, with an icon
+   sprite that does not load here - which is why every suggestion showed a
+   grey exclamation mark. No icons, a proper stacking order, and our own
+   typeface so it does not look pasted in from another website. */
+.pac-container{
+  z-index:100000 !important;
+  background:#fff;
+  border:1px solid #16243F;
+  border-radius:8px;
+  box-shadow:0 10px 30px rgba(0,0,0,.18);
+  font-family:var(--rg-font-app, inherit);
+  margin-top:2px;
+  padding:4px 0;
+}
+.pac-icon, .pac-icon-marker{ display:none !important; }
+.pac-item{
+  padding:10px 14px; border-top:none; cursor:pointer;
+  font-size:14px; line-height:1.35; color:#16243F;
+}
+.pac-item:hover, .pac-item-selected{ background:#F5F3EE; }
+.pac-item-query{ font-size:14px; color:#16243F; font-weight:600; }
+.pac-matched{ font-weight:700; }
+/* Google requires their mark to stay visible when results are shown. */
+.hdpi.pac-logo:after{ margin:2px 8px; }
+
 .fl-setwrap{ max-width:42rem; margin:0 auto; }
 .fl-sethead{ margin:6px 0 2px; font-size:26px; font-weight:800; color:#16243F; }
 .fl-setwho{ margin:0 0 16px; font-size:15px; color:#64748b; }
