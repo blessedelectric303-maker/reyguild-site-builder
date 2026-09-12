@@ -107,12 +107,32 @@ export default async function ProposalPage({
     .eq("key", "so_estimates")
     .maybeSingle();
 
-  let est: any = null;
-  try {
-    const list = JSON.parse(((rows as any) || {}).value || "[]");
-    est = list.find((e: any) => String(e.id) === claim.refId) || null;
-  } catch {
-    est = null;
+  const wantedRef = claim.refId;
+  const wantedCompany = claim.companyId;
+
+  function findIn(raw: any): any {
+    try {
+      const list = JSON.parse(((raw as any) || {}).value || "[]");
+      return list.find((e: any) => String(e.id) === wantedRef) || null;
+    } catch {
+      return null;
+    }
+  }
+
+  let est: any = findIn(rows);
+
+  // One retry, a second later. The write and the email leave at almost the
+  // same moment; a customer on a fast connection can arrive between them.
+  if (!est) {
+    await new Promise((r) => setTimeout(r, 1200));
+    const { data: again } = await sb
+      .schema("suite")
+      .from("app_storage")
+      .select("value")
+      .eq("company_id", wantedCompany)
+      .eq("key", "so_estimates")
+      .maybeSingle();
+    est = findIn(again);
   }
 
   const { data: already } = await sb
@@ -138,7 +158,8 @@ export default async function ProposalPage({
       <Shell>
         <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Proposal not found</h1>
         <p style={{ color: "#64748b", lineHeight: 1.6 }}>
-          It may have been withdrawn or replaced. Give {company} a call
+          If you have only just been sent it, wait a moment and open the link
+          again. Otherwise it may have been withdrawn or replaced - give {company} a call
           {phone ? " on " + phone : ""} and they will sort it out.
         </p>
       </Shell>

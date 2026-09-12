@@ -1007,14 +1007,14 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
         owner: myName || "Owner",
       }, ...clients], setClients);
     }
-    if (rec.id) save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
+    if (rec.id) await save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
     else {
       if (!String(rec.estimateNo || "").trim()) {
         const num = await takeNumber("estimate");
         if (num) rec.estimateNo = num;
       }
       const newId = uid();
-      save(STORAGE.estimates, [{ ...rec, id: newId }, ...estimates], setEstimates);
+      await save(STORAGE.estimates, [{ ...rec, id: newId }, ...estimates], setEstimates);
       return newId;
     }
     return rec.id;
