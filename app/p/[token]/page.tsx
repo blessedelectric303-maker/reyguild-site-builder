@@ -77,9 +77,27 @@ export default async function ProposalPage({
   const { data: co } = await sb
     .schema("suite")
     .from("companies")
-    .select("name,phone,email")
+    .select("name")
     .eq("id", claim.companyId)
     .maybeSingle();
+
+  // The business letterhead the office fills in under Settings. This is what
+  // a customer should see at the top of a proposal - the same heading that
+  // goes on a printed one.
+  const { data: profRow } = await sb
+    .schema("suite")
+    .from("app_storage")
+    .select("value")
+    .eq("company_id", claim.companyId)
+    .eq("key", "so_profile")
+    .maybeSingle();
+
+  let prof: any = {};
+  try {
+    prof = JSON.parse(((profRow as any) || {}).value || "{}") || {};
+  } catch {
+    prof = {};
+  }
 
   const { data: rows } = await sb
     .schema("suite")
@@ -105,8 +123,15 @@ export default async function ProposalPage({
     .eq("ref_id", claim.refId)
     .maybeSingle();
 
-  const company = ((co as any) || {}).name || "your contractor";
-  const phone = ((co as any) || {}).phone || "";
+  // The profile wins - it is what the office typed for their letterhead. The
+  // companies row is the fallback so a company that has not filled it in yet
+  // still shows a name rather than "your contractor".
+  const company = String(prof.name || "").trim() || ((co as any) || {}).name || "your contractor";
+  const logoUrl = String(prof.logo || "").trim();
+  const companyEmail = String(prof.email || "").trim();
+  const website = String(prof.website || "").trim();
+  const addressLine = String(prof.address || "").trim();
+  const phone = String(prof.phone || "").trim();
 
   if (!est) {
     return (
@@ -128,9 +153,27 @@ export default async function ProposalPage({
 
   return (
     <Shell>
-      <div style={{ borderBottom: "2px solid #0f172a", paddingBottom: 12, marginBottom: 20 }}>
-        <div style={{ fontSize: 19, fontWeight: 700 }}>{company}</div>
-        {phone ? <div style={{ fontSize: 12, color: "#64748b" }}>{phone}</div> : null}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 14,
+        borderBottom: "2px solid #0f172a", paddingBottom: 12, marginBottom: 20,
+      }}>
+        {logoUrl ? (
+          <img src={logoUrl} alt={company}
+               style={{ height: 54, width: "auto", flex: "none" }} />
+        ) : null}
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 19, fontWeight: 700 }}>{company}</div>
+          {addressLine ? (
+            <div style={{ fontSize: 12, color: "#64748b" }}>{addressLine}</div>
+          ) : null}
+          {phone ? <div style={{ fontSize: 12, color: "#64748b" }}>{phone}</div> : null}
+          {companyEmail ? (
+            <div style={{ fontSize: 12, color: "#64748b" }}>{companyEmail}</div>
+          ) : null}
+          {website ? (
+            <div style={{ fontSize: 12, color: "#64748b" }}>{website}</div>
+          ) : null}
+        </div>
       </div>
 
       <h1 style={{ fontSize: 20, margin: "0 0 4px" }}>Your proposal</h1>
@@ -197,6 +240,17 @@ export default async function ProposalPage({
       ) : (
         <Respond token={token} company={company} phone={phone} />
       )}
+
+      {/* The sign off sits outside the expired branch on purpose - somebody
+          whose proposal has run out is exactly the person you want to sound
+          human to. */}
+      <div style={{ marginTop: 28, paddingTop: 16, borderTop: "1px solid #e2e8f0" }}>
+        <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: "#334155" }}>
+          Thank you,<br />
+          <strong>{company}</strong><br />
+          <span style={{ color: "#64748b" }}>We look forward to your business.</span>
+        </p>
+      </div>
 
       <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 24, lineHeight: 1.5 }}>
         Accepting confirms the scope and price above and the Terms and
