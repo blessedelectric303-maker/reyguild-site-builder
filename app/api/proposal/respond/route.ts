@@ -63,5 +63,55 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "That did not save. Please try again." }, { status: 500 });
   }
 
+  // THE ACCEPT HAS TO REACH THE JOB QUEUE.
+  // Recording the response was only half of it. T&M's "Needs a date" screen
+  // lists proposals whose status is "approved", and nothing ever set that -
+  // so an accepted proposal sat at "Submitted" forever and the job was never
+  // offered for scheduling. Everything downstream of this (calendar, tech,
+  // supervisor) was waiting on a status that never changed.
+  //
+  // so_estimates is one JSON document holding every proposal, so this is a
+  // read-modify-write. If an estimator saves in the same instant, one of the
+  // two writes wins. Rare with a small crew, and worth knowing about.
+  if (response === "accepted") {
+    try {
+      const { data: row } = await sb
+        .schema("suite")
+        .from("app_storage")
+        .select("value")
+        .eq("company_id", claim.companyId)
+        .eq("key", "so_estimates")
+        .maybeSingle();
+      const list = JSON.parse(((row as any) || {}).value || "[]");
+      let touched = false;
+      const next = (Array.isArray(list) ? list : []).map((e: any) => {
+        if (String(e.id) !== claim.refId) return e;
+        touched = true;
+        return { ...e, status: "approved", acceptedAt: new Date().toISOString() };
+      });
+      if (touched) {
+        const { error: upErr } = await sb
+          .schema("suite")
+          .from("app_storage")
+          .upsert(
+            {
+              company_id: claim.companyId,
+              key: "so_estimates",
+              value: JSON.stringify(next),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "company_id,key" }
+          );
+        if (upErr) console.error("[respond] could not mark approved:", upErr.message);
+      } else {
+        console.error("[respond] no estimate matched refId", claim.refId);
+      }
+    } catch (e: any) {
+      // The customer's answer is already recorded and that is the part that
+      // must not fail. A status that did not flip is recoverable by hand.
+      console.error("[respond] approve step failed:", e && e.message);
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

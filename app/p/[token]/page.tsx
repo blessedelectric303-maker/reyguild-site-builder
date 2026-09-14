@@ -77,7 +77,7 @@ export default async function ProposalPage({
   const { data: co } = await sb
     .schema("suite")
     .from("companies")
-    .select("name")
+    .select("name,phone,email,website,address,city,state,zip,area,logo")
     .eq("id", claim.companyId)
     .maybeSingle();
 
@@ -143,15 +143,23 @@ export default async function ProposalPage({
     .eq("ref_id", claim.refId)
     .maybeSingle();
 
-  // The profile wins - it is what the office typed for their letterhead. The
-  // companies row is the fallback so a company that has not filled it in yet
-  // still shows a name rather than "your contractor".
-  const company = String(prof.name || "").trim() || ((co as any) || {}).name || "your contractor";
-  const logoUrl = String(prof.logo || "").trim();
-  const companyEmail = String(prof.email || "").trim();
-  const website = String(prof.website || "").trim();
-  const addressLine = String(prof.address || "").trim();
-  const phone = String(prof.phone || "").trim();
+  // COMMAND CENTER IS THE LETTERHEAD NOW. The company profile at /company is
+  // the one record; the old "so_profile" copy is kept only as a fallback for
+  // companies that filled that in before the two were merged. Without this
+  // the customer's page showed a blank letterhead while the office's own
+  // preview showed a full one - the same company, two different documents.
+  const coRow: any = co || {};
+  const cityLine = [coRow.city, [coRow.state, coRow.zip].filter(Boolean).join(" ")]
+    .filter(Boolean)
+    .join(", ");
+  const coAddress = [coRow.address, cityLine].filter(Boolean).join(", ");
+
+  const company = String(coRow.name || "").trim() || String(prof.name || "").trim() || "your contractor";
+  const logoUrl = String(coRow.logo || prof.logo || "").trim();
+  const companyEmail = String(coRow.email || prof.email || "").trim();
+  const website = String(coRow.website || prof.website || "").trim();
+  const addressLine = String(coAddress || prof.address || "").trim();
+  const phone = String(coRow.phone || prof.phone || "").trim();
 
   if (!est) {
     return (

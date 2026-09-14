@@ -1016,19 +1016,27 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
         owner: myName || "Owner",
       }, ...clients], setClients);
     }
-    if (rec.id) await save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
-    else {
-      if (!String(rec.estimateNo || "").trim()) {
-        const num = await takeNumber("estimate");
-        if (num) rec.estimateNo = num;
-      }
-      const newId = uid();
-      await save(STORAGE.estimates, [{ ...rec, id: newId }, ...estimates], setEstimates);
-      return newId;
+    if (rec.id) {
+      await save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
+      logAudit("Edited estimate", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
+      return rec.id;
     }
-    return rec.id;
-    logAudit(rec.id ? "Edited estimate" : "Created estimate", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
-    setEstForm(emptyEstimate());
+    if (!String(rec.estimateNo || "").trim()) {
+      const num = await takeNumber("estimate");
+      if (num) rec.estimateNo = num;
+    }
+    const newId = uid();
+    await save(STORAGE.estimates, [{ ...rec, id: newId }, ...estimates], setEstimates);
+    // THE FORM KEEPS THE ID IT WAS JUST SAVED UNDER.
+    // Without this the form still looked brand new after a save, so the next
+    // save minted a SECOND record with a new id - and the accept link already
+    // sitting in the customer's inbox pointed at the first one. That is why
+    // they saw "proposal not found" on a proposal that plainly existed.
+    // Keeping the id also means a sent proposal stays editable: an edit now
+    // updates the record the customer is looking at.
+    setEstForm((f) => ({ ...f, id: newId, estimateNo: rec.estimateNo || f.estimateNo, status: rec.status || f.status }));
+    logAudit("Created estimate", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
+    return newId;
   }
   // THE NUMBER COMES FROM THE DATABASE.
   // It used to be a blank box somebody typed into. Two estimators both
