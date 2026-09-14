@@ -46,6 +46,14 @@ export default function Queue({ proposals, jobs, techs }: { proposals: PendingPr
         setOpenJob(null);
         setDate("");
         setTech("");
+        // Scheduling is the end of the T&M half of this job. The next thing
+        // anyone does is look at it in Proposals, so go there rather than
+        // leaving them on an emptier queue. "Create job" stays put, because
+        // the job it just made still needs a date on this same screen.
+        if (payload && payload.action === "schedule") {
+          router.push("/apps/estimating?tab=estimates");
+          return;
+        }
         router.refresh();
       }
     } catch (e) {
