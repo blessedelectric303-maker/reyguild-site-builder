@@ -634,7 +634,14 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           setSops(await load(STORAGE.sops, SEED_SOPS));
           setSuppliers(await load(STORAGE.suppliers, SEED_SUPPLIERS));
           const prof = await load(STORAGE.profile, emptyProfile());
-          setProfile(prof); setProfileForm(prof);
+          // Company identity is owned by Command Center (suite.companies) and
+          // published on window.companyProfile by Invoicing.tsx. Overlay it so
+          // the two can never drift apart. Everything else in the profile -
+          // warranty, contract, the follow-up email bodies, review URL - is
+          // still this app's own and is preserved.
+          const cf = (typeof window !== "undefined" && window.companyProfile) || null;
+          const prof2 = cf ? { ...prof, ...cf } : prof;
+          setProfile(prof2); setProfileForm(prof2);
           setNotifications(await load(STORAGE.notifications, []));
           setPayouts(await load(STORAGE.payouts, []));
           const st = await load(STORAGE.settings, { theme: "light", payout: DEFAULT_PAYOUT });
@@ -1114,7 +1121,18 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     setErr("Noted — we'll keep following up. No rush.");
   }
   function clientOf(name) { return clients.find((c) => (c.company || "") === name) || null; }
-  function saveProfile() { save(STORAGE.profile, profileForm, setProfile); logAudit("Updated business profile", profileForm.name || ""); setErr("Business profile saved."); }
+  // Still used by Save emails / Save warranty / Save agreement. The company
+  // identity fields are owned by Command Center now, so they are stripped out
+  // before writing - otherwise saving an email template would quietly recreate
+  // the second company record this change exists to remove.
+  const COMPANY_OWNED = ["name", "tagline", "address", "phone", "email", "website", "logo"];
+  function saveProfile() {
+    const own = { ...profileForm };
+    COMPANY_OWNED.forEach((k) => { delete own[k]; });
+    save(STORAGE.profile, own, () => setProfile(profileForm));
+    logAudit("Updated business profile", profileForm.name || "");
+    setErr("Saved.");
+  }
   // exact match needs BOTH the full name and the full address
   function matchContact(name, addr) {
     const n = normExact(name), a = normExact(addr);
@@ -1996,8 +2014,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             {!String(profile.name || "").trim() ? (
               <p className="fl-hint" style={{ color: "#B45309", margin: "10px 16px 0" }}>
                 Your letterhead is empty, so proposals go out with no company
-                name, address or logo on them. Fill it in under Settings and it
-                appears on every document from then on.
+                name, address or logo on them. Fill in your company profile in{" "}
+                <a href="/company" style={{ color: "#B45309", textDecoration: "underline" }}>Command Center</a>{" "}
+                and it appears on every document from then on.
               </p>
             ) : null}
             <div className="fl-form">
@@ -3176,32 +3195,25 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           <section className="fl-panel">
             <div className="fl-panel-head"><h2>Your business letterhead</h2></div>
             <div className="fl-form">
-              <p className="fl-hint">This is what clients see at the top of every estimate and invoice you email — your logo and your company info. None of it is shared anywhere else.</p>
+              {/* READ-ONLY ON PURPOSE. These fields used to be editable here
+                  AND in Command Center, which meant two company records and a
+                  blank letterhead on every document. One place to edit now. */}
+              <p className="fl-hint">This is what clients see at the top of every estimate and invoice you email. It comes from your company profile in Command Center, so you only enter it once — and it is the same on your proposals, your invoices and in T&amp;M.</p>
               <Field label="Logo">
                 <div className="so-logo-row">
                   {profileForm.logo ? <img className="so-logo-prev" src={profileForm.logo} alt="logo" /> : <div className="so-logo-empty">No logo yet</div>}
-                  <div>
-                    <input type="file" accept="image/*" onChange={(ev) => {
-                      const f = ev.target.files && ev.target.files[0]; if (!f) return;
-                      if (f.size > 1500000) { setErr("That image is large — please use one under ~1.5 MB."); return; }
-                      const reader = new FileReader();
-                      reader.onload = () => setProfileForm((p) => ({ ...p, logo: reader.result }));
-                      reader.readAsDataURL(f);
-                    }} />
-                    {profileForm.logo && <button type="button" className="fl-link" onClick={() => setProfileForm((p) => ({ ...p, logo: "" }))}>Remove logo</button>}
-                  </div>
                 </div>
               </Field>
-              <Field label="Business name"><input value={profileForm.name} placeholder="Your company name" onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} /></Field>
-              <Field label="Tagline (optional)"><input value={profileForm.tagline} placeholder="e.g. Licensed & insured · Est. 2014" onChange={(e) => setProfileForm({ ...profileForm, tagline: e.target.value })} /></Field>
-              <Field label="Address"><input value={profileForm.address} placeholder="Street, City, State ZIP" onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })} /></Field>
+              <Field label="Business name"><input value={profileForm.name} readOnly placeholder="Set in Command Center" /></Field>
+              <Field label="Service area"><input value={profileForm.tagline} readOnly placeholder="Set in Command Center" /></Field>
+              <Field label="Address"><input value={profileForm.address} readOnly placeholder="Set in Command Center" /></Field>
               <div className="fl-two">
-                <Field label="Phone"><input value={profileForm.phone} placeholder="(555) 555-5555" onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} /></Field>
-                <Field label="Email"><input value={profileForm.email} placeholder="you@yourcompany.com" onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })} /></Field>
+                <Field label="Phone"><input value={profileForm.phone} readOnly placeholder="Set in Command Center" /></Field>
+                <Field label="Email"><input value={profileForm.email} readOnly placeholder="Set in Command Center" /></Field>
               </div>
-              <Field label="Website (optional)"><input value={profileForm.website} placeholder="yourcompany.com" onChange={(e) => setProfileForm({ ...profileForm, website: e.target.value })} /></Field>
+              <Field label="Website"><input value={profileForm.website} readOnly placeholder="Set in Command Center" /></Field>
               {err && <p className="fl-error">{err}</p>}
-              <div className="fl-actions"><button className="fl-primary" onClick={saveProfile}>Save letterhead</button></div>
+              <div className="fl-actions"><a className="fl-primary" href="/company" style={{ textDecoration: "none", display: "inline-block" }}>Edit in Command Center</a></div>
             </div>
           </section>
 

@@ -18,19 +18,29 @@ function installStorage(companyId: string) {
 
   (window as any).storage = {
     async get(key: string) {
-      const { data } = await table()
+      const { data, error } = await table()
         .select("key,value")
         .eq("company_id", companyId)
         .eq("key", key)
         .maybeSingle();
+      // A refused read and an absent record both arrived here as null, which
+      // is how "permission denied" spent months looking like "not found".
+      if (error) console.error("[storage] read failed for", key, error.message);
       const row = data as Row | null;
       return row ? { key: row.key, value: row.value } : null;
     },
     async set(key: string, value: string) {
-      await table().upsert(
+      // supabase-js RETURNS errors rather than throwing them. This used to
+      // discard the result, so a permissions failure reported success and the
+      // app looked like it simply forgot things. Never hide a failed write.
+      const { error } = await table().upsert(
         { company_id: companyId, key, value, updated_at: new Date().toISOString() },
         { onConflict: "company_id,key" }
       );
+      if (error) {
+        console.error("[storage] save failed for", key, error.message);
+        throw new Error("Could not save (" + error.message + ")");
+      }
       return { key, value };
     },
     async delete(key: string) {
@@ -891,13 +901,37 @@ export default function Invoicing() {
           const { data: co } = await supabase
             .schema("suite")
             .from("companies")
-            .select("name,phone,email,website,address,city,state,zip,owner_name,trade,settings")
+            .select("name,phone,email,website,address,city,state,zip,area,logo,owner_name,trade,settings")
             .eq("id", companyId)
             .maybeSingle();
           const map = buildTokenMap(((co || {}) as unknown) as CompanyFacts);
           (window as any).fillCompanyTokens = (text: string) => fillTokens(text, map);
+
+          // THE LETTERHEAD NOW COMES FROM COMMAND CENTER, NOT FROM A SECOND
+          // COPY. suite.companies is the one company record - /company edits
+          // it, and both halves of the suite read it. Before this the
+          // estimating app kept its own copy under the app_storage key
+          // "so_profile", so filling in Command Center changed nothing here
+          // and documents went out with no company name on them.
+          const c: any = co || {};
+          const cityLine = [c.city, [c.state, c.zip].filter(Boolean).join(" ")]
+            .filter(Boolean)
+            .join(", ");
+          (window as any).companyProfile = {
+            name: c.name || "",
+            // Command Center has no "tagline" field; its Service area is the
+            // one free-text line that belongs under a company name.
+            tagline: c.area || "",
+            address: [c.address, cityLine].filter(Boolean).join(", "),
+            phone: c.phone || "",
+            email: c.email || "",
+            website: c.website || "",
+            logo: c.logo || "",
+          };
         } catch {
           (window as any).fillCompanyTokens = (text: string) => text;
+          // Leave companyProfile undefined so the app falls back to whatever
+          // it already had rather than blanking the letterhead on a blip.
         }
 
         installStorage(companyId);
