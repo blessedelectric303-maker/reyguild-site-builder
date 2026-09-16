@@ -641,6 +641,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const [err, setErr] = useState("");
   const [query, setQuery] = useState("");
   const [estFilter, setEstFilter] = useState("All");
+  const [optsOpen, setOptsOpen] = useState(false);
   const [invFilter, setInvFilter] = useState("All");
   const [confirmId, setConfirmId] = useState(null);
   const formRef = useRef(null);
@@ -1685,13 +1686,38 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
   function removeSop(id) { save(STORAGE.sops, sops.filter((s) => s.id !== id), setSops); setConfirmId(null); }
 
+  // Group a list into months, newest first, with the month's total. How a
+  // contractor actually thinks about their book: what went out in September,
+  // what it came to.
+  function byMonth(rows, totalOf) {
+    const map = new Map();
+    (rows || []).forEach((r) => {
+      const d = new Date((r.date || r.sentAt || "") + "T00:00:00");
+      const key = isNaN(d.getTime()) ? "0000-00" : d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      const label = isNaN(d.getTime())
+        ? "No date"
+        : d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      if (!map.has(key)) map.set(key, { key, label, rows: [], total: 0 });
+      const g = map.get(key);
+      g.rows.push(r);
+      g.total += totalOf(r);
+    });
+    return [...map.values()].sort((a, b) => (a.key < b.key ? 1 : -1));
+  }
+
   // ── filtered lists ────────────────────────────────────────────────────────────
   const shownEstimates = myEstimates.filter((e) => {
-    if (estFilter === "Cleared") { if (!e.archived) return false; }
-    else { if (e.archived) return false;
-      if (estFilter === "Pending") { if (e.status === "Approved" || e.status === "Declined") return false; }
-      else if (estFilter !== "All" && e.status !== estFilter) return false;
-    }
+    // Three tabs, in the words the office uses out loud.
+    //   Sent       - it has gone to the customer and nobody has answered
+    //   Waiting on - drafts and anything still sitting with us
+    //   Accepted   - they said yes
+    //   Declined   - they said no
+    if (e.archived) return false;
+    const st = String(e.status || "").toLowerCase();
+    if (estFilter === "Sent") { if (!e.sentAt || st.includes("approv") || st.includes("declin")) return false; }
+    else if (estFilter === "Waiting on") { if (e.sentAt || st.includes("approv") || st.includes("declin")) return false; }
+    else if (estFilter === "Accepted") { if (!st.includes("approv")) return false; }
+    else if (estFilter === "Declined") { if (!st.includes("declin")) return false; }
     if (query.trim()) { const hay = [e.client, e.estimateNo, e.createdBy, e.notes, e.lumpDescription].join(" ").toLowerCase(); if (!hay.includes(query.toLowerCase())) return false; }
     return true;
   });
@@ -2509,19 +2535,52 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <input className="fl-search" value={query} placeholder="Search client, estimate #, estimator…" onChange={(e) => setQuery(e.target.value)} />
               {/* Always here, always visible. Starting a new one should never
                   mean scrolling past everything you have already done. */}
-              <button className="fl-newbtn" title="New estimate"
-                onClick={() => { setEstForm(emptyEstimate()); setEstFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
-                + New estimate
-              </button>
               <div className="fl-filters">
-                {["All", "Pending", "Approved", "Declined", "Cleared"].map((f) => <button key={f} className={"fl-pill" + (estFilter === f ? " active" : "")} onClick={() => setEstFilter(f)}>{f}</button>)}
+                {["All", "Sent", "Waiting on", "Accepted", "Declined"].map((f) => <button key={f} className={"fl-pill" + (estFilter === f ? " active" : "")} onClick={() => setEstFilter(f)}>{f}</button>)}
+              </div>
+              {/* EVERYTHING THAT IS NOT ABOUT ONE PARTICULAR DOCUMENT.
+                  Starting a new one, and whatever a customer has answered.
+                  Per-document actions belong on the document, not up here -
+                  this button has no way of knowing which one you mean. */}
+              <div className="fl-opts">
+                <button className="fl-optsbtn" onClick={() => setOptsOpen(!optsOpen)}>
+                  Options
+                  {answers.length > 0 && <span className="fl-optscount">{answers.length}</span>}
+                </button>
+                {optsOpen && (
+                  <>
+                    <div className="fl-optsveil" onClick={() => setOptsOpen(false)} />
+                    <div className="fl-optsmenu">
+                      <button onClick={() => { setOptsOpen(false); setEstForm(emptyEstimate()); setEstFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
+                        New estimate
+                      </button>
+                      <button onClick={() => { setOptsOpen(false); setPage("invoices"); }}>New invoice</button>
+                      {answers.length > 0 && <div className="fl-optssep">Customer answers</div>}
+                      {answers.slice(0, 6).map((a) => {
+                        const acc = String(a.response || "").toLowerCase() === "accepted";
+                        return (
+                          <button key={a.ref_id} onClick={() => { setOptsOpen(false); setEstFilter(acc ? "Accepted" : "Declined"); setQuery(a.client || ""); }}>
+                            <span className={"fl-optsdot" + (acc ? " yes" : " no")} />
+                            {(a.client || a.ref_id)} &mdash; {acc ? "accepted" : "declined"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             {loading ? <div className="fl-empty">Loading…</div> : shownEstimates.length === 0 ? (
-              <div className="fl-empty">{myEstimates.length === 0 ? "No estimates yet. Press + New estimate to build your first one." : "Nothing matches that filter."}</div>
+              <div className="fl-empty">{myEstimates.length === 0 ? "None yet. Open Options to start one." : "None in this tab."}</div>
             ) : (
               <div className="fl-cards">
-                {shownEstimates.map((e) => {
+                {byMonth(shownEstimates, (r) => recTotals(r).total).map((g) => (
+                  <div className="fl-month" key={g.key}>
+                    <div className="fl-monthhead">
+                      <span>{g.label}</span>
+                      <strong>{money(g.total)}</strong>
+                    </div>
+                {g.rows.map((e) => {
                   const t = recTotals(e);
                   return (
                     <article key={e.id} className="fl-card" style={{ "--accent": EST_COLOR[e.status] || "var(--ink-2)" }}>
@@ -2591,6 +2650,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                     </article>
                   );
                 })}
+                  </div>
+                ))}
               </div>
             )}
           </section>

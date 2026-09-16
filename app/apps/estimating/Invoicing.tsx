@@ -465,6 +465,51 @@ const STYLE_FIX = `
   box-shadow:0 0 0 1px rgba(255,255,255,.75) inset;
 }
 
+/* Month headings. How a contractor reads their own book: what went out in
+   September, and what it came to. */
+.fl-month{ margin-bottom:18px; }
+.fl-monthhead{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  padding:0 2px 6px; margin-bottom:8px; border-bottom:2px solid #16243F;
+}
+.fl-monthhead span{ font-size:15px; font-weight:800; color:#E8D5A8; letter-spacing:.02em; }
+.fl-monthhead strong{ font-size:15px; color:#fff; }
+
+/* One button for everything that is not about a single document. */
+.fl-opts{ position:relative; flex:none; }
+.fl-optsbtn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:9px 16px; border-radius:9px; cursor:pointer; font-family:inherit;
+  font-size:13px; font-weight:800; color:#16243F;
+  background:var(--metal, linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A));
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 2px 6px rgba(0,0,0,.35);
+}
+.fl-optsbtn:hover{ filter:brightness(1.06); }
+.fl-optscount{
+  min-width:18px; height:18px; padding:0 5px; border-radius:9px;
+  background:#16243F; color:#fff; font-size:11px; line-height:18px; text-align:center;
+}
+.fl-optsveil{ position:fixed; inset:0; z-index:40; }
+.fl-optsmenu{
+  position:absolute; right:0; top:calc(100% + 6px); z-index:41; min-width:260px;
+  background:#101B2E; border:1px solid #2A3C5E; border-radius:10px; padding:6px;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+.fl-optsmenu button{
+  display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+  padding:10px 12px; border:none; background:transparent; cursor:pointer;
+  color:#C7D3E6; font-size:13.5px; font-family:inherit; border-radius:7px;
+}
+.fl-optsmenu button:hover{ background:#16243F; color:#fff; }
+.fl-optssep{
+  padding:8px 12px 4px; font-size:11px; text-transform:uppercase;
+  letter-spacing:.08em; color:#7E8CA6; border-top:1px solid #2A3C5E; margin-top:4px;
+}
+.fl-optsdot{ width:8px; height:8px; border-radius:50%; flex:none; }
+.fl-optsdot.yes{ background:#34d399; }
+.fl-optsdot.no{ background:#9aa5b8; }
+
 /* Hours per line. Internal only - it never reaches the customer's copy. */
 .so-line-hrs{ width:56px; flex:none; text-align:center; }
 .so-totals-hrs{
