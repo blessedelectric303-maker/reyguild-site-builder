@@ -12,11 +12,17 @@ export async function POST(req: NextRequest) {
   let token = "";
   let response = "";
   let reason = "";
+  let signatureName = "";
+  let signatureData = "";
   try {
     const b = await req.json();
     token = String(b.token || "");
     response = String(b.response || "");
     reason = String(b.reason || "").slice(0, 2000);
+    signatureName = String(b.signatureName || "").slice(0, 200);
+    // A drawn signature as a PNG data URL. Capped so a huge canvas cannot be
+    // used to stuff the row; a 600x200 pad lands well under this.
+    signatureData = String(b.signatureData || "").slice(0, 400000);
   } catch {
     return NextResponse.json({ error: "Bad request." }, { status: 400 });
   }
@@ -37,8 +43,43 @@ export async function POST(req: NextRequest) {
   }
   const sb = createClient(url, key, { auth: { persistSession: false } });
 
+  // AN APPROVAL WITHOUT A SIGNATURE IS NOT AN APPROVAL.
+  // The signature is the evidence that the customer, not the office, said yes.
+  if (response === "accepted" && (!signatureName.trim() || !signatureData.startsWith("data:image/"))) {
+    return NextResponse.json(
+      { error: "Please type your name and sign before approving." },
+      { status: 400 }
+    );
+  }
+
   const fwd = req.headers.get("x-forwarded-for");
   const ip = fwd ? fwd.split(",")[0].trim() : req.headers.get("x-real-ip");
+
+  // Freeze the figure they actually agreed to. The proposal can be edited
+  // afterwards - that is deliberate - so the accepted price has to be captured
+  // here or there is no record of what was signed for.
+  let agreedTotal: number | null = null;
+  try {
+    const { data: snap } = await sb
+      .schema("suite")
+      .from("app_storage")
+      .select("value")
+      .eq("company_id", claim.companyId)
+      .eq("key", "so_estimates")
+      .maybeSingle();
+    const list = JSON.parse(((snap as any) || {}).value || "[]");
+    const rec = (Array.isArray(list) ? list : []).find((e: any) => String(e.id) === claim.refId);
+    if (rec) {
+      agreedTotal = String(rec.mode || "") === "lumpsum"
+        ? Number(rec.lumpPrice || 0)
+        : (rec.lines || []).reduce(
+            (s: number, l: any) => s + (Number(l.qty) || 0) * (Number(l.unitPrice) || 0),
+            0
+          );
+    }
+  } catch {
+    // A missing total must not block the customer's answer.
+  }
 
   const { error } = await sb.schema("suite").from("proposal_responses").insert({
     company_id: claim.companyId,
@@ -47,6 +88,9 @@ export async function POST(req: NextRequest) {
     reason: reason || null,
     ip_address: ip,
     user_agent: req.headers.get("user-agent"),
+    signature_name: signatureName || null,
+    signature_data: signatureData || null,
+    agreed_total: agreedTotal,
   });
 
   if (error) {

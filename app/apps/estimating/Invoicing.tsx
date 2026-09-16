@@ -353,6 +353,28 @@ const STYLE_FIX = `
   font-family:inherit; text-align:left;
 }
 .fl-setcard:hover{ border-color:#CC9000; }
+
+/* The per-job choice of whether the customer sees a price on every line.
+   Sits directly above Send to customer, because that is the moment it
+   matters and the last chance to change it. */
+.fl-pricemode{ border:1px solid #16243F; border-radius:10px; padding:12px 14px; margin:0 0 12px; width:100%; }
+.fl-pricemode-head{ display:flex; align-items:center; gap:8px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#9FB0CC; margin-bottom:8px; }
+.fl-help{
+  width:18px; height:18px; line-height:16px; border-radius:50%; flex:none;
+  border:1px solid #CC9000; background:transparent; color:#CC9000;
+  font-size:12px; font-weight:700; cursor:pointer; padding:0;
+}
+.fl-help:hover{ background:#CC9000; color:#16243F; }
+.fl-pricemode-opts{ display:flex; gap:8px; flex-wrap:wrap; }
+.fl-pricemode-btn{
+  flex:1 1 140px; padding:10px 12px; border-radius:8px; cursor:pointer;
+  border:1px solid #2A3C5E; background:transparent; color:#C7D3E6;
+  font-size:13px; font-weight:600; font-family:inherit;
+}
+.fl-pricemode-btn.on{ background:#CC9000; color:#16243F; border-color:#CC9000; }
+.fl-pricemode-help{ margin-top:10px; border-top:1px solid #2A3C5E; padding-top:10px; }
+.fl-pricemode-help p{ font-size:12.5px; line-height:1.6; color:#9FB0CC; margin:0 0 8px; }
+.fl-pricemode-help p:last-child{ margin-bottom:0; }
 .fl-setcard-text{ flex:1; min-width:0; }
 .fl-setcard-title{
   display:block; font-size:17px; font-weight:700; color:#16243F;

@@ -426,7 +426,7 @@ function guessClientMap(fields) {
 
 const emptyPerson = () => ({ id: null, name: "", role: "Estimator", email: "", phone: "", payout: "" });
 const emptyClient = () => ({ id: null, company: "", contact: "", phone: "", email: "", address: "", notes: "", owner: "" });
-const emptyProfile = () => ({ name: "", tagline: "", address: "", phone: "", email: "", website: "", logo: "", warranty: "", contract: "", emailFollowup1: "", emailFollowup2: "", emailReview: "", emailOverdue: "", reviewUrl: "", fromEmail: "", replyTo: "" });
+const emptyProfile = () => ({ name: "", tagline: "", address: "", phone: "", email: "", website: "", logo: "", warranty: "", contract: "", laborMaterials: "", emailFollowup1: "", emailFollowup2: "", emailReview: "", emailOverdue: "", reviewUrl: "", fromEmail: "", replyTo: "" });
 // {tokens} fill in automatically from the company info + the estimate
 const DEFAULT_FOLLOWUP_1 =
 `Hi {first},
@@ -497,7 +497,7 @@ const emptyPriceItem = () => ({
   unit: "ea", price: "", cost: "",
 });
 const emptySupplier = () => ({ id: null, name: "", url: "" });
-const emptyEstimate = () => ({ id: null, estimateNo: "", date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
+const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
 const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [] });
 const PAY_METHODS = ["Card", "Online deposit", "Check", "Cash", "Other"];
 const NET_DAYS = 15;
@@ -543,6 +543,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     }
   });
 
+  const [priceHelp, setPriceHelp] = useState(false);
   const [people, setPeople] = useState([]);
   const [clients, setClients] = useState([]);
   const [priceList, setPriceList] = useState([]);
@@ -2018,13 +2019,32 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <div className="fl-panel-head"><h2>{estForm.id ? "Edit estimate" : "New estimate"}</h2></div>
             {/* A document with no company name on it looks like a scam to the
                 person receiving it. Say so here, where somebody is about to
-                send one. */}
+                send one. Address, phone and website are all optional - plenty
+                of trades run from a truck and will not put a home address on
+                a document going to strangers - so only the name and one way
+                to reach them are ever asked for. */}
             {!String(profile.name || "").trim() ? (
               <p className="fl-hint" style={{ color: "#B45309", margin: "10px 16px 0" }}>
-                Your letterhead is empty, so proposals go out with no company
-                name, address or logo on them. Fill in your company profile in{" "}
-                <a href="/company" style={{ color: "#B45309", textDecoration: "underline" }}>Command Center</a>{" "}
-                and it appears on every document from then on.
+                Your letterhead has no company name, so documents go out
+                unbranded and read as suspicious. Add it in{" "}
+                <a href="/company" style={{ color: "#B45309", textDecoration: "underline" }}>Command Center</a>.
+                Address and website are optional &mdash; the name is not.
+              </p>
+            ) : (!String(profile.phone || "").trim() && !String(profile.email || "").trim() && !String(profile.website || "").trim()) ? (
+              <p className="fl-hint" style={{ color: "#B45309", margin: "10px 16px 0" }}>
+                Your letterhead has no way for a customer to reach you. Add a
+                phone, an email or a website in{" "}
+                <a href="/company" style={{ color: "#B45309", textDecoration: "underline" }}>Command Center</a> &mdash; any one of the three is enough.
+              </p>
+            ) : null}
+            {/* Until a price list is imported every line is typed by hand,
+                which is slow and inconsistent between estimators. */}
+            {!(priceList && priceList.length) ? (
+              <p className="fl-hint" style={{ color: "#B45309", margin: "10px 16px 0" }}>
+                You have no price list yet, so every line has to be typed from
+                scratch. Build one from the command sheet on the{" "}
+                <a href="#" style={{ color: "#B45309", textDecoration: "underline" }} onClick={(e) => { e.preventDefault(); setPage("prices"); }}>Price List</a>{" "}
+                screen &mdash; hand it to an AI, and import what it gives back.
               </p>
             ) : null}
             <div className="fl-form">
@@ -2188,6 +2208,36 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {/* Saves first, then emails. Sending an unsaved proposal
                     would put a link in a customer's inbox pointing at
                     something that does not exist yet. */}
+                {/* WHAT THE CUSTOMER SEES ON THE PROPOSAL.
+                    Some contractors want a price on every line; some want one
+                    figure so the conversation stays on the job rather than the
+                    parts. It is a per-job call, not a company setting. */}
+                <div className="fl-pricemode">
+                  <div className="fl-pricemode-head">
+                    <span>Prices on the customer's copy</span>
+                    <button type="button" className="fl-help" title="Click for an explanation"
+                      onClick={() => setPriceHelp(!priceHelp)}>?</button>
+                  </div>
+                  <div className="fl-pricemode-opts">
+                    <button type="button"
+                      className={"fl-pricemode-btn" + (String(estForm.priceDisplay || "total") === "total" ? " on" : "")}
+                      onClick={() => setEstForm({ ...estForm, priceDisplay: "total" })}>
+                      One total only
+                    </button>
+                    <button type="button"
+                      className={"fl-pricemode-btn" + (String(estForm.priceDisplay || "total") === "lines" ? " on" : "")}
+                      onClick={() => setEstForm({ ...estForm, priceDisplay: "lines" })}>
+                      Price on every line
+                    </button>
+                  </div>
+                  {priceHelp && (
+                    <div className="fl-pricemode-help">
+                      <p><strong>One total only.</strong> The customer sees everything included in the job and a single price at the end. Keeps the conversation on the work rather than on the cost of each part.</p>
+                      <p><strong>Price on every line.</strong> The customer sees what each item costs. More open, and some customers expect it &mdash; but it invites questions about individual lines.</p>
+                      <p>Either way they see the full scope, the warranty and the agreement. This only changes whether a figure sits beside each line.</p>
+                    </div>
+                  )}
+                </div>
                 <button
                   className="fl-primary"
                   disabled={sending || !String(estForm.clientEmail || "").trim()}
@@ -3291,6 +3341,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <p className="fl-hint">This is attached to the bottom of every estimate you email. It's premade with a one-year term and fills in your business name from the Business tab.{can.editProfile ? " You can edit the wording below." : ""}</p>
               {can.editProfile ? (
                 <>
+                  <Field label="Labor &amp; materials note"><textarea rows={4} value={profileForm.laborMaterials} placeholder="Labor and material are both included in every line item above. Nothing is billed separately after the fact." onChange={(e) => setProfileForm({ ...profileForm, laborMaterials: e.target.value })} /></Field>
                   <Field label="Warranty text"><textarea rows={10} value={profileForm.warranty} placeholder={defaultWarranty(profileForm.name)} onChange={(e) => setProfileForm({ ...profileForm, warranty: e.target.value })} /></Field>
                   {err && <p className="fl-error">{err}</p>}
                   <div className="fl-actions">

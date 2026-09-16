@@ -34,6 +34,8 @@ function Shell({ children }: { children: React.ReactNode }) {
           border: "1px solid #e2e8f0",
           borderRadius: 12,
           padding: 28,
+          position: "relative",
+          overflow: "hidden",
           fontFamily: "-apple-system,Segoe UI,Roboto,Arial,sans-serif",
           color: "#1e293b",
         }}
@@ -180,111 +182,194 @@ export default async function ProposalPage({
   const days = sentAt ? Math.floor((Date.now() - sentAt) / 86400000) : 0;
   const expired = days > 60;
 
+  const lines = Array.isArray(est.lines) ? est.lines : [];
+  const isLump = String(est.mode || "") === "lumpsum";
+
+  // The app computes totals rather than storing them (recSub in the estimating
+  // app). Reading est.total gave undefined, which is why this page showed
+  // $0.00 on a real proposal. Mirror the same rule here.
+  const subtotal = isLump
+    ? Number(est.lumpPrice || 0)
+    : lines.reduce((s: number, l: any) => s + (Number(l.qty) || 0) * (Number(l.unitPrice) || 0), 0);
+
+  // The contractor chooses per job whether the customer sees a price on every
+  // line or one figure at the end. Default to one figure.
+  const showLinePrices = String(est.priceDisplay || "total") === "lines";
+
+  const proposalPhotos = (est.photos || []).filter((p: any) => String(p.stage || "proposal") !== "completion");
+  const completionPhotos = (est.photos || []).filter((p: any) => String(p.stage || "") === "completion");
+
+  const laborText = String(prof.laborMaterials || "").trim() ||
+    "Labor and material are both included in every line item above. Nothing is billed separately after the fact.";
+  const warrantyText = String(prof.warranty || "").trim();
+  const contractText = String(prof.contract || "").trim();
+
+  const RULE = "1px solid #d4d4d4";
+  const sectionTitle = {
+    fontSize: 13, fontWeight: 700, letterSpacing: "0.04em",
+    textTransform: "uppercase" as const, color: "#111", margin: 0,
+  };
+  const bodyText = { fontSize: 13.5, lineHeight: 1.65, color: "#333", whiteSpace: "pre-wrap" as const, margin: "6px 0 0" };
+
+  function Row({ title, note, price }: { title: string; note?: string; price?: string }) {
+    return (
+      <div style={{ borderBottom: RULE, padding: "14px 0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+          <div style={sectionTitle}>{title}</div>
+          {price ? <div style={{ fontSize: 13.5, color: "#111", whiteSpace: "nowrap" }}>{price}</div> : null}
+        </div>
+        {note ? <p style={bodyText}>{note}</p> : null}
+      </div>
+    );
+  }
+
+  function Photos({ label, list }: { label: string; list: any[] }) {
+    if (!list.length) return null;
+    return (
+      <div style={{ borderBottom: RULE, padding: "14px 0" }}>
+        <div style={sectionTitle}>{label}</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+          {list.map((ph: any, i: number) => (
+            <img key={i} src={ph.url || ph.data || ph} alt=""
+                 style={{ width: 150, height: 150, objectFit: "cover", border: RULE }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Shell>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 14,
-        borderBottom: "2px solid #0f172a", paddingBottom: 12, marginBottom: 20,
-      }}>
-        {logoUrl ? (
-          <img src={logoUrl} alt={company}
-               style={{ height: 54, width: "auto", flex: "none" }} />
-        ) : null}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 19, fontWeight: 700 }}>{company}</div>
-          {addressLine ? (
-            <div style={{ fontSize: 12, color: "#64748b" }}>{addressLine}</div>
-          ) : null}
-          {phone ? <div style={{ fontSize: 12, color: "#64748b" }}>{phone}</div> : null}
-          {companyEmail ? (
-            <div style={{ fontSize: 12, color: "#64748b" }}>{companyEmail}</div>
-          ) : null}
-          {website ? (
-            <div style={{ fontSize: 12, color: "#64748b" }}>{website}</div>
-          ) : null}
+      {/* The company's own crest, faint, behind the page. This is their
+          document - it carries their brand, not ours. Black and white
+          everywhere else so it prints the way it looks. */}
+      {logoUrl ? (
+        <div aria-hidden style={{
+          position: "absolute", inset: 0, display: "flex",
+          alignItems: "center", justifyContent: "center",
+          opacity: 0.04, pointerEvents: "none", overflow: "hidden",
+        }}>
+          <img src={logoUrl} alt="" style={{ width: "78%", maxWidth: 460 }} />
+        </div>
+      ) : null}
+
+      <div style={{ position: "relative" }}>
+        {/* ---- letterhead ---------------------------------------------- */}
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+          <div style={{ minWidth: 0 }}>
+            {logoUrl ? (
+              <img src={logoUrl} alt={company} style={{ height: 58, width: "auto", display: "block", marginBottom: 10 }} />
+            ) : null}
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#111" }}>{company}</div>
+            {/* Every line is optional on purpose. A company that does not want
+                its address on a document sent to strangers simply leaves it
+                blank in Command Center and nothing renders here. */}
+            {addressLine ? <div style={{ fontSize: 12.5, color: "#555" }}>{addressLine}</div> : null}
+            {phone ? <div style={{ fontSize: 12.5, color: "#555" }}>{phone}</div> : null}
+            {companyEmail ? <div style={{ fontSize: 12.5, color: "#555" }}>{companyEmail}</div> : null}
+            {website ? <div style={{ fontSize: 12.5, color: "#555" }}>{website}</div> : null}
+          </div>
+          <div style={{ textAlign: "right", fontSize: 12.5, color: "#555" }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#888" }}>Prepared for</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#111", marginTop: 2 }}>{est.client || "Customer"}</div>
+            {est.clientAddr ? <div style={{ marginTop: 2 }}>{est.clientAddr}</div> : null}
+            <div style={{ marginTop: 10 }}>
+              {est.estimateNo ? <div>Proposal #{est.estimateNo}</div> : null}
+              {est.date ? <div>{est.date}</div> : null}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ borderBottom: "2px solid #111", margin: "18px 0 0" }} />
+
+        {/* ---- the job ------------------------------------------------- */}
+        <div style={{ borderBottom: RULE, padding: "14px 0" }}>
+          <div style={sectionTitle}>Description</div>
+          <p style={bodyText}>
+            {est.jobDescription || est.lumpDescription || "The work we discussed"}
+          </p>
+        </div>
+
+        {/* ---- line items ---------------------------------------------- */}
+        {isLump ? (
+          <Row
+            title={est.lumpDescription || "The work described above"}
+            price={showLinePrices ? money(est.lumpPrice) : undefined}
+          />
+        ) : (
+          lines
+            .filter((l: any) => String(l.name || "").trim())
+            .map((l: any, i: number) => (
+              <Row
+                key={i}
+                title={String(l.name)}
+                note={Number(l.qty) > 1 ? "Quantity: " + l.qty : undefined}
+                price={showLinePrices ? money((Number(l.qty) || 0) * (Number(l.unitPrice) || 0)) : undefined}
+              />
+            ))
+        )}
+
+        {/* These three carry no price on purpose. They are part of what the
+            customer is buying, at no separate charge, and saying so plainly
+            is worth more than a row of $0.00. */}
+        <Row title="Labor &amp; materials included" note={laborText} />
+        {warrantyText ? <Row title="Warranty" note={warrantyText} /> : null}
+        {contractText ? <Row title="Contract agreement" note={contractText} /> : null}
+
+        <Photos label="Proposal photos" list={proposalPhotos} />
+        <Photos label="Completion photos" list={completionPhotos} />
+
+        {/* ---- the only money on the page ------------------------------ */}
+        <div style={{ display: "flex", justifyContent: "flex-end", padding: "18px 0 6px" }}>
+          <div style={{ minWidth: 240 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13.5, color: "#555" }}>
+              <span>Subtotal</span><span>{money(subtotal)}</span>
+            </div>
+            <div style={{ borderTop: "2px solid #111", marginTop: 8, paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>Total</span>
+              <span style={{ fontSize: 22, fontWeight: 700 }}>{money(subtotal)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ---- answer -------------------------------------------------- */}
+        <div style={{ marginTop: 18 }}>
+          {already ? (
+            <div style={{
+              background: "#f5f5f5", border: RULE, borderRadius: 6, padding: 16,
+              fontSize: 14, lineHeight: 1.6,
+            }}>
+              <strong>
+                {(already as any).response === "accepted"
+                  ? "You have already approved this proposal."
+                  : "You have already declined this proposal."}
+              </strong>
+              <br />
+              {(already as any).response === "accepted"
+                ? company + " has been told and will be in touch to book it in."
+                : "Thank you for letting us know."}
+              {phone ? " If that was a mistake, call " + phone + "." : ""}
+            </div>
+          ) : expired ? (
+            <div style={{ background: "#f5f5f5", border: RULE, borderRadius: 6, padding: 16, fontSize: 14, lineHeight: 1.6 }}>
+              <strong>This proposal has expired.</strong>
+              <br />
+              Prices hold for sixty days and this one was sent {days} days ago.
+              {phone ? " Call " + phone + " and we will re-quote it for you." : ""}
+            </div>
+          ) : (
+            <Respond token={token} company={company} phone={phone} total={money(subtotal)} />
+          )}
+        </div>
+
+        <div style={{ marginTop: 26, paddingTop: 14, borderTop: RULE }}>
+          <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: 0, color: "#333" }}>
+            Thank you,<br />
+            <strong>{company}</strong><br />
+            <span style={{ color: "#666" }}>We look forward to your business.</span>
+          </p>
         </div>
       </div>
-
-      <h1 style={{ fontSize: 20, margin: "0 0 4px" }}>Your proposal</h1>
-      <p style={{ color: "#64748b", fontSize: 14, margin: "0 0 18px" }}>
-        {est.jobDescription || est.lumpDescription || "The work we discussed"}
-      </p>
-
-      <div
-        style={{
-          background: "#f8fafc",
-          border: "1px solid #e2e8f0",
-          borderRadius: 8,
-          padding: 16,
-          marginBottom: 20,
-        }}
-      >
-        <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b" }}>
-          Total
-        </div>
-        <div style={{ fontSize: 30, fontWeight: 700, color: "#0f172a" }}>
-          {money(est.total)}
-        </div>
-      </div>
-
-      {already ? (
-        <div
-          style={{
-            background: (already as any).response === "accepted" ? "#ecfdf5" : "#f1f5f9",
-            border: "1px solid " + ((already as any).response === "accepted" ? "#6ee7b7" : "#cbd5e1"),
-            borderRadius: 8,
-            padding: 16,
-            fontSize: 14,
-            lineHeight: 1.6,
-          }}
-        >
-          <strong>
-            {(already as any).response === "accepted"
-              ? "You have already accepted this proposal."
-              : "You have already declined this proposal."}
-          </strong>
-          <br />
-          {(already as any).response === "accepted"
-            ? company + " has been told and will be in touch to book it in."
-            : "Thank you for letting us know."}
-          {phone ? " If that was a mistake, call " + phone + "." : ""}
-        </div>
-      ) : expired ? (
-        <div
-          style={{
-            background: "#fffbeb",
-            border: "1px solid #fcd34d",
-            borderRadius: 8,
-            padding: 16,
-            fontSize: 14,
-            lineHeight: 1.6,
-          }}
-        >
-          <strong>This proposal has expired.</strong>
-          <br />
-          Prices hold for sixty days and this one was sent {days} days ago.
-          Material costs and scheduling have likely moved since.
-          {phone ? " Call " + phone + " and we will re-quote it for you." : ""}
-        </div>
-      ) : (
-        <Respond token={token} company={company} phone={phone} />
-      )}
-
-      {/* The sign off sits outside the expired branch on purpose - somebody
-          whose proposal has run out is exactly the person you want to sound
-          human to. */}
-      <div style={{ marginTop: 28, paddingTop: 16, borderTop: "1px solid #e2e8f0" }}>
-        <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: "#334155" }}>
-          Thank you,<br />
-          <strong>{company}</strong><br />
-          <span style={{ color: "#64748b" }}>We look forward to your business.</span>
-        </p>
-      </div>
-
-      <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 24, lineHeight: 1.5 }}>
-        Accepting confirms the scope and price above and the Terms and
-        Conditions supplied with this proposal.
-      </p>
     </Shell>
   );
 }
