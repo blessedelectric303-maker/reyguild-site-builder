@@ -454,6 +454,16 @@ export default function NewJobForm({
           border-radius: 0.5rem;
           background-color: white;
           font-size: 0.875rem;
+          /* No colour was set here, so a filled-in field inherited something
+             washed out and read as empty placeholder text. On a page whose
+             whole point is "this is already filled in for you", that is the
+             one thing it must not look like. */
+          color: rgb(15 23 42);
+          font-weight: 500;
+        }
+        .input::placeholder {
+          color: rgb(148 163 184);
+          font-weight: 400;
         }
         .input:focus {
           outline: 2px solid rgb(37 99 235);
