@@ -1716,7 +1716,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     const st = String(e.status || "").toLowerCase();
     if (estFilter === "Sent") { if (!e.sentAt || st.includes("approv") || st.includes("declin")) return false; }
     else if (estFilter === "Waiting on") { if (e.sentAt || st.includes("approv") || st.includes("declin")) return false; }
-    else if (estFilter === "Accepted") { if (!st.includes("approv")) return false; }
+    else if (estFilter === "Approved") { if (!st.includes("approv")) return false; }
     else if (estFilter === "Declined") { if (!st.includes("declin")) return false; }
     if (query.trim()) { const hay = [e.client, e.estimateNo, e.createdBy, e.notes, e.lumpDescription].join(" ").toLowerCase(); if (!hay.includes(query.toLowerCase())) return false; }
     return true;
@@ -2161,7 +2161,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <div key={a.ref_id} className={"fl-answer" + (accepted ? " yes" : "")}>
                 <div className="fl-answer-main">
                   <div className="fl-answer-t">
-                    {accepted ? "Accepted" : "Declined"}
+                    {accepted ? "Approved" : "Declined"}
                     {who ? " - " + who : ""}
                   </div>
                   {est && est.jobDescription ? (
@@ -2539,8 +2539,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                   separate thing to go and look at - it is a proposal that
                   changed state, so the count belongs on the tab it moved to. */}
               <div className="fl-filters">
-                {["All", "Sent", "Waiting on", "Accepted", "Declined"].map((f) => {
-                  const n = f === "Accepted"
+                {["All", "Sent", "Waiting on", "Approved", "Declined"].map((f) => {
+                  const n = f === "Approved"
                     ? answers.filter((a) => String(a.response || "").toLowerCase() === "accepted").length
                     : f === "Declined"
                       ? answers.filter((a) => String(a.response || "").toLowerCase() === "declined").length
@@ -2557,7 +2557,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                   phone where a thumb already is; top right on a desktop. */}
               <button className="fl-newbig"
                 onClick={() => { setEstForm(emptyEstimate()); setEstFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
-                New proposal
+                NEW PROPOSAL
               </button>
             </div>
             {loading ? <div className="fl-empty">Loading…</div> : shownEstimates.length === 0 ? (
@@ -2598,7 +2598,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                         <span className="fl-stamp">{e.createdBy ? "By " + e.createdBy : "No estimator"}</span>
                         <div className="fl-card-actions">
                           <button className="fl-link" onClick={() => editEstimate(e)}>Edit</button>
-                          <button className="fl-link" onClick={() => setPreviewFor(previewFor === e.id ? null : e.id)}>{previewFor === e.id ? "Hide preview" : "Preview"}</button>
+                          <button className="fl-link" onClick={() => setPreviewEst(e)}>Preview</button>
                           {clientOf(e.client)?.email
                             ? <a className="fl-link" href={sendDocMailto(e, "estimate")}>Email to client</a>
                             : (emailPromptFor === e.id
@@ -2614,8 +2614,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                             : <button className="fl-link" onClick={() => archiveEstimate(e.id, true)}>Clear from list</button>}
                           {confirmId === e.id ? (
                             <><button className="fl-link danger" onClick={() => removeEstimate(e.id)}>Delete</button><button className="fl-link" onClick={() => setConfirmId(null)}>Keep</button></>
-                          ) : <button className="fl-link" onClick={() => setConfirmId(e.id)}>Remove</button>}
-                          {e.status !== "Approved" && <button className="fl-link" onClick={() => setSignFor(signFor === e.id ? null : e.id)}>✍ Client sign-off</button>}
+                          ) : null}
+                          {!/approv|declin/i.test(String(e.status || "")) && <button className="fl-link" onClick={() => setSignFor(signFor === e.id ? null : e.id)}>✍ Client sign-off</button>}
                         </div>
                       </div>
                       {previewFor === e.id && (

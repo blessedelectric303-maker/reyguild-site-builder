@@ -394,19 +394,26 @@ const STYLE_FIX = `
 .fl-answer-go:hover{ filter:brightness(1.06); }
 
 /* The customer's copy, as they saw it. Paper, not app. */
+/* Full screen, because this is the document - not a thumbnail of it. The
+   tech should see exactly what landed in the customer's inbox. */
 .fl-prevwrap{
-  position:fixed; inset:0; z-index:9000; background:rgba(3,8,18,.72);
-  display:flex; align-items:flex-start; justify-content:center; padding:24px 12px; overflow:auto;
+  position:fixed; inset:0; z-index:9000; background:#334155;
+  display:block; overflow:auto; padding:0;
 }
 .fl-prev{
-  position:relative; width:100%; max-width:640px; background:#fff; color:#1e293b;
-  border-radius:10px; padding:26px 24px 22px;
+  position:relative; width:100%; max-width:720px; min-height:100%;
+  margin:0 auto; background:#fff; color:#1e293b;
+  border-radius:0; padding:56px 22px 40px;
   font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
 }
 .fl-prev-x{
-  position:absolute; top:10px; right:12px; border:none; background:transparent;
-  font-size:26px; line-height:1; cursor:pointer; color:#94a3b8;
+  position:fixed; top:12px; right:14px; z-index:9001;
+  width:38px; height:38px; border-radius:50%;
+  border:1px solid rgba(255,255,255,.5); background:rgba(15,23,42,.85);
+  font-size:22px; line-height:1; cursor:pointer; color:#fff;
 }
+.fl-prev-x:hover{ background:#0f172a; }
+@media (min-width:900px){ .fl-prev{ padding:56px 40px 48px; } }
 .fl-prev-head{ border-bottom:2px solid #111; padding-bottom:10px; font-size:12.5px; color:#555; }
 .fl-prev-co{ font-size:17px; font-weight:700; color:#111; }
 .fl-prev-for{ margin-top:12px; font-size:12.5px; color:#555; }
