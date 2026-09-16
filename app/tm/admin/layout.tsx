@@ -21,8 +21,11 @@ export default async function AdminLayout({
   }
 
   // Trial / subscription lock: office users hit the subscribe wall when locked.
+  // The page is at /subscription. /subscribe does not exist, so a locked org
+  // was sent to a 404 instead of the screen explaining what to do about it -
+  // the worst possible moment to show somebody a dead end.
   if (isOrgLocked(user.org)) {
-    redirect("/subscribe");
+    redirect("/subscription");
   }
 
   const isOwnerOrAdmin = ADMIN_ROLES.includes(user.role as any);
