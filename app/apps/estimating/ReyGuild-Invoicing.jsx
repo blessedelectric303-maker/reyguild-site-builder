@@ -338,6 +338,13 @@ const HELP_ARTICLES = [
 
 
 // ── helpers ──────────────────────────────────────────────────────────────────
+// Statuses arrive in both casings (the accept route has written "approved").
+// Show and colour them one way.
+function statusWord(s) { const t = String(s || "").trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : "Draft"; }
+// SIGNED IS SEALED. Once a customer has accepted, the proposal is the record
+// of what they agreed to and is never edited. Extra work is a new proposal
+// or invoice marked "adds to #...".
+function isSealed(e) { return !!(e && (e.signedAt || String(e.status || "").toLowerCase().includes("approv"))); }
 function uid() { return Date.now() + "-" + Math.random().toString(36).slice(2, 7); }
 function num(v) { const n = parseFloat((v ?? "").toString().replace(/[^0-9.\-]/g, "")); return isNaN(n) ? 0 : n; }
 function money(n) { return "$" + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -506,8 +513,8 @@ const emptyPriceItem = () => ({
   unit: "ea", price: "", cost: "",
 });
 const emptySupplier = () => ({ id: null, name: "", url: "" });
-const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", lumpHours: "", notifyOnOpen: true, includeLabor: true, includeWarranty: true, includeContract: true, date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
-const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [] });
+const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", lumpHours: "", notifyOnOpen: true, includeLabor: true, includeWarranty: true, includeContract: true, date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [], changeOrderFor: "" });
+const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [], changeOrderFor: "" });
 const PAY_METHODS = ["Card", "Online deposit", "Check", "Cash", "Other"];
 const NET_DAYS = 15;
 
@@ -1176,7 +1183,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     }
   }
 
-  function editEstimate(e) { setEstForm({ ...emptyEstimate(), ...e, lines: e.lines && e.lines.length ? e.lines : [emptyLine()] }); setPage("estimates"); setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }
+  function editEstimate(e) { if (isSealed(e)) { setErr("This proposal is signed, so it is sealed. For more work, start a NEW PROPOSAL and fill in \"Adds to\" with #" + (e.estimateNo || "") + "."); return; } setEstForm({ ...emptyEstimate(), ...e, lines: e.lines && e.lines.length ? e.lines : [emptyLine()] }); setPage("estimates"); setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }
   function setEstStatus(id, status) { const e = estimates.find((x) => x.id === id); save(STORAGE.estimates, estimates.map((x) => (x.id === id ? { ...x, status } : x)), setEstimates); logAudit("Estimate → " + status, e ? (e.client || "") + (e.estimateNo ? " #" + e.estimateNo : "") : ""); }
   function removeEstimate(id) { save(STORAGE.estimates, estimates.filter((e) => e.id !== id), setEstimates); setConfirmId(null); }
   function convertToInvoice(e) {
@@ -2432,6 +2439,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 </Field>
               )}
 
+              <Field label="Adds to (change order - optional)"><input value={estForm.changeOrderFor || ""} placeholder="Proposal or invoice #, e.g. 26" onChange={(e) => setEstForm({ ...estForm, changeOrderFor: e.target.value })} /></Field>
               <Field label="Job description"><textarea rows={3} value={estForm.jobDescription} placeholder="Describe the job in plain language — what you'll do and what's included." onChange={(e) => setEstForm({ ...estForm, jobDescription: e.target.value })} /></Field>
               <p className="fl-hint">Build it as a priced-out sheet: write the job description, then add each item from the price list as its own line (include labor as a line too). Your one-year warranty and service agreement are attached to every estimate automatically.</p>
 
@@ -2625,7 +2633,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {g.rows.map((e) => {
                   const t = recTotals(e);
                   return (
-                    <article key={e.id} className="fl-card fl-card--open" style={{ "--accent": EST_COLOR[e.status] || "var(--ink-2)" }}
+                    <article key={e.id} className="fl-card fl-card--open" style={{ "--accent": EST_COLOR[statusWord(e.status)] || "var(--ink-2)" }}
                       role="button" tabIndex={0} title="Open this proposal"
                       onClick={() => openDocFor("estimate", e)}
                       onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openDocFor("estimate", e); } }}>
@@ -2634,11 +2642,12 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                           <h3>{e.client || "(no client)"}</h3>
                           <p className="fl-addr">{e.estimateNo ? "#" + e.estimateNo + " · " : ""}{fmtDate(e.date)}</p>
                         </div>
-                        <span className="fl-status">{e.status}</span>
+                        <span className="fl-status">{statusWord(e.status)}</span>
                       </div>
                       <div className="fl-meta">
                         <span><strong>{money(t.total)}</strong></span>
                         <span>{e.mode === "lumpsum" ? "lump sum" : (e.lines || []).length + " line" + ((e.lines || []).length === 1 ? "" : "s")}</span>
+                        {String(e.changeOrderFor || "").trim() && <span className="fl-paychip">adds to #{String(e.changeOrderFor).replace(/^#/, "")}</span>}
                         {e.signedAt && <span className="fl-paychip">signed ✓</span>}
                         {e.invoiced && <span className="fl-paychip">invoiced ✓</span>}
                         {can.seeNumbers && e.mode !== "lumpsum" && <span className="fl-paychip">margin {money(t.sub - costOfLines(e.lines))}</span>}
@@ -2688,6 +2697,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 </Field>
               </div>
               <Field label="Client"><input list="so-clients" value={invForm.client} placeholder="Pick or type a client" onChange={(e) => { const name = e.target.value; const c = clientOf(name); setInvForm((f) => ({ ...f, client: name, address: (!f.address && c) ? (c.address || "") : f.address })); }} /></Field>
+              <Field label="Adds to (change order - optional)"><input value={invForm.changeOrderFor || ""} placeholder="Proposal or invoice #, e.g. 26" onChange={(e) => setInvForm({ ...invForm, changeOrderFor: e.target.value })} /></Field>
               <Field label="Job address (links to outreach royalties)"><input list="so-addrs" value={invForm.address} placeholder="123 Industrial Rd — where the work was done" onChange={(e) => setInvForm({ ...invForm, address: e.target.value })} /></Field>
               {role !== "Estimator" && (
                 <Field label="Submitted by"><input list="so-reps" value={invForm.createdBy} placeholder="Who's invoicing" onChange={(e) => setInvForm({ ...invForm, createdBy: e.target.value })} /></Field>
@@ -2777,7 +2787,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {g.rows.map((i) => {
                   const t = recTotals(i);
                   return (
-                    <article key={i.id} className="fl-card fl-card--open" style={{ "--accent": INV_COLOR[i.status] || "var(--ink-2)" }}
+                    <article key={i.id} className="fl-card fl-card--open" style={{ "--accent": INV_COLOR[statusWord(i.status)] || "var(--ink-2)" }}
                       role="button" tabIndex={0} title="Open this invoice"
                       onClick={() => openDocFor("invoice", i)}
                       onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openDocFor("invoice", i); } }}>
@@ -2786,11 +2796,12 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                           <h3>{i.client || "(no client)"}</h3>
                           <p className="fl-addr">{i.invoiceNo ? "#" + i.invoiceNo + " · " : ""}{fmtDate(i.date)}</p>
                         </div>
-                        <span className="fl-status">{i.status}</span>
+                        <span className="fl-status">{statusWord(i.status)}</span>
                       </div>
                       <div className="fl-meta">
                         <span><strong>{money(t.total)}</strong></span>
                         <span>{i.mode === "lumpsum" ? "lump sum" : (i.lines || []).length + " line" + ((i.lines || []).length === 1 ? "" : "s")}</span>
+                        {String(i.changeOrderFor || "").trim() && <span className="fl-paychip">adds to #{String(i.changeOrderFor).replace(/^#/, "")}</span>}
                         {can.seeNumbers && i.mode !== "lumpsum" && <span className="fl-paychip">margin {money(t.sub - costOfLines(i.lines))}</span>}
                       </div>
                       {i.mode === "lumpsum" && i.lumpDescription && <p className="fl-notes">{i.lumpDescription}</p>}
@@ -4049,6 +4060,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                     <strong>{d.client || "Customer"}</strong>
                     {d.clientAddr ? <div>{d.clientAddr}</div> : null}
                     {d.estimateNo ? <div>Proposal #{d.estimateNo}</div> : null}
+                    {String(d.changeOrderFor || "").trim() ? <div className="fl-prev-co-for">Change order &middot; adds to #{String(d.changeOrderFor).replace(/^#/, "")}</div> : null}
                     {d.date ? <div>{fmtDate(d.date)}</div> : null}
                   </div>
                   <div className="fl-prev-sec">
@@ -4095,6 +4107,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                     <strong>{d.client || "Customer"}</strong>
                     {d.address ? <div>{d.address}</div> : null}
                     {d.invoiceNo ? <div>Invoice #{d.invoiceNo}</div> : null}
+                    {String(d.changeOrderFor || "").trim() ? <div className="fl-prev-co-for">Change order &middot; adds to #{String(d.changeOrderFor).replace(/^#/, "")}</div> : null}
                     {d.date ? <div>Date: {fmtDate(d.date)}</div> : null}
                     {d.dueDate ? <div>Due: {fmtDate(d.dueDate)}</div> : null}
                   </div>
@@ -4256,14 +4269,15 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             )}
 
             <div className="fl-docbar">
-              <span className="fl-docstatus">{isEst ? "Proposal" : "Invoice"}{no ? " #" + no : ""} · {d.status || "Draft"}</span>
+              <span className="fl-docstatus">{isEst ? "Proposal" : "Invoice"}{no ? " #" + no : ""} · {statusWord(d.status)}</span>
               {isEst ? (
                 <>
-                  <button className="fl-docbtn" onClick={() => { closeDoc(); editEstimate(d); }}>Edit</button>
+                  {isSealed(d)
+                    ? <button className="fl-docbtn soon" onClick={() => editEstimate(d)}>Sealed <small>signed</small></button>
+                    : <button className="fl-docbtn" onClick={() => { closeDoc(); editEstimate(d); }}>Edit</button>}
                   <button className="fl-docbtn" disabled={sending} onClick={() => emailProposalRec(d)}>{sending ? "Sending…" : "Email"}</button>
                   <button className="fl-docbtn" onClick={printDoc}>Print</button>
                   <button className="fl-docbtn" onClick={() => turnIntoInvoice(d)}>Turn into invoice</button>
-                  <button className="fl-docbtn soon" onClick={() => soon("Change Orders are not built yet. They are next on the list.")}>Change Orders <small>soon</small></button>
                 </>
               ) : (
                 <>
@@ -4275,7 +4289,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                   <button className={"fl-docbtn" + (panel === "pay" ? " on" : "")} onClick={() => toggle("pay")}>Payments</button>
                   <button className="fl-docbtn soon" onClick={() => soon("Tap to Pay needs Stripe connected first.")}>Tap to Pay <small>soon</small></button>
                   <button className="fl-docbtn soon" onClick={() => soon("Signing an invoice is not built yet.")}>Sign <small>soon</small></button>
-                  <button className="fl-docbtn soon" onClick={() => soon("Change Orders are not built yet. They are next on the list.")}>Change Orders <small>soon</small></button>
                 </>
               )}
               <button className={"fl-docbtn" + (panel === "more" ? " on" : "")} onClick={() => toggle("more")}>More</button>
@@ -4643,6 +4656,7 @@ const CSS = `
 
 /* ── ZZ-124: the letterhead logo, and the same logo faint behind the page ── */
 .fl-docwrap .fl-prev{isolation:isolate}
+.fl-prev-co-for{margin-top:4px; font-weight:700; color:#111}
 .fl-prev-logo{display:block; height:64px; width:auto; max-width:220px; object-fit:contain; margin:0 0 8px}
 .fl-prev-mark{
   position:absolute; z-index:-1; pointer-events:none;
