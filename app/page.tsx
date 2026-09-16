@@ -234,7 +234,7 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto w-full">
         <div className="flex flex-col items-center mb-5">
           {companyName ? (
-            <div className="rg-wordmark gold-shine gold-outline text-3xl md:text-4xl tracking-wide text-center">{companyName}</div>
+            <div className="rg-wordmark rg-coname gold-shine gold-outline text-3xl md:text-4xl tracking-wide text-center">{companyName}</div>
           ) : (
             <>
               <img src="/crest.png" alt="ReyGuild" className="w-16 md:w-20 h-auto drop-shadow" />

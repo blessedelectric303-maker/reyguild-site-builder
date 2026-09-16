@@ -400,3 +400,22 @@ table th{
 /* The mono face stays where it earns its place: the tagline under the crest
    and anything that is really a code. */
 .rg-mono{ font-family:var(--rey-font-mono) !important; }
+
+
+/* ============================================================
+   GLOOCK: THE COMPANY NAME AND THE OPENING-SCREEN WORD
+   Only two places: the company name above the calendar on the home page
+   (every company, whichever is logged in) and "REYGUILD" on the splash.
+   Everything else keeps its own font. Gloock has one weight, so 400 -
+   asking for 700 would make the browser fake a smeared bold.
+   ============================================================ */
+.rg-wordmark.rg-coname{
+  font-family:"Gloock", Georgia, "Times New Roman", serif !important;
+  font-weight:400;
+  text-transform:uppercase;
+}
+.rg-splash__word{
+  font-family:"Gloock", Georgia, "Times New Roman", serif !important;
+  font-weight:400;
+  text-transform:uppercase;
+}
