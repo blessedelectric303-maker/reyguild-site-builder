@@ -419,3 +419,24 @@ table th{
   font-weight:400;
   text-transform:uppercase;
 }
+
+/* HEARTBEAT on the company name: two quick beats, then a rest, over and over.
+   Fades down and back up with a slight swell. Anyone who has asked their
+   phone for less motion gets the name standing still. */
+.rg-coname{
+  animation:rg-heartbeat 2.4s ease-in-out infinite;
+  transform-origin:center;
+  will-change:opacity, transform;
+}
+@keyframes rg-heartbeat{
+  0%   { opacity:1;   transform:scale(1) }
+  12%  { opacity:.45; transform:scale(.985) }
+  22%  { opacity:1;   transform:scale(1.03) }
+  34%  { opacity:.45; transform:scale(.985) }
+  46%  { opacity:1;   transform:scale(1.03) }
+  60%  { opacity:1;   transform:scale(1) }
+  100% { opacity:1;   transform:scale(1) }
+}
+@media (prefers-reduced-motion: reduce){
+  .rg-coname{ animation:none }
+}

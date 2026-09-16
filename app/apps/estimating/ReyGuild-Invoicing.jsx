@@ -117,7 +117,7 @@ const SEED_SOPS = [
 `• Inspect the existing system or setup — its type, capacity, condition, and where the new work will tie in. Confirm there's room to do it right, or make a plan if there isn't.
 • Map the cleanest route from the source to the work area. Look for attic, crawlspace, or exterior paths, and avoid surface or wall damage wherever you can.
 • Photograph the source, the route, any obstacles, and the work location. Pictures beat memory every time.
-• If any wall or surface damage is unavoidable, note it now and estimate how much.`,
+• If any wall or surface damage is unavoidable, note it now and proposal how much.`,
   },
   {
     id: "s4",
@@ -126,7 +126,7 @@ const SEED_SOPS = [
 `• Measure the full run — up and down walls, into the ground and back out. Add a margin to every run so you're never short.
 • Count every fixture, part, and material you'll need.
 • Rate the difficulty honestly, and note anything special: rental equipment, an oversized ladder, or tight access.
-• Estimate your labor hours based on that difficulty.`,
+• Proposal your labor hours based on that difficulty.`,
   },
   {
     id: "s5",
@@ -134,31 +134,31 @@ const SEED_SOPS = [
     body:
 `Some jobs are too big to price on the spot — and that's fine.
 • Gather your full material list, photos, and measurements, and document exactly what the customer wants.
-• Clean up, then tell them: "This one needs a little more research before I can give you an accurate estimate. I'll have it to you by email within 24 hours."
+• Clean up, then tell them: "This one needs a little more research before I can give you an accurate proposal. I'll have it to you by email within 24 hours."
 • Leave courteously — then deliver on that promise.`,
   },
   {
     id: "s6",
-    title: "6 · Price in private & write the estimate",
+    title: "6 · Price in private & write the proposal",
     body:
 `• Clean up and pack your tools before you touch any numbers.
-• Build the estimate away from the customer — in your vehicle, not on their doorstep. Never price in front of them.
+• Build the proposal away from the customer — in your vehicle, not on their doorstep. Never price in front of them.
 • Price it from your price list; the app does the math for you.
 • Write a clean, plain-language description of the work.
 • If surface damage may be needed, add a note that repairs aren't included, but you're glad to handle them if they'd prefer.`,
   },
   {
     id: "s7",
-    title: "7 · What every estimate includes",
+    title: "7 · What every proposal includes",
     body:
-`Before you send it, make sure the estimate has:
+`Before you send it, make sure the proposal has:
 • The client's name and address, spelled correctly.
 • A job title — the address plus a 2–3 word description of the work.
 • The job description, with the price beside it.
 • The one-year warranty (labor and material included).
 • The service agreement.
 • A thank-you line — "Thank you for the opportunity to earn your business" for a new customer, or "It's a pleasure doing business with you, and we value our continued relationship" for a returning one.
-• "Estimate valid for 90 days" — but only add this if the customer asks you to hold off, never before.`,
+• "Proposal valid for 90 days" — but only add this if the customer asks you to hold off, never before.`,
   },
   {
     id: "s8",
@@ -169,7 +169,7 @@ const SEED_SOPS = [
 • Walk them through the agreement simply: "Standard contract — the main thing to know is the payment terms, and that final payment is due within 15 days of completion."
 • Show them where to sign: "If everything looks good, this is where you sign and we can get to work."
 • If they sign, schedule them right then and fit their calendar. If a down payment applies, let them know the office will reach out.
-• If they're not ready, mention estimates are valid for 90 days — and then add that line to the estimate.
+• If they're not ready, mention proposals are valid for 90 days — and then add that line to the proposal.
 • Thank them warmly and head out.`,
   },
   {
@@ -193,11 +193,11 @@ Core principles:
   },
   {
     id: "s10",
-    title: "Using the app · estimate → invoice",
+    title: "Using the app · proposal → invoice",
     body:
-`1. Build the estimate — line items pull from the Price List and the warranty + contract attach automatically (uncheck the box on an estimate to leave them off).
+`1. Build the proposal — line items pull from the Price List and the warranty + contract attach automatically (uncheck the box on a proposal to leave them off).
 2. Tap Preview to see exactly what the client gets, then Email to client. If there's no email on file, it asks for one.
-3. Get the client's sign-off: on the estimate they can Accept & sign, choose "Let me think on it," or Decline.
+3. Get the client's sign-off: on the proposal they can Accept & sign, choose "Let me think on it," or Decline.
 4. Once Approved, hit "→ Invoice" — it copies the client and every line item. Add your invoice number, mark it Sent, and the office records payments.`,
   },
   {
@@ -214,8 +214,8 @@ Core principles:
     id: "s12",
     title: "Finding your way around the app",
     body:
-`• Your work lives across the top: Estimates, Invoices, Follow-ups, Clients, and the Price List.
-• Estimates are grouped into Pending, Approved, and Declined — tap the buttons to filter.
+`• Your work lives across the top: Proposals, Invoices, Follow-ups, Clients, and the Price List.
+• Proposals are grouped into Pending, Approved, and Declined — tap the buttons to filter.
 • Follow-ups shows what's due; tap an item to log what happened and clear it.
 • Need help? It is in the menu, under Help. The two guides that build your price list with an AI are in there, marked in green.
 • Help has a search bar — type a couple of words. If it can't answer it, there's a support email link at the bottom.`,
@@ -225,8 +225,8 @@ Core principles:
     title: "Administrator · your daily routine",
     body:
 `You can see everyone's work — use it to keep the team moving, not to micromanage.
-• Check the Approvals tab every day. It holds payouts to approve, follow-ups running late, past-due invoices, collections calls, estimate approvals, and copies of everything sent.
-• Skim the team's Follow-ups and Estimates so you know what's in flight.
+• Check the Approvals tab every day. It holds payouts to approve, follow-ups running late, past-due invoices, collections calls, proposal approvals, and copies of everything sent.
+• Skim the team's Follow-ups and Proposals so you know what's in flight.
 • Keep the Price List current (the Warranty and Contract editors live under Price List), and keep the follow-up emails sharp (they're under Follow-ups). Your Business letterhead and Subscription are in Settings → Account.`,
   },
   {
@@ -289,23 +289,23 @@ const SEED_SUPPLIERS = [
 const SUPPORT_EMAIL = "support@reyguild.com";
 const HELP_ARTICLES = [
   { title: "Roles & “Acting as”", keywords: "role owner admin estimator permission acting as who login access",
-    body: `There are three roles. The Owner (you, the creator) can do everything. An Admin can do everything the Owner can except manage people. An Estimator builds estimates and invoices and sees only their own work.\nUse the “Acting as” menu at the top to preview the app as any person on your team.` },
-  { title: "Building an estimate", keywords: "estimate new build job description line items itemized one price lump quote",
-    body: `Open the Estimates tab. Add a job description, then choose how to price it: Itemized (a priced-out sheet — add each item from your price list as a line) or One price + description (a single lump price). Your warranty and service agreement attach to the bottom automatically.` },
+    body: `There are three roles. The Owner (you, the creator) can do everything. An Admin can do everything the Owner can except manage people. An Estimator builds proposals and invoices and sees only their own work.\nUse the “Acting as” menu at the top to preview the app as any person on your team.` },
+  { title: "Building a proposal", keywords: "estimate new build job description line items itemized one price lump quote",
+    body: `Open the Proposals tab. Add a job description, then choose how to price it: Itemized (a priced-out sheet — add each item from your price list as a line) or One price + description (a single lump price). Your warranty and service agreement attach to the bottom automatically.` },
   { title: "Contacts (estimators)", keywords: "client contact estimator full name address exact match new add own private",
-    body: `Estimators don't see the whole client list — they only see their own. On an estimate, type the contact's full name and full address. If both exactly match an existing contact, it pops up to reuse. If not, it's saved as a new contact when you save the estimate.` },
-  { title: "Emailing an estimate or invoice", keywords: "email send client letterhead logo email me preview copy",
-    body: `Tap Preview on any estimate or invoice to see exactly what the client gets, then Email to client to send it with your business letterhead on top. If no email is on file, it asks for one first.` },
+    body: `Estimators don't see the whole client list — they only see their own. On a proposal, type the contact's full name and full address. If both exactly match an existing contact, it pops up to reuse. If not, it's saved as a new contact when you save the proposal.` },
+  { title: "Emailing a proposal or invoice", keywords: "email send client letterhead logo email me preview copy",
+    body: `Tap Preview on any proposal or invoice to see exactly what the client gets, then Email to client to send it with your business letterhead on top. If no email is on file, it asks for one first.` },
   { title: "Business letterhead", keywords: "business profile logo company name address phone letterhead branding",
-    body: `Under Settings → Account (admin only), upload your logo and enter your company name, address, phone, email, and website. This heading appears on every estimate and invoice you email — your branding only.` },
+    body: `Under Settings → Account (admin only), upload your logo and enter your company name, address, phone, email, and website. This heading appears on every proposal and invoice you email — your branding only.` },
   { title: "Warranty & contract", keywords: "warranty contract agreement net 15 legal terms one year prefill",
-    body: `The Warranty and Contract editors live under Price List (admin). They hold premade text that fills in your business name automatically; the contract uses Net 15 terms and covers third-party collection/legal fees. Both attach to every estimate — uncheck the box on an estimate to leave them off.` },
+    body: `The Warranty and Contract editors live under Price List (admin). They hold premade text that fills in your business name automatically; the contract uses Net 15 terms and covers third-party collection/legal fees. Both attach to every proposal — uncheck the box on a proposal to leave them off.` },
   { title: "Follow-up schedule", keywords: "follow up followup reminder cadence call email day 3 8 13 18 sent to client",
-    body: `Mark an estimate “Sent to client” and the sequence starts: a call reminder on day 3, a Follow-up 1 email on day 8, a Follow-up 2 email on day 13, and a call reminder on day 18. Due items appear on the Follow-ups tab.` },
-  { title: "Approving an estimate & e-signature", keywords: "approve approval sign signature client phone outcome still deciding lost notification",
-    body: `On a follow-up call you record the outcome: Approved, Still deciding, or Went with someone else. Or have the client sign the estimate with the Client sign-off button. Either way, approval marks the estimate Approved and notifies the office.` },
-  { title: "Estimate → invoice", keywords: "convert invoice approved create bill",
-    body: `Once an estimate is Approved, hit “→ Invoice” on its card to copy the client and every line item into a new invoice. Add your invoice number and mark it Sent when it goes out.` },
+    body: `Mark a proposal “Sent to client” and the sequence starts: a call reminder on day 3, a Follow-up 1 email on day 8, a Follow-up 2 email on day 13, and a call reminder on day 18. Due items appear on the Follow-ups tab.` },
+  { title: "Approving a proposal & e-signature", keywords: "approve approval sign signature client phone outcome still deciding lost notification",
+    body: `On a follow-up call you record the outcome: Approved, Still deciding, or Went with someone else. Or have the client sign the proposal with the Client sign-off button. Either way, approval marks the proposal Approved and notifies the office.` },
+  { title: "Proposal → invoice", keywords: "convert invoice approved create bill",
+    body: `Once a proposal is Approved, hit “→ Invoice” on its card to copy the client and every line item into a new invoice. Add your invoice number and mark it Sent when it goes out.` },
   { title: "Recording payments", keywords: "payment paid cash check card online partial balance done archive owed",
     body: `On an invoice, hit “Record payment” and enter the amount, method (cash, check, card, or online), and date. Partial payments are tracked — the card shows the balance left. When it's paid in full the invoice is marked Paid; then Archive it to move it to the Done folder.` },
   { title: "Estimator payouts ($50 per invoice)", keywords: "payout commission 50 invoice approve pay my pay deny",
@@ -313,7 +313,7 @@ const HELP_ARTICLES = [
   { title: "Royalties", keywords: "royalty royalties outreach 10 percent vest commission address",
     body: `Invoices matched by job address to an outreach walk-in earn that estimator a royalty. The Royalties tab is admin/owner only; the admin exports a stub for each estimator over any date range and hands it to them.` },
   { title: "Admin Approvals tab", keywords: "approvals admin payout late follow up duplicate split oversight dismiss",
-    body: `The Approvals tab (admin) is your daily checklist: payouts to approve (duplicates flagged in red), follow-ups running more than 3 days late (email the estimator or dismiss with a reason), and estimate approvals.` },
+    body: `The Approvals tab (admin) is your daily checklist: payouts to approve (duplicates flagged in red), follow-ups running more than 3 days late (email the estimator or dismiss with a reason), and proposal approvals.` },
   { title: "SOPs", keywords: "sop procedure training steps walk job admin only audience",
     body: `Your procedures live in T&M & P&L under Field Procedures - one place, so what you edit is what the crew reads. The written guides for quoting and closing out are in there too.` },
   { title: "Where to find things", keywords: "where find navigation menu tabs settings help sops account audit preferences lost",
@@ -333,7 +333,7 @@ const HELP_ARTICLES = [
   { title: "Setting estimator pay", keywords: "payout pay per invoice rate amount settings team estimator royalty 50 default",
     body: `Payouts are set per person on the command centre, under Army / Employees. Blank means they get the company default.` },
   { title: "Copies of what's sent", keywords: "copy sent notification estimate invoice off toggle approvals owner admin overwhelm",
-    body: `When the copies setting is on, a copy of every estimate and invoice that goes out appears on the admin's Approvals tab under "Sent — your copies." Turn it off anytime in Settings if it's too much.` },
+    body: `When the copies setting is on, a copy of every proposal and invoice that goes out appears on the admin's Approvals tab under "Sent — your copies." Turn it off anytime in Settings if it's too much.` },
 ];
 
 
@@ -447,7 +447,7 @@ const emptyProfile = () => ({ name: "", tagline: "", address: "", phone: "", ema
 const DEFAULT_FOLLOWUP_1 =
 `Hi {first},
 
-Thank you again for the opportunity to provide an estimate {estimate_no} for {total}. We're checking in to see whether you'd still like to move forward with us, or if you've found another provider.
+Thank you again for the opportunity to provide a proposal {estimate_no} for {total}. We're checking in to see whether you'd still like to move forward with us, or if you've found another provider.
 
 We'd be glad to answer any questions or make adjustments — just reply here and we'll take care of it.
 
@@ -458,7 +458,7 @@ We look forward to your business.`;
 const DEFAULT_FOLLOWUP_2 =
 `Hi {first},
 
-I wanted to follow up once more on the estimate {estimate_no} for {total} we put together for you. We'd genuinely welcome the opportunity to earn your business, and we're happy to walk through any details or adjust the scope to fit your needs.
+I wanted to follow up once more on the proposal {estimate_no} for {total} we put together for you. We'd genuinely welcome the opportunity to earn your business, and we're happy to walk through any details or adjust the scope to fit your needs.
 
 If you've decided to go another direction, no problem at all — just let us know so we can close it out. Otherwise, we're ready whenever you are.
 
@@ -492,7 +492,7 @@ function defaultWarranty(co) {
 }
 function defaultContract(co) {
   const C = co || "the Company";
-  return `SERVICE AGREEMENT\n\nThis Agreement is between ${C} ("Company") and the client identified on this estimate ("Client").\n\n1. SCOPE. Company will perform the work described in this estimate.\n\n2. PAYMENT TERMS. Payment is due Net 15 days from the invoice date. Balances not paid within 15 days may accrue a late charge as permitted by law.\n\n3. COLLECTION & LEGAL COSTS. If any amount is not paid when due and the matter is referred to a third party for collection or legal action, Client agrees to pay all third-party costs of collection, including collection-agency fees, court costs, and reasonable attorney's fees.\n\n4. WARRANTY. Completed work is covered by Company's one (1) year workmanship warranty, provided separately.\n\n5. CHANGES. Any change to the scope of work must be agreed in writing and may adjust the price.\n\n6. ACCEPTANCE. Client's signature on, or written approval of, this estimate constitutes acceptance of these terms.\n\n${C}`;
+  return `SERVICE AGREEMENT\n\nThis Agreement is between ${C} ("Company") and the client identified on this proposal ("Client").\n\n1. SCOPE. Company will perform the work described in this proposal.\n\n2. PAYMENT TERMS. Payment is due Net 15 days from the invoice date. Balances not paid within 15 days may accrue a late charge as permitted by law.\n\n3. COLLECTION & LEGAL COSTS. If any amount is not paid when due and the matter is referred to a third party for collection or legal action, Client agrees to pay all third-party costs of collection, including collection-agency fees, court costs, and reasonable attorney's fees.\n\n4. WARRANTY. Completed work is covered by Company's one (1) year workmanship warranty, provided separately.\n\n5. CHANGES. Any change to the scope of work must be agreed in writing and may adjust the price.\n\n6. ACCEPTANCE. Client's signature on, or written approval of, this proposal constitutes acceptance of these terms.\n\n${C}`;
 }
 // The price book has ELEVEN fields, not six, and the difference is the whole
 // model. Two prices per item: standalone carries the drive, the setup and the
@@ -620,7 +620,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const [msgTarget, setMsgTarget] = useState("team");
   const [navOpen, setNavOpen] = useState(false);
   const [helpQuery, setHelpQuery] = useState("");
-  const [supportForm, setSupportForm] = useState({ name: "", email: "", app: "ReyGuild — Estimating & Invoicing", message: "" });
+  const [supportForm, setSupportForm] = useState({ name: "", email: "", app: "ReyGuild — Proposals & Invoicing", message: "" });
   const [emailPromptFor, setEmailPromptFor] = useState(null); // record id needing a client email
   const [emailDraft, setEmailDraft] = useState("");
   const [outreachVisits, setOutreachVisits] = useState([]); // read-only, from the outreach app
@@ -1141,7 +1141,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     }
     if (rec.id) {
       await save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
-      logAudit("Edited estimate", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
+      logAudit("Edited proposal", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
       return rec.id;
     }
     if (!String(rec.estimateNo || "").trim()) {
@@ -1158,7 +1158,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     // Keeping the id also means a sent proposal stays editable: an edit now
     // updates the record the customer is looking at.
     setEstForm((f) => ({ ...f, id: newId, estimateNo: rec.estimateNo || f.estimateNo, status: rec.status || f.status }));
-    logAudit("Created estimate", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
+    logAudit("Created proposal", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
     return newId;
   }
   // THE NUMBER COMES FROM THE DATABASE.
@@ -1184,10 +1184,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
 
   function editEstimate(e) { if (isSealed(e)) { setErr("This proposal is signed, so it is sealed. For more work, start a NEW PROPOSAL and fill in \"Adds to\" with #" + (e.estimateNo || "") + "."); return; } setEstForm({ ...emptyEstimate(), ...e, lines: e.lines && e.lines.length ? e.lines : [emptyLine()] }); setPage("estimates"); setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }
-  function setEstStatus(id, status) { const e = estimates.find((x) => x.id === id); save(STORAGE.estimates, estimates.map((x) => (x.id === id ? { ...x, status } : x)), setEstimates); logAudit("Estimate → " + status, e ? (e.client || "") + (e.estimateNo ? " #" + e.estimateNo : "") : ""); }
+  function setEstStatus(id, status) { const e = estimates.find((x) => x.id === id); save(STORAGE.estimates, estimates.map((x) => (x.id === id ? { ...x, status } : x)), setEstimates); logAudit("Proposal → " + status, e ? (e.client || "") + (e.estimateNo ? " #" + e.estimateNo : "") : ""); }
   function removeEstimate(id) { save(STORAGE.estimates, estimates.filter((e) => e.id !== id), setEstimates); setConfirmId(null); }
   function convertToInvoice(e) {
-    logAudit("Converted estimate to invoice", e.client || ""); setInvForm({ ...emptyInvoice(), client: e.client, address: e.clientAddr || (clientOf(e.client)?.address) || "", createdBy: e.createdBy || myName, fromEstimate: e.estimateNo || e.id, mode: e.mode || "itemized", lines: (e.lines || []).map((l) => ({ ...l, id: uid() })), lumpDescription: e.lumpDescription || "", lumpPrice: e.lumpPrice || "", notes: e.notes });
+    logAudit("Converted proposal to invoice", e.client || ""); setInvForm({ ...emptyInvoice(), client: e.client, address: e.clientAddr || (clientOf(e.client)?.address) || "", createdBy: e.createdBy || myName, fromEstimate: e.estimateNo || e.id, mode: e.mode || "itemized", lines: (e.lines || []).map((l) => ({ ...l, id: uid() })), lumpDescription: e.lumpDescription || "", lumpPrice: e.lumpPrice || "", notes: e.notes });
     save(STORAGE.estimates, estimates.map((x) => (x.id === e.id ? { ...x, invoiced: true } : x)), setEstimates);
     // Since the form became hidden-until-asked-for, converting filled in a
     // form nobody could see. Open it.
@@ -1301,18 +1301,18 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     if (signedName || signature) patch.signedAt = date || toLocalDate(new Date());
     save(STORAGE.estimates, estimates.map((x) => (x.id === e.id ? { ...x, ...patch } : x)), setEstimates);
     addNotification({ type: "approved", estimateNo: e.estimateNo || "", client: e.client || "", total: recTotals(e).total, via, signedName: signedName || "" });
-    logAudit("Estimate approved", (e.client || "") + " · " + via);
+    logAudit("Proposal approved", (e.client || "") + " · " + via);
   }
   function signEstimate(e, signedName, signature) {
     if (!signedName && !signature) { setErr("Please sign or type a full name to approve."); return; }
     approveEstimate(e, "client signature", toLocalDate(new Date()), signedName, signature);
     setSignFor(null);
-    setErr("Estimate approved — the office has been notified.");
+    setErr("Proposal approved — the office has been notified.");
   }
   function declineByClient(e) {
     save(STORAGE.estimates, estimates.map((x) => (x.id === e.id ? { ...x, status: "Declined", fuStopped: true, declinedAt: toLocalDate(new Date()) } : x)), setEstimates);
     addNotification({ type: "declined", estimateNo: e.estimateNo || "", client: e.client || "", total: recTotals(e).total, via: "client declined" });
-    setSignFor(null); logAudit("Estimate declined by client", e.client || "");
+    setSignFor(null); logAudit("Proposal declined by client", e.client || "");
     setErr("Marked declined — the office has been notified.");
   }
   function clientThinking(e) {
@@ -1381,7 +1381,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   }
   function reminderMailto(e, which) {
     const c = clientOf(e.client); const to = c && c.email ? c.email : "";
-    const subject = `Following up on your estimate${e.estimateNo ? " #" + e.estimateNo : ""}`;
+    const subject = `Following up on your proposal${e.estimateNo ? " #" + e.estimateNo : ""}`;
     return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(reminderBody(e, which))}`;
   }
   function copyReminder(e, which) { try { navigator.clipboard && navigator.clipboard.writeText(reminderBody(e, which)); setErr("Reminder text copied to the clipboard."); } catch (e2) {} }
@@ -1457,7 +1457,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     const c = clientOf(r.client);
     const to = toSelf ? (profile.email || (currentUser && currentUser.email) || "") : (c && c.email ? c.email : "");
     const no = kind === "invoice" ? r.invoiceNo : r.estimateNo;
-    const subject = `${toSelf ? "[PREVIEW] " : ""}${kind === "invoice" ? "Invoice" : "Estimate"}${no ? " #" + no : ""}${r.client ? " — " + r.client : ""}`;
+    const subject = `${toSelf ? "[PREVIEW] " : ""}${kind === "invoice" ? "Invoice" : "Proposal"}${no ? " #" + no : ""}${r.client ? " — " + r.client : ""}`;
     return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(docBodyText(r, kind))}`;
   }
 
@@ -1573,8 +1573,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   function repEmailByName(name) { const p = people.find((x) => (x.name || "") === name); return p && p.email ? p.email : ""; }
   function lateRepMailto(e) {
     const to = repEmailByName(e.createdBy);
-    const subject = `Follow-up overdue — ${e.client || "estimate"}${e.estimateNo ? " #" + e.estimateNo : ""}`;
-    const body = `Hi ${e.createdBy || ""},\n\nThe follow-up on ${e.client || "this estimate"}${e.estimateNo ? " (#" + e.estimateNo + ")" : ""} is past due. Could you reach out to the client and update its status, or let me know what's going on so we can keep it moving?\n\nThanks`;
+    const subject = `Follow-up overdue — ${e.client || "proposal"}${e.estimateNo ? " #" + e.estimateNo : ""}`;
+    const body = `Hi ${e.createdBy || ""},\n\nThe follow-up on ${e.client || "this proposal"}${e.estimateNo ? " (#" + e.estimateNo + ")" : ""} is past due. Could you reach out to the client and update its status, or let me know what's going on so we can keep it moving?\n\nThanks`;
     return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
   function dismissLate(e) {
@@ -2264,7 +2264,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           {(estFormOpen || estForm.id) && (
           <section className="fl-panel" ref={formRef}>
             <div className="fl-panel-head">
-              <h2>{estForm.id ? "Edit estimate" : "New estimate"}</h2>
+              <h2>{estForm.id ? "Edit proposal" : "New proposal"}</h2>
               <button className="fl-panel-close" title="Close"
                 onClick={() => { setEstForm(emptyEstimate()); setEstFormOpen(false); setErr(""); }}>&times;</button>
             </div>
@@ -2311,7 +2311,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             ) : null}
             <div className="fl-form">
               <div className="fl-two">
-                <Field label="Estimate #"><input value={estForm.estimateNo} placeholder="EST-1001" onChange={(e) => setEstForm({ ...estForm, estimateNo: e.target.value })} /></Field>
+                <Field label="Proposal #"><input value={estForm.estimateNo} placeholder="EST-1001" onChange={(e) => setEstForm({ ...estForm, estimateNo: e.target.value })} /></Field>
                 <Field label="Date"><input type="date" value={estForm.date} onChange={(e) => setEstForm({ ...estForm, date: e.target.value })} /></Field>
               </div>
               {(() => {
@@ -2441,7 +2441,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
               <Field label="Adds to (change order - optional)"><input value={estForm.changeOrderFor || ""} placeholder="Proposal or invoice #, e.g. 26" onChange={(e) => setEstForm({ ...estForm, changeOrderFor: e.target.value })} /></Field>
               <Field label="Job description"><textarea rows={3} value={estForm.jobDescription} placeholder="Describe the job in plain language — what you'll do and what's included." onChange={(e) => setEstForm({ ...estForm, jobDescription: e.target.value })} /></Field>
-              <p className="fl-hint">Build it as a priced-out sheet: write the job description, then add each item from the price list as its own line (include labor as a line too). Your one-year warranty and service agreement are attached to every estimate automatically.</p>
+              <p className="fl-hint">Build it as a priced-out sheet: write the job description, then add each item from the price list as its own line (include labor as a line too). Your one-year warranty and service agreement are attached to every proposal automatically.</p>
 
               <p className="fl-sub">How to price this</p>
               <Seg value={estForm.mode === "lumpsum" ? "One price + description" : "Itemized"} options={["Itemized", "One price + description"]} onChange={(v) => setEstForm({ ...estForm, mode: v === "Itemized" ? "itemized" : "lumpsum" })} />
@@ -2482,7 +2482,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               </div>
 
               <Field label="Scope / notes"><textarea rows={3} value={estForm.notes} placeholder="What's included, exclusions, access notes…" onChange={(e) => setEstForm({ ...estForm, notes: e.target.value })} /></Field>
-              <label className="so-legal-toggle"><input type="checkbox" checked={estForm.attachLegal !== false} onChange={(e) => setEstForm({ ...estForm, attachLegal: e.target.checked })} /> Attach the warranty &amp; contract to this estimate</label>
+              <label className="so-legal-toggle"><input type="checkbox" checked={estForm.attachLegal !== false} onChange={(e) => setEstForm({ ...estForm, attachLegal: e.target.checked })} /> Attach the warranty &amp; contract to this proposal</label>
               <Field label="Photos">
                 <div className="so-photo-btns">
                   <label className="fl-job-btn">📷 Take a picture<input type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={(e) => { handlePhotos(e.target.files, setEstForm); e.target.value = ""; }} /></label>
@@ -2592,7 +2592,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
           <section className="fl-list">
             <div className="fl-toolbar">
-              <input className="fl-search" value={query} placeholder="Search client, estimate #, estimator…" onChange={(e) => setQuery(e.target.value)} />
+              <input className="fl-search" value={query} placeholder="Search client, proposal #, estimator…" onChange={(e) => setQuery(e.target.value)} />
               {/* Always here, always visible. Starting a new one should never
                   mean scrolling past everything you have already done. */}
               {/* The tabs carry their own news. A customer answering is not a
@@ -2685,7 +2685,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 onClick={() => { setInvForm(emptyInvoice()); setInvFormOpen(false); setErr(""); }}>&times;</button>
             </div>
             <div className="fl-form">
-              {invForm.fromEstimate && <p className="fl-match ok" style={{ marginTop: 0 }}>From estimate <strong>{invForm.fromEstimate}</strong></p>}
+              {invForm.fromEstimate && <p className="fl-match ok" style={{ marginTop: 0 }}>From proposal <strong>{invForm.fromEstimate}</strong></p>}
               <div className="fl-two">
                 <Field label="Invoice #"><input value={invForm.invoiceNo} placeholder="INV-1042" onChange={(e) => setInvForm({ ...invForm, invoiceNo: e.target.value })} /></Field>
                 <Field label="Date"><input type="date" value={invForm.date} onChange={(e) => setInvForm({ ...invForm, date: e.target.value })} /></Field>
@@ -2844,7 +2844,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
         <div className="fl-weekly">
           <div className="so-banner-info">THIS IS YOUR AUTOMATIC FOLLOW-UP SEQUENCE. BEFORE IT CAN BEGIN, MAKE SURE EACH CLIENT'S PHONE NUMBER AND EMAIL ARE ON FILE — THE CALLS AND EMAILS CANNOT GO OUT WITHOUT THEM.</div>
           <p className="fl-foot-note" style={{ marginTop: 0, marginBottom: 14 }}>
-            Mark an estimate “Sent to client” and the follow-up sequence lines up: a <strong>phone-call reminder on day {FOLLOWUP_STEPS[0].afterDays}</strong>, an automatic <strong>Follow-up 1 email on day {FOLLOWUP_STEPS[1].afterDays}</strong>, an automatic <strong>Follow-up 2 email on day {FOLLOWUP_STEPS[2].afterDays}</strong>, then a <strong>phone-call reminder on day {FOLLOWUP_STEPS[3].afterDays}</strong>. The calls are assigned to the estimator who owns it. The day-{FOLLOWUP_STEPS[1].afterDays} and day-{FOLLOWUP_STEPS[2].afterDays} emails are written and ready — once email sending is connected they go out on their own; until then they appear here as one-tap sends. {can.seeAllWork ? "You see the whole team's." : "You see your own."}
+            Mark a proposal “Sent to client” and the follow-up sequence lines up: a <strong>phone-call reminder on day {FOLLOWUP_STEPS[0].afterDays}</strong>, an automatic <strong>Follow-up 1 email on day {FOLLOWUP_STEPS[1].afterDays}</strong>, an automatic <strong>Follow-up 2 email on day {FOLLOWUP_STEPS[2].afterDays}</strong>, then a <strong>phone-call reminder on day {FOLLOWUP_STEPS[3].afterDays}</strong>. The calls are assigned to the estimator who owns it. The day-{FOLLOWUP_STEPS[1].afterDays} and day-{FOLLOWUP_STEPS[2].afterDays} emails are written and ready — once email sending is connected they go out on their own; until then they appear here as one-tap sends. {can.seeAllWork ? "You see the whole team's." : "You see your own."}
           </p>
 
           <p className="fl-sub" style={{ marginTop: 0 }}>Due now · {fuDueList.length}</p>
@@ -2892,7 +2892,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           })}
 
           <p className="fl-sub">Scheduled · {fuUpcoming.length}</p>
-          {fuUpcoming.length === 0 ? <div className="fl-empty">No reminders lined up. Mark an approved estimate “Sent to client” to start the clock.</div> : (
+          {fuUpcoming.length === 0 ? <div className="fl-empty">No reminders lined up. Mark an approved proposal “Sent to client” to start the clock.</div> : (
             <div className="fl-emp-card">
               {fuUpcoming.map(({ e, step }) => (
                 <div className="fl-emp-row" key={e.id}>
@@ -3001,7 +3001,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 </div>
               </div>
             )}
-            {myClients.length === 0 ? <div className="fl-empty">{can.seeAllWork ? "No clients yet." : "None of your clients yet."}{can.importExport ? " Import a CSV above, or add one with the form" : " Add one with the form, or they're created automatically when you build an estimate"}{can.seeAllWork ? " — admins see the whole team's." : " — you only see your own."}</div> : (
+            {myClients.length === 0 ? <div className="fl-empty">{can.seeAllWork ? "No clients yet." : "None of your clients yet."}{can.importExport ? " Import a CSV above, or add one with the form" : " Add one with the form, or they're created automatically when you build a proposal"}{can.seeAllWork ? " — admins see the whole team's." : " — you only see your own."}</div> : (
               <div className="fl-cards">
                 {myClients.filter((c) => !query.trim() || [c.company, c.contact, c.email, c.address].join(" ").toLowerCase().includes(query.toLowerCase())).map((c) => (
                   <article className="fl-person" key={c.id} style={{ "--accent": "var(--blue)" }}>
@@ -3415,7 +3415,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <div className="fl-emp-card" key={rep}>
                 <div className="fl-emp-head"><h3>{rep}</h3><span className="fl-emp-count">{myEst.length} est · {myInv.length} inv</span></div>
                 <div className="fl-comm-summary">
-                  <div><span className="fl-comm-num">{myEst.length}</span><span className="fl-comm-lbl">estimates built</span></div>
+                  <div><span className="fl-comm-num">{myEst.length}</span><span className="fl-comm-lbl">proposals built</span></div>
                   <div><span className="fl-comm-num">{money(sold)}</span><span className="fl-comm-lbl">invoiced</span></div>
                   <div className="hot"><span className="fl-comm-num">{money(margin)}</span><span className="fl-comm-lbl">margin</span></div>
                 </div>
@@ -3573,7 +3573,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               {/* READ-ONLY ON PURPOSE. These fields used to be editable here
                   AND in Command Center, which meant two company records and a
                   blank letterhead on every document. One place to edit now. */}
-              <p className="fl-hint">This is what clients see at the top of every estimate and invoice you email. It comes from your company profile in Command Center, so you only enter it once — and it is the same on your proposals, your invoices and in T&amp;M.</p>
+              <p className="fl-hint">This is what clients see at the top of every proposal and invoice you email. It comes from your company profile in Command Center, so you only enter it once — and it is the same on your proposals, your invoices and in T&amp;M.</p>
               <Field label="Logo">
                 <div className="so-logo-row">
                   {profileForm.logo ? <img className="so-logo-prev" src={profileForm.logo} alt="logo" /> : <div className="so-logo-empty">No logo yet</div>}
@@ -3602,7 +3602,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               {(profile.phone || profile.email) && <p className="so-letter-line">{[profile.phone, profile.email].filter(Boolean).join("  ·  ")}</p>}
               {profile.website && <p className="so-letter-line">{profile.website}</p>}
               <div className="so-letter-rule" />
-              <p className="fl-hint">This heading is added to the top of every estimate/invoice you email. Use the <strong>Email me</strong> button on any estimate to send yourself a test copy.</p>
+              <p className="fl-hint">This heading is added to the top of every proposal/invoice you email. Use the <strong>Email me</strong> button on any proposal to send yourself a test copy.</p>
             </article>
           </section>
         </div>
@@ -3616,7 +3616,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <div className="fl-form">
               <p className="fl-hint">These are the two automatic follow-up emails. Edit the wording however you like. The placeholders below fill in by themselves:</p>
               <p className="fl-foot-note" style={{ marginTop: 0 }}>
-                <strong>{"{first}"}</strong> client's first name · <strong>{"{client}"}</strong> client/company · <strong>{"{estimate_no}"}</strong> estimate # · <strong>{"{invoice_no}"}</strong> invoice # · <strong>{"{total}"}</strong> total · <strong>{"{balance}"}</strong> amount owed · <strong>{"{due_date}"}</strong> due date · <strong>{"{review_url}"}</strong> review link · <strong>{"{company}"}</strong> your business name
+                <strong>{"{first}"}</strong> client's first name · <strong>{"{client}"}</strong> client/company · <strong>{"{estimate_no}"}</strong> proposal # · <strong>{"{invoice_no}"}</strong> invoice # · <strong>{"{total}"}</strong> total · <strong>{"{balance}"}</strong> amount owed · <strong>{"{due_date}"}</strong> due date · <strong>{"{review_url}"}</strong> review link · <strong>{"{company}"}</strong> your business name
               </p>
               <p className="so-callout">⚠ Please don't change the words inside the curly braces { } — those fill in automatically from your business information in Settings. Edit everything else freely.</p>
               <Field label="Follow-up 1 (day 8)"><textarea rows={9} value={profileForm.emailFollowup1} placeholder={DEFAULT_FOLLOWUP_1} onChange={(e) => setProfileForm({ ...profileForm, emailFollowup1: e.target.value })} /></Field>
@@ -3655,7 +3655,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           <section className="fl-panel">
             <div className="fl-panel-head"><h2>Your warranty</h2></div>
             <div className="fl-form">
-              <p className="fl-hint">This is attached to the bottom of every estimate you email. It's premade with a one-year term and fills in your business name from the Business tab.{can.editProfile ? " You can edit the wording below." : ""}</p>
+              <p className="fl-hint">This is attached to the bottom of every proposal you email. It's premade with a one-year term and fills in your business name from the Business tab.{can.editProfile ? " You can edit the wording below." : ""}</p>
               {can.editProfile ? (
                 <>
                   <Field label="Labor &amp; materials note"><textarea rows={4} value={profileForm.laborMaterials} placeholder="Labor and material are both included in every line item above. Nothing is billed separately after the fact." onChange={(e) => setProfileForm({ ...profileForm, laborMaterials: e.target.value })} /></Field>
@@ -3682,7 +3682,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           <section className="fl-panel">
             <div className="fl-panel-head"><h2>Your service agreement</h2></div>
             <div className="fl-form">
-              <p className="fl-hint">This contract is attached to every estimate you email. It's premade with <strong>Net 15</strong> terms and a clause covering third-party collection &amp; legal fees, and it fills in your business name automatically.{can.editProfile ? " Have your own attorney review wording before relying on it." : ""}</p>
+              <p className="fl-hint">This contract is attached to every proposal you email. It's premade with <strong>Net 15</strong> terms and a clause covering third-party collection &amp; legal fees, and it fills in your business name automatically.{can.editProfile ? " Have your own attorney review wording before relying on it." : ""}</p>
               {can.editProfile ? (
                 <>
                   <Field label="Agreement text"><textarea rows={14} value={profileForm.contract} placeholder={defaultContract(profileForm.name)} onChange={(e) => setProfileForm({ ...profileForm, contract: e.target.value })} /></Field>
@@ -3806,21 +3806,21 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           })}
 
           <div className="so-alerts-head" style={{ marginTop: 22 }}>
-            <p className="fl-sub" style={{ margin: 0 }}>Estimate approvals · {approvalNotices.length}</p>
+            <p className="fl-sub" style={{ margin: 0 }}>Proposal approvals · {approvalNotices.length}</p>
             {approvalNotices.length > 0 && <button className="fl-link" onClick={() => save(STORAGE.notifications, notifications.filter((n) => n.type === "sent"), setNotifications)}>Dismiss all</button>}
           </div>
           {approvalNotices.length === 0 ? (
-            <div className="fl-empty">No new estimate approvals. When a client approves an estimate — by phone or by signing — it shows up here.</div>
+            <div className="fl-empty">No new proposal approvals. When a client approves a proposal — by phone or by signing — it shows up here.</div>
           ) : approvalNotices.map((n) => (
             <div className="fl-job flag" key={n.id} style={{ "--accent": n.type === "declined" ? "var(--red)" : "var(--green)" }}>
               <div className="fl-job-top">
                 <div>
-                  <h3>{n.type === "declined" ? "✕ Estimate declined" : "✓ Estimate approved"}{n.estimateNo ? " · #" + n.estimateNo : ""}</h3>
+                  <h3>{n.type === "declined" ? "✕ Proposal declined" : "✓ Proposal approved"}{n.estimateNo ? " · #" + n.estimateNo : ""}</h3>
                   <p className="fl-addr">{n.client || "(no client)"}{n.total ? " · " + money(n.total) : ""} · {fmtDateTime(n.ts)}</p>
                 </div>
                 <span className="fl-status" style={{ background: n.type === "declined" ? "var(--red)" : "var(--green)" }}>{n.type === "declined" ? "Declined" : "Approved"}</span>
               </div>
-              <p className="fl-notes">{n.type === "declined" ? "The client declined this estimate (" + (n.via || "—") + ")." : "Approved via " + (n.via || "—") + (n.signedName ? " (" + n.signedName + ")" : "") + ". Ready to convert to an invoice on the Estimates tab."}</p>
+              <p className="fl-notes">{n.type === "declined" ? "The client declined this proposal (" + (n.via || "—") + ")." : "Approved via " + (n.via || "—") + (n.signedName ? " (" + n.signedName + ")" : "") + ". Ready to convert to an invoice on the Proposals tab."}</p>
               <div className="fl-job-foot">
                 <button className="fl-link" onClick={() => dismissNotification(n.id)}>Dismiss</button>
               </div>
@@ -3831,14 +3831,14 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <p className="fl-sub" style={{ margin: 0 }}>Sent — your copies · {sentNotices.length}</p>
             {sentNotices.length > 0 && <button className="fl-link" onClick={clearSent}>Dismiss all</button>}
           </div>
-          <p className="fl-foot-note" style={{ marginTop: 0, marginBottom: 10 }}>A copy of every estimate and invoice that goes out. Turn this off anytime in Settings.</p>
+          <p className="fl-foot-note" style={{ marginTop: 0, marginBottom: 10 }}>A copy of every proposal and invoice that goes out. Turn this off anytime in Settings.</p>
           {sentNotices.length === 0 ? (
-            <div className="fl-empty">{notifySent ? "No copies yet. Each estimate/invoice that's sent will drop a copy here." : "Copies are turned off in Settings."}</div>
+            <div className="fl-empty">{notifySent ? "No copies yet. Each proposal/invoice that's sent will drop a copy here." : "Copies are turned off in Settings."}</div>
           ) : sentNotices.map((n) => (
             <div className="fl-job flag" key={n.id} style={{ "--accent": "var(--blue)" }}>
               <div className="fl-job-top">
                 <div>
-                  <h3>{n.kind === "invoice" ? "🧾 Invoice" : "📄 Estimate"} sent{n.no ? " · #" + n.no : ""}</h3>
+                  <h3>{n.kind === "invoice" ? "🧾 Invoice" : "📄 Proposal"} sent{n.no ? " · #" + n.no : ""}</h3>
                   <p className="fl-addr">{n.client || "(no client)"}{n.total ? " · " + money(n.total) : ""} · {fmtDateTime(n.ts)}</p>
                 </div>
                 <span className="fl-status" style={{ background: "var(--blue)" }}>Sent</span>
@@ -3977,7 +3977,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 <Field label="Phone"><input value={personForm.phone} onChange={(e) => setPersonForm({ ...personForm, phone: e.target.value })} /></Field>
               </div>
               <Field label={"Payout per invoice ($, blank = default " + money(payoutAmt) + ")"}><input inputMode="decimal" value={personForm.payout} placeholder={String(payoutAmt)} onChange={(e) => setPersonForm({ ...personForm, payout: e.target.value })} /></Field>
-              <p className="fl-hint">Owner runs everything · Admin runs the estimators and sees the numbers · Estimator builds estimates &amp; invoices.</p>
+              <p className="fl-hint">Owner runs everything · Admin runs the estimators and sees the numbers · Estimator builds proposals &amp; invoices.</p>
               {err && <p className="fl-error">{err}</p>}
               <div className="fl-actions">
                 <button className="fl-primary" onClick={savePerson}>{personForm.id ? "Update person" : "Add person"}</button>

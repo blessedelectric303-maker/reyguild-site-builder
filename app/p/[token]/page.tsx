@@ -265,9 +265,9 @@ This warranty covers the labor and workmanship on services we performed. It does
   const contractText = String(prof.contract || "").trim() ||
     `SERVICE AGREEMENT
 
-This Agreement is between ${company} ("Company") and the client identified on this estimate ("Client").
+This Agreement is between ${company} ("Company") and the client identified on this proposal ("Client").
 
-1. SCOPE. Company will perform the work described in this estimate.
+1. SCOPE. Company will perform the work described in this proposal.
 
 2. PAYMENT TERMS. Payment is due Net 15 days from the invoice date. Balances not paid within 15 days may accrue a late charge as permitted by law.
 
@@ -277,7 +277,7 @@ This Agreement is between ${company} ("Company") and the client identified on th
 
 5. CHANGES. Any change to the scope of work must be agreed in writing and may adjust the price.
 
-6. ACCEPTANCE. Client's signature on, or written approval of, this estimate constitutes acceptance of these terms.
+6. ACCEPTANCE. Client's signature on, or written approval of, this proposal constitutes acceptance of these terms.
 
 ${company}`;
 

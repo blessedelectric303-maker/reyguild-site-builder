@@ -166,7 +166,7 @@ const makeSite = (key, customName) => {
       nonSubHeading: "Non-Subscriber Projects",
       nonSubSub: "(Limited)",
       nonSubBody: "Not looking for a subscription? We selectively take on projects outside of our subscription service.",
-      nonSubButton: { label: "Request Estimate", kind: "booking", value: "" },
+      nonSubButton: { label: "Request Proposal", kind: "booking", value: "" },
       nonSubNote: "All other projects will be scheduled based off availability.",
       urgentHeading: "Need Immediate Assistance?",
       urgentBody: `For urgent ${svc} needs, contact us directly:`,
