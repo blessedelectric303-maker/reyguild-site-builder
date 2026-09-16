@@ -548,6 +548,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // "I deleted this". Without that distinction a merge either resurrects
   // deleted rows or keeps losing other people's.
   const seenIds = useRef({});
+  // Whether a starting number has been set. Until it is, every estimate goes
+  // out unnumbered - and numbers are how a customer and the office refer to
+  // the same piece of paper on the phone.
+  const [numberingReady, setNumberingReady] = useState(true);
   const [priceHelp, setPriceHelp] = useState(false);
   // Same address typed two different ways is still the same house, so compare
   // on a flattened form: lowercase, no punctuation, single spaces.
@@ -882,6 +886,12 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     let alive = true;
     const pull = async () => {
       try {
+        const rn = await fetch("/api/numbering");
+        const jn = await rn.json().catch(() => ({}));
+        if (Array.isArray(jn.rows)) {
+          const est = jn.rows.find((x) => String(x.kind || x.doc_kind || "") === "estimate");
+          setNumberingReady(!!est);
+        }
         const r = await fetch("/api/proposal/responses");
         const j = await r.json();
         if (alive) setAnswers(Array.isArray(j.items) ? j.items : []);
@@ -2101,6 +2111,17 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 Your letterhead has no way for a customer to reach you. Add a
                 phone, an email or a website in{" "}
                 <a href="/company" style={{ color: "#B45309", textDecoration: "underline" }}>Command Center</a> &mdash; any one of the three is enough.
+              </p>
+            ) : null}
+            {/* A proposal with no number is one nobody can refer to on the
+                phone. Set the starting number once and every document after
+                it is numbered automatically. */}
+            {!numberingReady ? (
+              <p className="fl-hint" style={{ color: "#B45309", margin: "10px 16px 0" }}>
+                No starting number is set, so proposals go out unnumbered. Pick
+                the number to start from in{" "}
+                <a href="/numbering" style={{ color: "#B45309", textDecoration: "underline" }}>Numbering</a>{" "}
+                &mdash; it only has to be done once.
               </p>
             ) : null}
             {/* Until a price list is imported every line is typed by hand,

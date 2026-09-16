@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUnlocked, ADMIN_ROLES, ROLES } from "@/lib/auth";
+import { createClient as createSuiteClient } from "@/utils/supabase/server";
 
 const schema = z.object({
   customerName: z.string().min(1).max(200),
@@ -16,6 +17,7 @@ const schema = z.object({
   scopeOfWork: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   assignedTechIds: z.array(z.string()).default([]),
+  proposalRef: z.string().nullable().optional(),
   // Material and other costs entered while booking the job. Both deduct from
   // the sale price exactly like the ones logged later from the job page -
   // they are the same records, just created at the start instead of the end.
@@ -47,10 +49,36 @@ export async function POST(req: Request) {
     const org = await prisma.organization.findUnique({
       where: { id: actor.orgId },
       select: { defaultGeofenceMiles: true },
-    });const job = await prisma.$transaction(async (tx) => {
+    });
+
+    // ONE PROPOSAL, ONE JOB.
+    //
+    // The calendar's own route has always claimed the proposal before writing
+    // the job. This route did not, so a proposal booked through the full job
+    // page stayed in "waiting to be booked" forever and could be booked a
+    // second time. Same guard, same order: claim first, because a claim that
+    // fails after the job exists leaves an orphan nobody notices.
+    const jobId = "job_" + crypto.randomUUID();
+    const proposalRef = String(data.proposalRef || "").trim();
+    if (proposalRef) {
+      try {
+        const suite = await createSuiteClient();
+        const { error: claimErr } = await suite
+          .schema("suite")
+          .rpc("claim_proposal_for_job", { p_proposal: proposalRef, p_job: jobId });
+        if (claimErr) {
+          return NextResponse.json({ error: claimErr.message }, { status: 409 });
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Could not check that proposal. Try again." },
+          { status: 500 }
+        );
+      }
+    }const job = await prisma.$transaction(async (tx) => {
       const newJob = await tx.job.create({
         data: {
-          id: "job_" + crypto.randomUUID(),
+          id: jobId,
           orgId: actor.orgId,
           createdById: actor.id,
           customerName: data.customerName,

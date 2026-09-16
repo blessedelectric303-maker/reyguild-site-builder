@@ -161,6 +161,9 @@ export default function NewJobForm({
           materials: noMaterial ? [] : cleanMaterials,
           otherCosts: cleanOther,
           assignedTechIds,
+          // Sent so the job claims the proposal it came from. Without it the
+          // proposal stays in the booking queue after the job is made.
+          proposalRef: pf.proposalRef || null,
         }),
       });
 
