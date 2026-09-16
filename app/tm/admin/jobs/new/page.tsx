@@ -109,6 +109,11 @@ async function loadProposal(refId: string): Promise<JobPrefill | undefined> {
       lat: e.addrLat ?? null,
       lng: e.addrLng ?? null,
       salePrice: total ? String(total) : "",
+      // How long the estimator said it takes. Carried through so nobody
+      // re-guesses a job that was already sized when it was quoted.
+      hours: String(e.mode || "") === "lumpsum"
+        ? (Number(e.lumpHours) || null)
+        : ((e.lines || []).reduce((t: number, l: any) => t + (Number(l.hours) || 0), 0) || null),
       scopeOfWork: e.jobDescription || e.lumpDescription || "",
       proposalRef: String(e.id),
     };

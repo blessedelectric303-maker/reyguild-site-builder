@@ -419,6 +419,14 @@ const STYLE_FIX = `
 .fl-prev-total span{ font-size:15px; font-weight:700; }
 .fl-prev-total strong{ font-size:22px; }
 
+/* Hours per line. Internal only - it never reaches the customer's copy. */
+.so-line-hrs{ width:56px; flex:none; text-align:center; }
+.so-totals-hrs{
+  display:flex; justify-content:space-between; margin-top:6px;
+  padding-top:6px; border-top:1px dashed #2A3C5E;
+  font-size:12px; color:#9FB0CC;
+}
+
 /* Another proposal already exists at this address. Amber, not red - it is a
    caution, not an error, and sometimes two jobs at one address are correct. */
 .fl-dupwarn{

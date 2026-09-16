@@ -365,7 +365,16 @@ function downloadTextFile(name, text, type) {
     setTimeout(() => URL.revokeObjectURL(url), 1500); return true;
   } catch (e) { return false; }
 }
-function emptyLine() { return { id: uid(), name: "", qty: 1, unitPrice: "" }; }
+// hours is the estimator's own figure and never appears on the customer's
+// copy. It is what tells T&M how long to block out, so nobody guesses twice.
+function emptyLine() { return { id: uid(), name: "", qty: 1, unitPrice: "", hours: "" }; }
+// Total time for a whole estimate: the lump-sum figure, or the line hours
+// added up. Returns 0 when nobody has filled any in.
+function recHours(r) {
+  if (!r) return 0;
+  if (String(r.mode || "") === "lumpsum") return num(r.lumpHours);
+  return (r.lines || []).reduce((t, l) => t + num(l.hours), 0);
+}
 function lineTotal(l) { return num(l.qty) * num(l.unitPrice); }
 function subtotalOf(lines) { return (lines || []).reduce((s, l) => s + lineTotal(l), 0); }
 function totalsOf(lines) {
@@ -497,7 +506,7 @@ const emptyPriceItem = () => ({
   unit: "ea", price: "", cost: "",
 });
 const emptySupplier = () => ({ id: null, name: "", url: "" });
-const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", notifyOnOpen: true, includeLabor: true, includeWarranty: true, includeContract: true, date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
+const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", lumpHours: "", notifyOnOpen: true, includeLabor: true, includeWarranty: true, includeContract: true, date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
 const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [] });
 const PAY_METHODS = ["Card", "Online deposit", "Check", "Cash", "Other"];
 const NET_DAYS = 15;
@@ -2343,6 +2352,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 <>
                   <Field label="Description (what the job covers)"><textarea rows={5} value={estForm.lumpDescription} placeholder="Describe the full scope here — materials and labor — in plain language." onChange={(e) => setEstForm({ ...estForm, lumpDescription: e.target.value })} /></Field>
                   <Field label="Price ($)"><input value={estForm.lumpPrice} inputMode="decimal" placeholder="0.00" onChange={(e) => setEstForm({ ...estForm, lumpPrice: e.target.value })} /></Field>
+                  <Field label="Hours (internal - the customer never sees this)"><input value={estForm.lumpHours} inputMode="decimal" placeholder="e.g. 4" onChange={(e) => setEstForm({ ...estForm, lumpHours: e.target.value })} /></Field>
                 </>
               ) : (
                 <>
@@ -2352,6 +2362,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                       <input className="so-line-name" list="so-items" value={l.name} placeholder="Item / material" onChange={(e) => pickItem(estForm, setEstForm, l.id, e.target.value)} />
                       <input className="so-line-qty" inputMode="decimal" value={l.qty} placeholder="Qty" onChange={(e) => setLine(estForm, setEstForm, l.id, "qty", e.target.value)} />
                       <input className="so-line-price" inputMode="decimal" value={l.unitPrice} placeholder="Unit $" onChange={(e) => setLine(estForm, setEstForm, l.id, "unitPrice", e.target.value)} />
+                      {/* Hours are for us, not the customer. They never appear
+                          on the proposal - they are what tells T&M how long to
+                          block out, so the office is not guessing at a job
+                          somebody already sized. */}
+                      <input className="so-line-hrs" inputMode="decimal" value={l.hours} placeholder="Hrs" title="Hours - internal only, the customer never sees this" onChange={(e) => setLine(estForm, setEstForm, l.id, "hours", e.target.value)} />
                       <span className="so-line-amt">{money(lineTotal(l))}</span>
                       <button className="so-line-x" onClick={() => removeLine(estForm, setEstForm, l.id)} aria-label="remove line">×</button>
                     </div>
@@ -2364,6 +2379,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {TAX_RATE > 0 && <div><span>Subtotal</span><span>{money(estTotals.sub)}</span></div>}
                 {TAX_RATE > 0 && <div><span>{TAX_LABEL} ({Math.round(TAX_RATE * 1000) / 10}%)</span><span>{money(estTotals.tax)}</span></div>}
                 <div className="so-totals-grand"><span>Total</span><span>{money(estTotals.total)}</span></div>
+                <div className="so-totals-hrs"><span>Time on site (internal)</span><span>{recHours(estForm) ? recHours(estForm) + (recHours(estForm) === 1 ? " hour" : " hours") : "not set"}</span></div>
                 {can.seeNumbers && estForm.mode !== "lumpsum" && <div className="so-totals-margin"><span>Est. margin</span><span>{money(estTotals.sub - costOfLines(estForm.lines))}</span></div>}
               </div>
 

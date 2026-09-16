@@ -13,7 +13,8 @@ const schema = z.object({
   jobLng: z.number(),
   salePrice: z.number().nullable().optional(),
   scheduledStartAt: z.string().nullable().optional(),
-  scheduledEndAt: z.string().nullable().optional(),
+  hours: z.number().min(0).max(200).nullable().optional(),
+  days: z.number().min(0).max(30).nullable().optional(),
   scopeOfWork: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   assignedTechIds: z.array(z.string()).default([]),
@@ -58,6 +59,11 @@ export async function POST(req: Request) {
     // page stayed in "waiting to be booked" forever and could be booked a
     // second time. Same guard, same order: claim first, because a claim that
     // fails after the job exists leaves an orphan nobody notices.
+    const startAt = data.scheduledStartAt ? new Date(data.scheduledStartAt) : null;
+    const blockHours = Number(data.days) > 0
+      ? Number(data.days) * 8
+      : (Number(data.hours) || 0);
+
     const jobId = "job_" + crypto.randomUUID();
     const proposalRef = String(data.proposalRef || "").trim();
     if (proposalRef) {
@@ -89,8 +95,13 @@ export async function POST(req: Request) {
           lng: data.jobLng,
           salePrice: data.salePrice ?? null,
           geofenceMiles: org?.defaultGeofenceMiles ?? 1.0,
-          scheduledStart: data.scheduledStartAt ? new Date(data.scheduledStartAt) : null,
-          scheduledEnd: data.scheduledEndAt ? new Date(data.scheduledEndAt) : null,
+          scheduledStart: startAt,
+          // Worked out from how long the job takes rather than typed. A day
+          // is eight hours - the figure the estimator sized the job in.
+          scheduledEnd: startAt && blockHours
+            ? new Date(startAt.getTime() + blockHours * 3600000)
+            : null,
+          estimatedHours: blockHours || null,
           jobDescription: data.scopeOfWork || null,
           notes: data.notes || null,
           status: "scheduled",

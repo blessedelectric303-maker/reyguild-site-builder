@@ -20,6 +20,7 @@ export type JobPrefill = {
   lat?: number | null;
   lng?: number | null;
   salePrice?: string;
+  hours?: number | null;
   scopeOfWork?: string;
   proposalRef?: string;
 };
@@ -47,7 +48,12 @@ export default function NewJobForm({
   const [lng, setLng] = useState<number | null>(pf.lng ?? null);
   const [salePrice, setSalePrice] = useState(pf.salePrice || "");
   const [scheduledStart, setScheduledStart] = useState("");
-  const [scheduledEnd, setScheduledEnd] = useState("");
+  // HOW LONG, NOT WHEN IT ENDS.
+  // Nobody thinks "this finishes at 4:30" - they think "it is a four hour
+  // job". And when it came from a proposal the estimator already said how
+  // long, so there is nothing to pick at all.
+  const [hours, setHours] = useState<number>(pf.hours || 2);
+  const [days, setDays] = useState<number>(0);
   const [scopeOfWork, setScopeOfWork] = useState(pf.scopeOfWork || "");
   const [assignedTechIds, setAssignedTechIds] = useState<string[]>([]);
   const [mapsReady, setMapsReady] = useState(false);
@@ -155,7 +161,10 @@ export default function NewJobForm({
           jobLng: lng,
           salePrice: parsedSale,
           scheduledStartAt: scheduledStart || null,
-          scheduledEndAt: scheduledEnd || null,
+          // The server works out the end from how long it takes, so nobody
+          // has to do arithmetic to book a job.
+          hours: pf.hours || (days ? days * 8 : hours),
+          days: pf.hours ? 0 : days,
           scopeOfWork: scopeOfWork || null,
           notes: noNotes ? "None" : notes,
           materials: noMaterial ? [] : cleanMaterials,
@@ -287,13 +296,34 @@ export default function NewJobForm({
                 className="input"
               />
             </Field>
-            <Field label="End (optional)">
-              <input
-                type="datetime-local"
-                value={scheduledEnd}
-                onChange={(e) => setScheduledEnd(e.target.value)}
-                className="input"
-              />
+            <Field label="How long">
+              {pf.hours ? (
+                <div className="text-sm text-slate-700 py-2">
+                  <strong>{pf.hours} {pf.hours === 1 ? "hour" : "hours"}</strong>
+                  <span className="text-slate-500"> &mdash; from the proposal</span>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {[2, 4, 8].map((h) => (
+                    <button type="button" key={h} onClick={() => { setHours(h); setDays(0); }}
+                      className={"px-3 py-2 rounded-lg border text-sm font-semibold " +
+                        (days === 0 && hours === h
+                          ? "bg-slate-900 text-white border-slate-900"
+                          : "bg-white text-slate-700 border-slate-300")}>
+                      {h}h
+                    </button>
+                  ))}
+                  {[2, 3].map((d) => (
+                    <button type="button" key={"d" + d} onClick={() => { setDays(d); setHours(8); }}
+                      className={"px-3 py-2 rounded-lg border text-sm font-semibold " +
+                        (days === d
+                          ? "bg-slate-900 text-white border-slate-900"
+                          : "bg-white text-slate-700 border-slate-300")}>
+                      {d} days
+                    </button>
+                  ))}
+                </div>
+              )}
             </Field>
           </div>
         </Section>
