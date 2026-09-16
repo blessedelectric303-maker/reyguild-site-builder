@@ -207,17 +207,16 @@ export default async function ProposalPage({
   // blank stored value and a full warranty on its own preview. Reading the
   // stored value alone dropped both sections off the customer's copy - the
   // same text has to fall back the same way here.
-  const co = company;
   const warrantyText = String(prof.warranty || "").trim() ||
     `ONE-YEAR WORKMANSHIP WARRANTY
 
-${co} warrants all work we service for a period of one (1) year from the date of completion. During this period we will repair or correct any defect in our workmanship at no additional charge.
+${company} warrants all work we service for a period of one (1) year from the date of completion. During this period we will repair or correct any defect in our workmanship at no additional charge.
 
 This warranty covers the labor and workmanship on services we performed. It does not cover damage from misuse, alteration or repair by others, normal wear and tear, or conditions beyond our control.`;
   const contractText = String(prof.contract || "").trim() ||
     `SERVICE AGREEMENT
 
-This Agreement is between ${co} ("Company") and the client identified on this estimate ("Client").
+This Agreement is between ${company} ("Company") and the client identified on this estimate ("Client").
 
 1. SCOPE. Company will perform the work described in this estimate.
 
@@ -231,7 +230,7 @@ This Agreement is between ${co} ("Company") and the client identified on this es
 
 6. ACCEPTANCE. Client's signature on, or written approval of, this estimate constitutes acceptance of these terms.
 
-${co}`;
+${company}`;
 
   // Each section is included or left off per job, chosen on the estimate form
   // before sending. Default to on - a document with no terms on it is the
