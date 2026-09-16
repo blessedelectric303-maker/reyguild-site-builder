@@ -1069,6 +1069,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
   // Save, then send. The link in the email points at the saved record, so
   // the order matters - send first and the customer gets a link to nothing.
+  const estimatesRef = useRef(estimates);
+  estimatesRef.current = estimates;
   async function sendProposal() {
     const to = String(estForm.clientEmail || "").trim();
     if (!to) { setErr("Add a customer email first."); return; }
@@ -1091,7 +1093,19 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       });
       const j = await res.json();
       if (!res.ok) setErr(j.error || "The email did not send.");
-      else setErr("Sent to " + j.sentTo + ". They can accept from that email.");
+      else {
+        setErr("Sent to " + j.sentTo + ". They can accept from that email.");
+        // Gone to the customer, so it is Sent: this puts it in the Sent tab
+        // and starts the follow-ups. The form gets the date too, otherwise the
+        // next Save from the form would write the blank date back over it.
+        const today = toLocalDate(new Date());
+        const cur = (estimatesRef.current || []).find((x) => String(x.id) === String(ref));
+        if (cur && !cur.sentAt) {
+          save(STORAGE.estimates, (estimatesRef.current || []).map((x) => (String(x.id) === String(ref) ? { ...x, sentAt: today, fuDone: 0, fuStopped: false } : x)), setEstimates);
+          noticeSent("estimate", cur);
+        }
+        setEstForm((f) => (String(f.id) === String(ref) && !f.sentAt ? { ...f, sentAt: today } : f));
+      }
     } catch (e) {
       setErr("Could not reach the mail service.");
     }
@@ -2599,7 +2613,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               </button>
             </div>
             {loading ? <div className="fl-empty">Loading…</div> : shownEstimates.length === 0 ? (
-              <div className="fl-empty">{myEstimates.length === 0 ? "None yet. Open Options to start one." : "None in this tab."}</div>
+              <div className="fl-empty">{myEstimates.length === 0 ? "None yet. Tap NEW PROPOSAL to start one." : "None in this tab."}</div>
             ) : (
               <div className="fl-cards">
                 {byMonth(shownEstimates, (r) => recTotals(r).total).map((g) => (
@@ -4021,7 +4035,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           <div className="fl-prevwrap fl-docwrap">
             <button className="fl-prev-x" title="Close" onClick={closeDoc}>&times;</button>
             <div className="fl-prev">
+              {profile.logo ? <img className="fl-prev-mark" src={profile.logo} alt="" aria-hidden="true" /> : null}
               <div className="fl-prev-head">
+                {profile.logo ? <img className="fl-prev-logo" src={profile.logo} alt={profile.name || "logo"} /> : null}
                 <div className="fl-prev-co">{profile.name || "Your company"}</div>
                 {profile.address ? <div>{profile.address}</div> : null}
                 {profile.phone ? <div>{profile.phone}</div> : null}
@@ -4625,6 +4641,39 @@ const CSS = `
 .fl-docemail input{flex:1 1 200px; padding:9px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; color:#1e293b}
 .fl-docsheet .so-pay-fields input, .fl-docsheet .so-pay-fields select{color:#1e293b}
 
+/* ── ZZ-124: the letterhead logo, and the same logo faint behind the page ── */
+.fl-docwrap .fl-prev{isolation:isolate}
+.fl-prev-logo{display:block; height:64px; width:auto; max-width:220px; object-fit:contain; margin:0 0 8px}
+.fl-prev-mark{
+  position:absolute; z-index:-1; pointer-events:none;
+  top:50%; left:50%; transform:translate(-50%,-50%);
+  width:70%; max-width:460px; height:auto; opacity:.07;
+}
+.fl-docwrap .fl-prev-mark{position:fixed}
+@media (min-width:760px){ .fl-docwrap .fl-prev-mark{left:50%} }
+
+/* ── ZZ-124: the list toolbar ──
+   Computer: search and the big gold button on the top row, button at the
+   right; the tabs lined up underneath. Phone: every tab on one row, so
+   Archived never drops to a row of its own. */
+@media (min-width:900px){
+  .fl-root .fl-toolbar{display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px}
+  .fl-root .fl-toolbar .fl-search{flex:1 1 320px; margin-bottom:0; order:1}
+  .fl-root .fl-toolbar .fl-newbig{order:2; flex:none; margin-left:auto}
+  .fl-root .fl-toolbar .fl-filters{order:3; flex:1 1 100%}
+}
+@media (max-width:899px){
+  .fl-root .fl-toolbar .fl-filters{flex-wrap:nowrap; gap:4px}
+  .fl-root .fl-toolbar .fl-pill{
+    flex:1 1 auto; min-width:0; white-space:nowrap; text-align:center;
+    padding:6px 3px; font-size:10px; letter-spacing:-.02em;
+  }
+  .fl-root .fl-toolbar .fl-pillcount{
+    min-width:14px; height:14px; margin-left:3px; padding:0 3px;
+    font-size:9px; line-height:14px;
+  }
+}
+
 .fl-print{display:none}
 @media print{
   .fl-noprint{display:none !important}
@@ -4635,6 +4684,8 @@ const CSS = `
   .fl-root.fl-has-doc .fl-prevwrap{position:static !important; overflow:visible !important; background:#fff !important}
   .fl-root.fl-has-doc .fl-prev{max-width:none !important; min-height:0 !important; padding:0 !important}
   .fl-docbar, .fl-docsheet, .fl-prev-x{display:none !important}
+  .fl-root.fl-has-doc .fl-prev{position:relative !important}
+  .fl-root.fl-has-doc .fl-prev-mark{position:absolute !important; top:40% !important}
   .fl-root{background:#fff !important; padding:0 !important; color-scheme:light}
   .fl-print{display:block; color:#000; font-family:'Inter',Arial,sans-serif}
   .fl-stmt{page-break-after:always; padding:8px}
