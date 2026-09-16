@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { getCurrentUser, ADMIN_ROLES, ROLES } from "@/lib/auth";
 import NewJobForm, { type JobPrefill } from "./NewJobForm";
 
@@ -12,30 +13,82 @@ export const dynamic = "force-dynamic";
 // quoted rather than a retyped approximation of it.
 async function loadProposal(refId: string): Promise<JobPrefill | undefined> {
   try {
-    const supabase = await createClient();
-    const { data: { user: su } } = await supabase.auth.getUser();
-    if (!su) return undefined;
-    const { data: mem } = await supabase
-      .schema("suite")
-      .from("memberships")
-      .select("company_id")
-      .eq("user_id", su.id)
-      .limit(1)
-      .maybeSingle();
-    const cid = ((mem as any) || {}).company_id;
-    if (!cid) return undefined;
+    // READ IT WITH THE SERVICE ROLE, NOT THE BROWSER SESSION.
+    //
+    // This page lives under the T&M admin layout, which signs people in with
+    // its own blessed_track_session cookie. The Supabase session that owns
+    // suite.app_storage is a different one and is not always readable here -
+    // so the lookup came back empty and the form opened blank, with no error,
+    // because it was written to fail open. Silence was the wrong choice and
+    // this is the wrong client. The service role does not care which cookie
+    // the browser is carrying.
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!url || !key) {
+      console.error("[job prefill] no service role key - cannot read the proposal");
+      return undefined;
+    }
+    const sb = createServiceClient(url, key, { auth: { persistSession: false } });
 
-    const { data: row } = await supabase
-      .schema("suite")
-      .from("app_storage")
-      .select("value")
-      .eq("company_id", cid)
-      .eq("key", "so_estimates")
-      .maybeSingle();
+    // The company still comes from whoever is signed in, so one company can
+    // never pull another's proposal through this page.
+    let cid = "";
+    try {
+      const supabase = await createClient();
+      const { data: { user: su } } = await supabase.auth.getUser();
+      if (su) {
+        const { data: mem } = await supabase
+          .schema("suite")
+          .from("memberships")
+          .select("company_id")
+          .eq("user_id", su.id)
+          .limit(1)
+          .maybeSingle();
+        cid = ((mem as any) || {}).company_id || "";
+      }
+    } catch {
+      // No Supabase session in this context - fall through to the lookup by
+      // proposal id below, which is still scoped to one company's row.
+    }
+
+    let row: any = null;
+    if (cid) {
+      const { data } = await sb
+        .schema("suite")
+        .from("app_storage")
+        .select("value")
+        .eq("company_id", cid)
+        .eq("key", "so_estimates")
+        .maybeSingle();
+      row = data;
+    } else {
+      // Without a company id, find the one company whose estimate list holds
+      // this proposal. The id is a signed-link reference, not a guessable
+      // number, and only an office user who is already signed into T&M can
+      // reach this page at all.
+      const { data: rows } = await sb
+        .schema("suite")
+        .from("app_storage")
+        .select("value")
+        .eq("key", "so_estimates");
+      for (const r of (rows || []) as any[]) {
+        try {
+          const l = JSON.parse(r.value || "[]");
+          if (Array.isArray(l) && l.some((x: any) => String(x.id) === refId)) { row = r; break; }
+        } catch { /* skip a list that will not parse */ }
+      }
+    }
+    if (!row) {
+      console.error("[job prefill] no estimate list found for", refId);
+      return undefined;
+    }
 
     const list = JSON.parse(((row as any) || {}).value || "[]");
     const e = (Array.isArray(list) ? list : []).find((x: any) => String(x.id) === refId);
-    if (!e) return undefined;
+    if (!e) {
+      console.error("[job prefill] proposal not in the list:", refId);
+      return undefined;
+    }
 
     // The estimating app computes totals rather than storing them.
     const total = String(e.mode || "") === "lumpsum"
@@ -59,8 +112,11 @@ async function loadProposal(refId: string): Promise<JobPrefill | undefined> {
       scopeOfWork: e.jobDescription || e.lumpDescription || "",
       proposalRef: String(e.id),
     };
-  } catch {
-    // A proposal that will not load must not block booking a job by hand.
+  } catch (err: any) {
+    // A proposal that will not load must not block booking a job by hand -
+    // but it must not do it quietly either. That silence is what made this
+    // look like "the fields just do not transfer".
+    console.error("[job prefill] threw:", err?.message || err);
     return undefined;
   }
 }
