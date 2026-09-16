@@ -563,7 +563,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const [numberingReady, setNumberingReady] = useState(true);
   // The proposal being previewed exactly as the customer received it, so
   // whoever is booking knows what was agreed before they commit to it.
-  const [previewEst, setPreviewEst] = useState(null);
+  // LAYER 2: the open document. { kind: "estimate" | "invoice", id }.
+  // Only the id is kept, so the view always shows the live record - a payment
+  // logged or a signature taken shows up without reopening it.
+  const [openDoc, setOpenDoc] = useState(null);
+  const [docMore, setDocMore] = useState(false);
   // THE LIST IS THE SCREEN. THE FORM IS SOMETHING YOU OPEN.
   // The builder is long, and on a narrow window the two-column grid stacked
   // it on top of the list - so the work you already did sat below a whole
@@ -1021,6 +1025,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     if (!ok) setPage(TABS[0] ? TABS[0].key : "estimates");
   }, [role]);
   useEffect(() => { if (page === "messages") save(STORAGE.msgSeen, { ...msgSeen, [actorKey]: Date.now() }, setMsgSeen); }, [page]);
+  useEffect(() => { setOpenDoc(null); setDocMore(false); }, [page]);
 
   // estimators always create under their own name
   useEffect(() => {
@@ -1163,8 +1168,77 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   function convertToInvoice(e) {
     logAudit("Converted estimate to invoice", e.client || ""); setInvForm({ ...emptyInvoice(), client: e.client, address: e.clientAddr || (clientOf(e.client)?.address) || "", createdBy: e.createdBy || myName, fromEstimate: e.estimateNo || e.id, mode: e.mode || "itemized", lines: (e.lines || []).map((l) => ({ ...l, id: uid() })), lumpDescription: e.lumpDescription || "", lumpPrice: e.lumpPrice || "", notes: e.notes });
     save(STORAGE.estimates, estimates.map((x) => (x.id === e.id ? { ...x, invoiced: true } : x)), setEstimates);
+    // Since the form became hidden-until-asked-for, converting filled in a
+    // form nobody could see. Open it.
+    setInvFormOpen(true);
     setPage("invoices");
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 40);
+  }
+  // ── LAYER 2: one open document, its own actions ──────────────────────────
+  // Exactly one panel is open at a time: More, customer signature, payments,
+  // the missing-email box, or the delete check. The panels reuse the state the
+  // cards used to use, so signEstimate, recordPayment and the rest close their
+  // own panel when they finish, exactly as before.
+  function docPanel(which, id) {
+    setDocMore(which === "more");
+    setSignFor(which === "sign" ? id : null);
+    setPayFor(which === "pay" ? id : null);
+    setEmailPromptFor(which === "email" ? id : null);
+    setConfirmId(which === "delete" ? id : null);
+    if (which === "pay") setPayDraft({ amount: "", method: "Card", methodOther: "", date: toLocalDate(new Date()) });
+    if (which === "email") setEmailDraft("");
+  }
+  function openDocFor(kind, rec) { docPanel(null, null); setErr(""); setOpenDoc({ kind, id: rec.id }); }
+  function closeDoc() { docPanel(null, null); setOpenDoc(null); }
+  function printDoc() { docPanel(null, null); setTimeout(() => { try { window.print(); } catch (e) {} }, 60); }
+  function turnIntoInvoice(e) {
+    const st = String(e.status || "").toLowerCase();
+    if (!(can.seeAllWork || (e.createdBy || "").trim() === myName)) { setErr("Only the estimator on this proposal, or an admin, can turn it into an invoice."); return; }
+    if (e.invoiced) { setErr("This proposal has already been turned into an invoice."); return; }
+    if (!st.includes("approv")) { setErr("The customer has to accept this proposal before it can become an invoice."); return; }
+    closeDoc();
+    convertToInvoice(e);
+  }
+  // The real send - the branded email with the Accept button, same route the
+  // form uses. The record is already saved, so there is nothing to save first.
+  async function emailProposalRec(e) {
+    const c = clientOf(e.client);
+    const to = String(e.clientEmail || (c && c.email) || "").trim();
+    if (!to) { docPanel("email", e.id); return; }
+    docPanel(null, e.id);
+    setSending(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/proposal/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          refId: String(e.id),
+          to,
+          clientName: e.client || "",
+          total: money(recTotals(e).total),
+          description: e.jobDescription || "",
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) setErr(j.error || "The email did not send.");
+      else {
+        setErr("Sent to " + (j.sentTo || to) + ". They can accept from that email.");
+        // It has gone to the customer, so it is Sent: status out of Draft, the
+        // sent date set (which starts the follow-ups), the address kept.
+        const wasSent = !!e.sentAt;
+        save(STORAGE.estimates, estimates.map((x) => (x.id === e.id ? {
+          ...x,
+          status: (!x.status || String(x.status).toLowerCase() === "draft") ? "Submitted" : x.status,
+          sentAt: x.sentAt || toLocalDate(new Date()),
+          clientEmail: x.clientEmail || to,
+        } : x)), setEstimates);
+        if (!wasSent) noticeSent("estimate", e);
+      }
+    } catch (err2) {
+      setErr("Could not reach the mail service.");
+    }
+    setSending(false);
   }
   function archiveEstimate(id, on) { save(STORAGE.estimates, estimates.map((e) => (e.id === id ? { ...e, archived: on } : e)), setEstimates); }
   function markSentToClient(id) {
@@ -1766,7 +1840,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const invTotals = recTotals(invForm);
 
   return (
-    <div className={"fl-root" + (theme === "dark" ? " so-dark" : "")}>
+    <div className={"fl-root" + (theme === "dark" ? " so-dark" : "") + (openDoc ? " fl-has-doc" : "")}>
       <div className="fl-noprint">
       {/* Built to the same shape as T and M and P and L, deliberately. One
           dark bar: crest left, who you are in the middle, Settings right.
@@ -2117,55 +2191,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               ? toSchedule.length + " accepted - get " + (toSchedule.length === 1 ? "it" : "them") + " on the calendar"
               : answers.length + " customer " + (answers.length === 1 ? "reply" : "replies")}
           </div>
-          {previewEst && (
-            <div className="fl-prevwrap" onClick={() => setPreviewEst(null)}>
-              <div className="fl-prev" onClick={(ev) => ev.stopPropagation()}>
-                <button className="fl-prev-x" onClick={() => setPreviewEst(null)}>&times;</button>
-                {/* Black and white on purpose - this is what the customer got,
-                    not a ReyGuild screen. */}
-                <div className="fl-prev-head">
-                  <div className="fl-prev-co">{profile.name || "Your company"}</div>
-                  {profile.address ? <div>{profile.address}</div> : null}
-                  {profile.phone ? <div>{profile.phone}</div> : null}
-                </div>
-                <div className="fl-prev-for">
-                  <span>Prepared for</span>
-                  <strong>{previewEst.client || "Customer"}</strong>
-                  {previewEst.clientAddr ? <div>{previewEst.clientAddr}</div> : null}
-                  {previewEst.estimateNo ? <div>Proposal #{previewEst.estimateNo}</div> : null}
-                </div>
-                <div className="fl-prev-sec">
-                  <b>Description</b>
-                  <p>{previewEst.jobDescription || previewEst.lumpDescription || "The work we discussed"}</p>
-                </div>
-                {String(previewEst.mode || "") === "lumpsum" ? (
-                  <div className="fl-prev-sec"><b>{previewEst.lumpDescription || "The work described above"}</b></div>
-                ) : (
-                  (previewEst.lines || []).filter((l) => String(l.name || "").trim()).map((l, i) => (
-                    <div className="fl-prev-sec" key={i}>
-                      <b>{l.name}</b>
-                      {Number(l.qty) > 1 ? <p>Quantity: {l.qty}</p> : null}
-                      {String(previewEst.priceDisplay || "total") === "lines"
-                        ? <p>{money(num(l.qty) * num(l.unitPrice))}</p> : null}
-                    </div>
-                  ))
-                )}
-                {previewEst.includeLabor !== false ? (
-                  <div className="fl-prev-sec"><b>Labor &amp; materials included</b>
-                    <p>{profile.laborMaterials || "Labor and material are both included in every line item above."}</p></div>
-                ) : null}
-                {previewEst.includeWarranty !== false ? (
-                  <div className="fl-prev-sec"><b>Warranty</b><p>{warrantyText()}</p></div>
-                ) : null}
-                {previewEst.includeContract !== false ? (
-                  <div className="fl-prev-sec"><b>Contract agreement</b><p>{contractText()}</p></div>
-                ) : null}
-                <div className="fl-prev-total">
-                  <span>Total</span><strong>{money(recSub(previewEst))}</strong>
-                </div>
-              </div>
-            </div>
-          )}
           {answers.map((a) => {
             const est = estimates.find((e) => String(e.id) === String(a.ref_id));
             const who = est ? (est.client || est.clientContact || "") : "";
@@ -2196,7 +2221,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                   <div className="fl-answer-acts">
                     {est ? (
                       <button className="fl-answer-eye" title="See it the way the customer saw it"
-                        onClick={() => setPreviewEst(est)}>&#128065;</button>
+                        onClick={() => openDocFor("estimate", est)}>&#128065;</button>
                     ) : null}
                     <a className="fl-answer-go"
                        href={"/tm/admin/jobs/new?fromProposal=" + encodeURIComponent(a.ref_id)}>
@@ -2586,7 +2611,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {g.rows.map((e) => {
                   const t = recTotals(e);
                   return (
-                    <article key={e.id} className="fl-card" style={{ "--accent": EST_COLOR[e.status] || "var(--ink-2)" }}>
+                    <article key={e.id} className="fl-card fl-card--open" style={{ "--accent": EST_COLOR[e.status] || "var(--ink-2)" }}
+                      role="button" tabIndex={0} title="Open this proposal"
+                      onClick={() => openDocFor("estimate", e)}
+                      onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openDocFor("estimate", e); } }}>
                       <div className="fl-card-top">
                         <div>
                           <h3>{e.client || "(no client)"}</h3>
@@ -2597,6 +2625,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                       <div className="fl-meta">
                         <span><strong>{money(t.total)}</strong></span>
                         <span>{e.mode === "lumpsum" ? "lump sum" : (e.lines || []).length + " line" + ((e.lines || []).length === 1 ? "" : "s")}</span>
+                        {e.signedAt && <span className="fl-paychip">signed ✓</span>}
                         {e.invoiced && <span className="fl-paychip">invoiced ✓</span>}
                         {can.seeNumbers && e.mode !== "lumpsum" && <span className="fl-paychip">margin {money(t.sub - costOfLines(e.lines))}</span>}
                       </div>
@@ -2609,47 +2638,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                       {e.notes && <p className="fl-notes">{e.notes}</p>}
                       <div className="fl-card-foot">
                         <span className="fl-stamp">{e.createdBy ? "By " + e.createdBy : "No estimator"}</span>
-                        <div className="fl-card-actions">
-                          <button className="fl-link" onClick={() => editEstimate(e)}>Edit</button>
-                          <button className="fl-link" onClick={() => setPreviewEst(e)}>Preview</button>
-                          {clientOf(e.client)?.email
-                            ? <a className="fl-link" href={sendDocMailto(e, "estimate")}>Email to client</a>
-                            : (emailPromptFor === e.id
-                                ? <span className="so-email-prompt"><input value={emailDraft} placeholder="client@email.com" onChange={(ev) => setEmailDraft(ev.target.value)} /><button className="fl-link" onClick={() => saveClientEmail(e)}>Save &amp; send</button></span>
-                                : <button className="fl-link" onClick={() => { setEmailPromptFor(e.id); setEmailDraft(""); }}>Email to client</button>)}
-                          {(profile.email || (currentUser && currentUser.email)) && <a className="fl-link" href={sendDocMailto(e, "estimate", true)}>Email me</a>}
-                          {can.approve && e.status === "Submitted" && <button className="fl-link" onClick={() => setEstStatus(e.id, "Approved")}>Approve</button>}
-                          {can.approve && e.status === "Submitted" && <button className="fl-link danger" onClick={() => setEstStatus(e.id, "Declined")}>Decline</button>}
-                          {(can.seeAllWork || (e.createdBy || "").trim() === myName) && e.status === "Approved" && !e.invoiced && <button className="fl-link" onClick={() => convertToInvoice(e)}>→ Invoice</button>}
-                          {!e.sentAt && <button className="fl-link" onClick={() => markSentToClient(e.id)}>Sent to client</button>}
-                          {e.archived
-                            ? <button className="fl-link" onClick={() => archiveEstimate(e.id, false)}>Restore</button>
-                            : <button className="fl-link" onClick={() => archiveEstimate(e.id, true)}>Clear from list</button>}
-                          {confirmId === e.id ? (
-                            <><button className="fl-link danger" onClick={() => removeEstimate(e.id)}>Delete</button><button className="fl-link" onClick={() => setConfirmId(null)}>Keep</button></>
-                          ) : null}
-                          {!/approv|declin/i.test(String(e.status || "")) && <button className="fl-link" onClick={() => setSignFor(signFor === e.id ? null : e.id)}>✍ Client sign-off</button>}
-                        </div>
+                        <span className="fl-openhint">Open &rsaquo;</span>
                       </div>
-                      {previewFor === e.id && (
-                        <div className="so-preview">
-                          <p className="so-preview-lbl">Preview — what the client receives</p>
-                          <pre className="so-legal">{docBodyText(e, "estimate")}</pre>
-                          {(e.photos || []).length > 0 && <div className="so-photos">{e.photos.map((p, idx) => <img className="so-photo-view" key={idx} src={p} alt="" />)}</div>}
-                        </div>
-                      )}
-                      {e.signedAt && e.signature && (
-                        <div className="so-signed"><span className="so-signed-lbl">Signed & approved {fmtDate(e.signedAt)}{e.signedName ? " — " + e.signedName : ""}</span><img className="so-signed-img" src={e.signature} alt="signature" /></div>
-                      )}
-                      {signFor === e.id && (
-                        <SignaturePad
-                          client={e.client}
-                          onApprove={(name, sig) => signEstimate(e, name, sig)}
-                          onThink={() => clientThinking(e)}
-                          onDecline={() => declineByClient(e)}
-                          onCancel={() => setSignFor(null)}
-                        />
-                      )}
                     </article>
                   );
                 })}
@@ -2773,7 +2763,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {g.rows.map((i) => {
                   const t = recTotals(i);
                   return (
-                    <article key={i.id} className="fl-card" style={{ "--accent": INV_COLOR[i.status] || "var(--ink-2)" }}>
+                    <article key={i.id} className="fl-card fl-card--open" style={{ "--accent": INV_COLOR[i.status] || "var(--ink-2)" }}
+                      role="button" tabIndex={0} title="Open this invoice"
+                      onClick={() => openDocFor("invoice", i)}
+                      onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openDocFor("invoice", i); } }}>
                       <div className="fl-card-top">
                         <div>
                           <h3>{i.client || "(no client)"}</h3>
@@ -2803,63 +2796,13 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                           </div>
                         );
                       })()}
-                      {(i.payments || []).length > 0 && (
-                        <div className="so-pay-list">
-                          {i.payments.map((p) => (
-                            <div className="so-pay-row" key={p.id}>
-                              <span>{fmtDate(p.date)} · {p.method}</span>
-                              <span>{money(p.amount)}</span>
-                              <button className="fl-link" onClick={() => removePayment(i.id, p.id)}>×</button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {payFor === i.id && (
-                        <div className="so-pay-form">
-                          <div className="so-pay-fields">
-                            <input className="so-pay-amt" inputMode="decimal" value={payDraft.amount} placeholder={"Amount (bal " + money(invBalance(i)) + ")"} onChange={(e) => setPayDraft({ ...payDraft, amount: e.target.value })} />
-                            <select value={payDraft.method} onChange={(e) => setPayDraft({ ...payDraft, method: e.target.value })}>{PAY_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}</select>
-                            {payDraft.method === "Other" && <input value={payDraft.methodOther} placeholder="Type method" onChange={(e) => setPayDraft({ ...payDraft, methodOther: e.target.value })} />}
-                            <input type="date" value={payDraft.date} onChange={(e) => setPayDraft({ ...payDraft, date: e.target.value })} />
-                          </div>
-                          <div className="so-pay-actions">
-                            <button className="fl-primary" onClick={() => recordPayment(i)}>Log payment</button>
-                            <button className="fl-link" onClick={() => setPayDraft({ ...payDraft, amount: String(invBalance(i)) })}>Pay full balance</button>
-                            <button className="fl-ghost" onClick={() => setPayFor(null)}>Cancel</button>
-                          </div>
-                        </div>
-                      )}
                       {i.dueDate && invBalance(i) > 0.005 && (
                         <p className={"so-due-stamp" + (isPastDue(i) ? " over" : "")}>{isPastDue(i) ? "⚠ Past due — was due " + fmtDate(i.dueDate) : "Due " + fmtDate(i.dueDate)}{i.overdueEmailSent ? " · past-due notice sent " + fmtDate(i.overdueEmailSentAt) : ""}</p>
                       )}
                       <div className="fl-card-foot">
                         <span className="fl-stamp">{i.createdBy ? "By " + i.createdBy : "No estimator"}</span>
-                        <div className="fl-card-actions">
-                          <button className="fl-link" onClick={() => editInvoice(i)}>Edit</button>
-                          <button className="fl-link" onClick={() => setPreviewFor(previewFor === i.id ? null : i.id)}>{previewFor === i.id ? "Hide preview" : "Preview"}</button>
-                          {clientOf(i.client)?.email
-                            ? <a className="fl-link" href={sendDocMailto(i, "invoice")}>Email to client</a>
-                            : (emailPromptFor === i.id
-                                ? <span className="so-email-prompt"><input value={emailDraft} placeholder="client@email.com" onChange={(ev) => setEmailDraft(ev.target.value)} /><button className="fl-link" onClick={() => saveClientEmail(i)}>Save &amp; send</button></span>
-                                : <button className="fl-link" onClick={() => { setEmailPromptFor(i.id); setEmailDraft(""); }}>Email to client</button>)}
-                          {(profile.email || (currentUser && currentUser.email)) && <a className="fl-link" href={sendDocMailto(i, "invoice", true)}>Email me</a>}
-                          {i.status !== "Sent" && i.status !== "Paid" && <button className="fl-link" onClick={() => setInvStatus(i.id, "Sent")}>Sent</button>}
-                          {isPastDue(i) && clientOf(i.client)?.email && <a className="fl-link danger" href={overdueMailto(i)} onClick={() => markOverdueSent(i)}>Send past-due notice</a>}
-                          {invBalance(i) > 0.005 && <button className="fl-link" onClick={() => { setPayFor(payFor === i.id ? null : i.id); setPayDraft({ amount: "", method: "Card", methodOther: "", date: toLocalDate(new Date()) }); }}>＋ Record payment</button>}
-                          {i.status === "Paid" && !i.archived && <button className="fl-link" onClick={() => archiveInvoice(i.id, true)}>Archive (done)</button>}
-                          {i.archived && <button className="fl-link" onClick={() => archiveInvoice(i.id, false)}>Unarchive</button>}
-                          {confirmId === i.id ? (
-                            <><button className="fl-link danger" onClick={() => removeInvoice(i.id)}>Delete</button><button className="fl-link" onClick={() => setConfirmId(null)}>Keep</button></>
-                          ) : <button className="fl-link" onClick={() => setConfirmId(i.id)}>Remove</button>}
-                        </div>
+                        <span className="fl-openhint">Open &rsaquo;</span>
                       </div>
-                      {previewFor === i.id && (
-                        <div className="so-preview">
-                          <p className="so-preview-lbl">Preview — what the client receives</p>
-                          <pre className="so-legal">{docBodyText(i, "invoice")}</pre>
-                          {(i.photos || []).length > 0 && <div className="so-photos">{i.photos.map((p, idx) => <img className="so-photo-view" key={idx} src={p} alt="" />)}</div>}
-                        </div>
-                      )}
                     </article>
                   );
                 })}
@@ -4050,6 +3993,281 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       )}
       </div>
 
+      {/* ════════════════════ OPEN DOCUMENT (Layer 2) ════════════════════
+          Tap a proposal or invoice and it opens full screen, the way the
+          customer sees it, with that document's own actions along the
+          bottom. It sits outside .fl-noprint so Print prints the paper. */}
+      {openDoc && (() => {
+        const isEst = openDoc.kind === "estimate";
+        const d = (isEst ? estimates : invoices).find((x) => x.id === openDoc.id);
+        if (!d) return null;
+        const st = String(d.status || "").toLowerCase();
+        const cli = clientOf(d.client);
+        const custEmail = String((isEst ? d.clientEmail : "") || (cli && cli.email) || "").trim();
+        const selfEmail = profile.email || (currentUser && currentUser.email);
+        const panel = docMore ? "more"
+          : signFor === d.id ? "sign"
+          : payFor === d.id ? "pay"
+          : emailPromptFor === d.id ? "email"
+          : confirmId === d.id ? "delete"
+          : null;
+        const toggle = (w) => docPanel(panel === w ? null : w, d.id);
+        const soon = (msg) => { docPanel(null, d.id); setErr(msg); };
+        const t = recTotals(d);
+        const paid = isEst ? 0 : invPaidAmt(d);
+        const bal = isEst ? 0 : invBalance(d);
+        const no = isEst ? d.estimateNo : d.invoiceNo;
+        return (
+          <div className="fl-prevwrap fl-docwrap">
+            <button className="fl-prev-x" title="Close" onClick={closeDoc}>&times;</button>
+            <div className="fl-prev">
+              <div className="fl-prev-head">
+                <div className="fl-prev-co">{profile.name || "Your company"}</div>
+                {profile.address ? <div>{profile.address}</div> : null}
+                {profile.phone ? <div>{profile.phone}</div> : null}
+              </div>
+              {isEst ? (
+                <>
+                  <div className="fl-prev-for">
+                    <span>Prepared for</span>
+                    <strong>{d.client || "Customer"}</strong>
+                    {d.clientAddr ? <div>{d.clientAddr}</div> : null}
+                    {d.estimateNo ? <div>Proposal #{d.estimateNo}</div> : null}
+                    {d.date ? <div>{fmtDate(d.date)}</div> : null}
+                  </div>
+                  <div className="fl-prev-sec">
+                    <b>Description</b>
+                    <p>{d.jobDescription || d.lumpDescription || "The work we discussed"}</p>
+                  </div>
+                  {String(d.mode || "") === "lumpsum" ? (
+                    <div className="fl-prev-sec"><b>{d.lumpDescription || "The work described above"}</b></div>
+                  ) : (
+                    (d.lines || []).filter((l) => String(l.name || "").trim()).map((l, k) => (
+                      <div className="fl-prev-sec" key={k}>
+                        <b>{l.name}</b>
+                        {Number(l.qty) > 1 ? <p>Quantity: {l.qty}</p> : null}
+                        {String(d.priceDisplay || "total") === "lines"
+                          ? <p>{money(num(l.qty) * num(l.unitPrice))}</p> : null}
+                      </div>
+                    ))
+                  )}
+                  {d.includeLabor !== false ? (
+                    <div className="fl-prev-sec"><b>Labor &amp; materials included</b>
+                      <p>{profile.laborMaterials || "Labor and material are both included in every line item above."}</p></div>
+                  ) : null}
+                  {d.includeWarranty !== false ? (
+                    <div className="fl-prev-sec"><b>Warranty</b><p>{warrantyText()}</p></div>
+                  ) : null}
+                  {d.includeContract !== false ? (
+                    <div className="fl-prev-sec"><b>Contract agreement</b><p>{contractText()}</p></div>
+                  ) : null}
+                  <div className="fl-prev-total">
+                    <span>Total</span><strong>{money(recSub(d))}</strong>
+                  </div>
+                  {(d.signedAt || d.signedName) && (
+                    <div className="fl-prev-sec fl-prev-signed">
+                      <b>Accepted{d.signedAt ? " " + fmtDate(d.signedAt) : ""}</b>
+                      {d.signedName ? <p>{d.signedName}</p> : null}
+                      {d.signature ? <img className="fl-prev-sig" src={d.signature} alt="signature" /> : null}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="fl-prev-for">
+                    <span>Bill to</span>
+                    <strong>{d.client || "Customer"}</strong>
+                    {d.address ? <div>{d.address}</div> : null}
+                    {d.invoiceNo ? <div>Invoice #{d.invoiceNo}</div> : null}
+                    {d.date ? <div>Date: {fmtDate(d.date)}</div> : null}
+                    {d.dueDate ? <div>Due: {fmtDate(d.dueDate)}</div> : null}
+                  </div>
+                  {String(d.mode || "") === "lumpsum" ? (
+                    <div className="fl-prev-sec">
+                      <b>Work performed</b>
+                      <p>{d.lumpDescription || "The work described"}</p>
+                    </div>
+                  ) : (
+                    (d.lines || []).filter((l) => String(l.name || "").trim() || num(l.unitPrice)).map((l, k) => (
+                      <div className="fl-prev-sec fl-prev-line" key={k}>
+                        <div>
+                          <b>{l.name || "Item"}</b>
+                          <p>{num(l.qty)} &times; {money(num(l.unitPrice))}</p>
+                        </div>
+                        <strong>{money(lineTotal(l))}</strong>
+                      </div>
+                    ))
+                  )}
+                  {d.notes ? <div className="fl-prev-sec"><b>Notes</b><p>{d.notes}</p></div> : null}
+                  {TAX_RATE > 0 && <div className="fl-prev-sub"><span>Subtotal</span><span>{money(t.sub)}</span></div>}
+                  {TAX_RATE > 0 && <div className="fl-prev-sub"><span>{TAX_LABEL}</span><span>{money(t.tax)}</span></div>}
+                  <div className="fl-prev-total">
+                    <span>Total</span><strong>{money(t.total)}</strong>
+                  </div>
+                  {paid > 0 && <div className="fl-prev-sub"><span>Paid</span><span>{money(paid)}</span></div>}
+                  {paid > 0 && (
+                    <div className="fl-prev-total">
+                      <span>{bal <= 0.005 ? "Paid in full" : "Balance due"}</span><strong>{money(bal)}</strong>
+                    </div>
+                  )}
+                </>
+              )}
+              {(d.photos || []).length > 0 && (
+                <div className="so-photos">{d.photos.map((ph, k) => <img className="so-photo-view" key={k} src={ph} alt="" />)}</div>
+              )}
+            </div>
+
+            {(panel || err) && (
+              <div className="fl-docsheet">
+                {err && (
+                  <div className="fl-docmsg">
+                    <span>{err}</span>
+                    <button type="button" aria-label="Dismiss" onClick={() => setErr("")}>&times;</button>
+                  </div>
+                )}
+
+                {panel === "more" && isEst && (
+                  <>
+                    <h4>More</h4>
+                    <div className="fl-doclist">
+                      {can.approve && st === "submitted" && <button onClick={() => { setEstStatus(d.id, "Approved"); docPanel(null, d.id); }}>Approve</button>}
+                      {can.approve && st === "submitted" && <button className="danger" onClick={() => { setEstStatus(d.id, "Declined"); docPanel(null, d.id); }}>Decline</button>}
+                      {!/approv|declin/.test(st) && <button onClick={() => docPanel("sign", d.id)}>&#9997; Customer signs here</button>}
+                      {!d.sentAt && <button onClick={() => { markSentToClient(d.id); docPanel(null, d.id); }}>Mark as sent to customer</button>}
+                      {selfEmail && <a href={sendDocMailto(d, "estimate", true)}>Email me a copy</a>}
+                      {d.archived
+                        ? <button onClick={() => { archiveEstimate(d.id, false); docPanel(null, d.id); }}>Put back in the list</button>
+                        : <button onClick={() => { archiveEstimate(d.id, true); closeDoc(); }}>Clear from list</button>}
+                      <button className="danger" onClick={() => docPanel("delete", d.id)}>Delete&hellip;</button>
+                    </div>
+                  </>
+                )}
+
+                {panel === "more" && !isEst && (
+                  <>
+                    <h4>More</h4>
+                    <div className="fl-doclist">
+                      {st !== "sent" && st !== "paid" && <button onClick={() => { setInvStatus(d.id, "Sent"); docPanel(null, d.id); }}>Mark as sent</button>}
+                      {isPastDue(d) && custEmail && <a className="danger" href={overdueMailto(d)} onClick={() => markOverdueSent(d)}>Send past-due notice</a>}
+                      {selfEmail && <a href={sendDocMailto(d, "invoice", true)}>Email me a copy</a>}
+                      {st === "paid" && !d.archived && <button onClick={() => { archiveInvoice(d.id, true); closeDoc(); }}>Archive (done)</button>}
+                      {d.archived && <button onClick={() => { archiveInvoice(d.id, false); docPanel(null, d.id); }}>Unarchive</button>}
+                      <button className="danger" onClick={() => docPanel("delete", d.id)}>Delete&hellip;</button>
+                    </div>
+                  </>
+                )}
+
+                {panel === "sign" && isEst && (
+                  <SignaturePad
+                    client={d.client}
+                    onApprove={(name, sig) => signEstimate(d, name, sig)}
+                    onThink={() => clientThinking(d)}
+                    onDecline={() => declineByClient(d)}
+                    onCancel={() => setSignFor(null)}
+                  />
+                )}
+
+                {panel === "pay" && !isEst && (
+                  <>
+                    <h4>Payments</h4>
+                    <p className="fl-docnote">
+                      {paid <= 0
+                        ? "Nothing paid yet. " + money(t.total) + " due."
+                        : bal <= 0.005
+                          ? "Paid in full: " + money(paid) + "."
+                          : "Paid " + money(paid) + " of " + money(t.total) + ". " + money(bal) + " left."}
+                    </p>
+                    {(d.payments || []).length > 0 && (
+                      <div className="so-pay-list">
+                        {d.payments.map((pm) => (
+                          <div className="so-pay-row" key={pm.id}>
+                            <span>{fmtDate(pm.date)} · {pm.method}</span>
+                            <span>{money(pm.amount)}</span>
+                            <button className="fl-link" title="Remove this payment" onClick={() => removePayment(d.id, pm.id)}>&times;</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {bal > 0.005 && (
+                      <div className="so-pay-form">
+                        <div className="so-pay-fields">
+                          <input className="so-pay-amt" inputMode="decimal" value={payDraft.amount} placeholder={"Amount (balance " + money(bal) + ")"} onChange={(ev) => setPayDraft({ ...payDraft, amount: ev.target.value })} />
+                          <select value={payDraft.method} onChange={(ev) => setPayDraft({ ...payDraft, method: ev.target.value })}>{PAY_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}</select>
+                          {payDraft.method === "Other" && <input value={payDraft.methodOther} placeholder="Type method" onChange={(ev) => setPayDraft({ ...payDraft, methodOther: ev.target.value })} />}
+                          <input type="date" value={payDraft.date} onChange={(ev) => setPayDraft({ ...payDraft, date: ev.target.value })} />
+                        </div>
+                        <div className="so-pay-actions">
+                          <button className="fl-primary" onClick={() => recordPayment(d)}>Log payment</button>
+                          <button className="fl-link" onClick={() => setPayDraft({ ...payDraft, amount: String(bal) })}>Pay full balance</button>
+                          <button className="fl-ghost" onClick={() => setPayFor(null)}>Close</button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {panel === "email" && (
+                  <>
+                    <h4>Customer email</h4>
+                    <p className="fl-docnote">There is no email on file for {d.client || "this customer"}. Add one here and it is kept for next time.</p>
+                    <div className="fl-docemail">
+                      <input type="email" value={emailDraft} placeholder="customer@email.com" onChange={(ev) => setEmailDraft(ev.target.value)} />
+                      <button className="fl-docbtn" onClick={() => {
+                        const addr = emailDraft.trim();
+                        if (!addr) { setErr("Enter the customer's email."); return; }
+                        saveClientEmail(d);
+                        if (isEst) emailProposalRec({ ...d, clientEmail: addr });
+                        else {
+                          const url = sendDocMailto(d, "invoice");
+                          window.location.href = "mailto:" + addr + url.slice(url.indexOf("?"));
+                        }
+                      }}>Save &amp; send</button>
+                    </div>
+                  </>
+                )}
+
+                {panel === "delete" && (
+                  <>
+                    <h4>Delete this {isEst ? "proposal" : "invoice"}?</h4>
+                    <p className="fl-docnote">This cannot be undone.{isEst && d.sentAt ? " The link in the customer's email will stop working." : ""}</p>
+                    <div className="fl-doclist">
+                      <button className="danger" onClick={() => { const id = d.id; closeDoc(); if (isEst) removeEstimate(id); else removeInvoice(id); }}>Yes, delete it</button>
+                      <button onClick={() => docPanel(null, d.id)}>Keep it</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="fl-docbar">
+              <span className="fl-docstatus">{isEst ? "Proposal" : "Invoice"}{no ? " #" + no : ""} · {d.status || "Draft"}</span>
+              {isEst ? (
+                <>
+                  <button className="fl-docbtn" onClick={() => { closeDoc(); editEstimate(d); }}>Edit</button>
+                  <button className="fl-docbtn" disabled={sending} onClick={() => emailProposalRec(d)}>{sending ? "Sending…" : "Email"}</button>
+                  <button className="fl-docbtn" onClick={printDoc}>Print</button>
+                  <button className="fl-docbtn" onClick={() => turnIntoInvoice(d)}>Turn into invoice</button>
+                  <button className="fl-docbtn soon" onClick={() => soon("Change Orders are not built yet. They are next on the list.")}>Change Orders <small>soon</small></button>
+                </>
+              ) : (
+                <>
+                  <button className="fl-docbtn" onClick={() => { closeDoc(); editInvoice(d); }}>Edit</button>
+                  {custEmail
+                    ? <a className="fl-docbtn" href={sendDocMailto(d, "invoice")}>Email</a>
+                    : <button className={"fl-docbtn" + (panel === "email" ? " on" : "")} onClick={() => toggle("email")}>Email</button>}
+                  <button className="fl-docbtn" onClick={printDoc}>Print</button>
+                  <button className={"fl-docbtn" + (panel === "pay" ? " on" : "")} onClick={() => toggle("pay")}>Payments</button>
+                  <button className="fl-docbtn soon" onClick={() => soon("Tap to Pay needs Stripe connected first.")}>Tap to Pay <small>soon</small></button>
+                  <button className="fl-docbtn soon" onClick={() => soon("Signing an invoice is not built yet.")}>Sign <small>soon</small></button>
+                  <button className="fl-docbtn soon" onClick={() => soon("Change Orders are not built yet. They are next on the list.")}>Change Orders <small>soon</small></button>
+                </>
+              )}
+              <button className={"fl-docbtn" + (panel === "more" ? " on" : "")} onClick={() => toggle("more")}>More</button>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* shared datalists */}
       <datalist id="so-clients">{clientNames.map((c, i) => <option key={i} value={c} />)}</datalist>
       <datalist id="so-items">{priceNames.map((n, i) => <option key={i} value={n} />)}</datalist>
@@ -4353,9 +4571,70 @@ const CSS = `
 .fl-prev td.no{color:var(--red)}
 
 /* ── Print ───────────────────────────────────────────────────────────────── */
+/* ── Layer 2: tap a card to open it ─────────────────────────────────────── */
+.fl-card--open{cursor:pointer}
+.fl-card--open:hover{filter:brightness(1.03)}
+.fl-card--open:focus-visible{outline:2px solid var(--amber); outline-offset:2px}
+.fl-openhint{font-size:12px; font-weight:800; color:var(--amber-deep); white-space:nowrap}
+.fl-docwrap .fl-prev{padding-bottom:140px}
+.fl-prev-line{display:flex; justify-content:space-between; align-items:flex-start; gap:12px}
+.fl-prev-line strong{font-size:14px; color:#111; white-space:nowrap}
+.fl-prev-sub{display:flex; justify-content:space-between; padding-top:8px; font-size:13px; color:#333}
+.fl-prev-signed{border-bottom:none; margin-top:10px}
+.fl-prev-sig{display:block; max-width:240px; max-height:90px; margin-top:6px; object-fit:contain}
+.fl-docbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:9002;
+  display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:#16243F; border-top:2px solid #CC9000;
+}
+.fl-docbtn{
+  flex:none; display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+  padding:10px 14px; border-radius:9px; cursor:pointer; text-decoration:none;
+  font-family:inherit; font-size:13px; font-weight:800; color:#16243F;
+  background:linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A);
+  border:1px solid rgba(255,255,255,.55);
+}
+.fl-docbtn.on{outline:2px solid #fff; outline-offset:1px}
+.fl-docbtn:disabled{opacity:.55; cursor:default}
+.fl-docbtn.soon{background:transparent; color:#E8D5A8; border:1px dashed rgba(232,213,168,.6)}
+.fl-docbtn.soon small{font-size:10px; font-weight:700; opacity:.8; text-transform:uppercase}
+.fl-docstatus{flex:none; align-self:center; padding-right:6px; white-space:nowrap; color:#E8D5A8; font-size:12px; font-weight:800}
+.fl-docsheet{
+  position:fixed; left:8px; right:8px; bottom:66px; z-index:9002;
+  max-height:62vh; overflow:auto; padding:14px;
+  background:#fff; color:#1e293b; border:2px solid #16243F; border-radius:12px;
+  box-shadow:0 -6px 24px rgba(0,0,0,.35);
+}
+@media (min-width:900px){
+  .fl-docsheet{left:auto; right:16px; width:440px}
+  .fl-docbar{justify-content:center}
+}
+.fl-docsheet h4{margin:0 0 10px; font-size:13px; letter-spacing:.05em; text-transform:uppercase; color:#16243F}
+.fl-docmsg{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px; font-size:13px; font-weight:700; color:#16243F}
+.fl-docmsg button{border:none; background:none; cursor:pointer; font-size:20px; line-height:1; color:#555}
+.fl-docnote{margin:0 0 10px; font-size:13px; line-height:1.5; color:#333}
+.fl-doclist{display:flex; flex-direction:column; gap:6px}
+.fl-doclist > button, .fl-doclist > a{
+  display:block; text-align:left; padding:11px 12px; border-radius:8px; cursor:pointer; text-decoration:none;
+  font-family:inherit; font-size:14px; font-weight:700; color:#16243F;
+  background:#f8fafc; border:1px solid #d4d4d4;
+}
+.fl-doclist > .danger{color:#BC4A3C}
+.fl-docemail{display:flex; gap:8px; flex-wrap:wrap}
+.fl-docemail input{flex:1 1 200px; padding:9px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; color:#1e293b}
+.fl-docsheet .so-pay-fields input, .fl-docsheet .so-pay-fields select{color:#1e293b}
+
 .fl-print{display:none}
 @media print{
   .fl-noprint{display:none !important}
+  /* With a document open, print the document and nothing else. The outer
+     page forces .fl-noprint back on for whole-page printing; this selector
+     is more specific, so it wins while a document is open. */
+  .fl-root.fl-has-doc > .fl-noprint{display:none !important}
+  .fl-root.fl-has-doc .fl-prevwrap{position:static !important; overflow:visible !important; background:#fff !important}
+  .fl-root.fl-has-doc .fl-prev{max-width:none !important; min-height:0 !important; padding:0 !important}
+  .fl-docbar, .fl-docsheet, .fl-prev-x{display:none !important}
   .fl-root{background:#fff !important; padding:0 !important; color-scheme:light}
   .fl-print{display:block; color:#000; font-family:'Inter',Arial,sans-serif}
   .fl-stmt{page-break-after:always; padding:8px}
