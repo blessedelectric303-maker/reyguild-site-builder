@@ -2535,40 +2535,30 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <input className="fl-search" value={query} placeholder="Search client, estimate #, estimator…" onChange={(e) => setQuery(e.target.value)} />
               {/* Always here, always visible. Starting a new one should never
                   mean scrolling past everything you have already done. */}
+              {/* The tabs carry their own news. A customer answering is not a
+                  separate thing to go and look at - it is a proposal that
+                  changed state, so the count belongs on the tab it moved to. */}
               <div className="fl-filters">
-                {["All", "Sent", "Waiting on", "Accepted", "Declined"].map((f) => <button key={f} className={"fl-pill" + (estFilter === f ? " active" : "")} onClick={() => setEstFilter(f)}>{f}</button>)}
+                {["All", "Sent", "Waiting on", "Accepted", "Declined"].map((f) => {
+                  const n = f === "Accepted"
+                    ? answers.filter((a) => String(a.response || "").toLowerCase() === "accepted").length
+                    : f === "Declined"
+                      ? answers.filter((a) => String(a.response || "").toLowerCase() === "declined").length
+                      : 0;
+                  return (
+                    <button key={f} className={"fl-pill" + (estFilter === f ? " active" : "")} onClick={() => setEstFilter(f)}>
+                      {f}
+                      {n > 0 && <span className="fl-pillcount">{n}</span>}
+                    </button>
+                  );
+                })}
               </div>
-              {/* EVERYTHING THAT IS NOT ABOUT ONE PARTICULAR DOCUMENT.
-                  Starting a new one, and whatever a customer has answered.
-                  Per-document actions belong on the document, not up here -
-                  this button has no way of knowing which one you mean. */}
-              <div className="fl-opts">
-                <button className="fl-optsbtn" onClick={() => setOptsOpen(!optsOpen)}>
-                  Options
-                  {answers.length > 0 && <span className="fl-optscount">{answers.length}</span>}
-                </button>
-                {optsOpen && (
-                  <>
-                    <div className="fl-optsveil" onClick={() => setOptsOpen(false)} />
-                    <div className="fl-optsmenu">
-                      <button onClick={() => { setOptsOpen(false); setEstForm(emptyEstimate()); setEstFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
-                        New estimate
-                      </button>
-                      <button onClick={() => { setOptsOpen(false); setPage("invoices"); }}>New invoice</button>
-                      {answers.length > 0 && <div className="fl-optssep">Customer answers</div>}
-                      {answers.slice(0, 6).map((a) => {
-                        const acc = String(a.response || "").toLowerCase() === "accepted";
-                        return (
-                          <button key={a.ref_id} onClick={() => { setOptsOpen(false); setEstFilter(acc ? "Accepted" : "Declined"); setQuery(a.client || ""); }}>
-                            <span className={"fl-optsdot" + (acc ? " yes" : " no")} />
-                            {(a.client || a.ref_id)} &mdash; {acc ? "accepted" : "declined"}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
+              {/* Big, gold, and never hidden. Full width along the bottom on a
+                  phone where a thumb already is; top right on a desktop. */}
+              <button className="fl-newbig"
+                onClick={() => { setEstForm(emptyEstimate()); setEstFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
+                New proposal
+              </button>
             </div>
             {loading ? <div className="fl-empty">Loading…</div> : shownEstimates.length === 0 ? (
               <div className="fl-empty">{myEstimates.length === 0 ? "None yet. Open Options to start one." : "None in this tab."}</div>
