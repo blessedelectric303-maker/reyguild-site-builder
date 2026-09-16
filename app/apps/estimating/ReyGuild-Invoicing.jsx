@@ -552,6 +552,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // out unnumbered - and numbers are how a customer and the office refer to
   // the same piece of paper on the phone.
   const [numberingReady, setNumberingReady] = useState(true);
+  // The proposal being previewed exactly as the customer received it, so
+  // whoever is booking knows what was agreed before they commit to it.
+  const [previewEst, setPreviewEst] = useState(null);
   const [priceHelp, setPriceHelp] = useState(false);
   // Same address typed two different ways is still the same house, so compare
   // on a flattened form: lowercase, no punctuation, single spaces.
@@ -2059,6 +2062,55 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               ? toSchedule.length + " accepted - get " + (toSchedule.length === 1 ? "it" : "them") + " on the calendar"
               : answers.length + " customer " + (answers.length === 1 ? "reply" : "replies")}
           </div>
+          {previewEst && (
+            <div className="fl-prevwrap" onClick={() => setPreviewEst(null)}>
+              <div className="fl-prev" onClick={(ev) => ev.stopPropagation()}>
+                <button className="fl-prev-x" onClick={() => setPreviewEst(null)}>&times;</button>
+                {/* Black and white on purpose - this is what the customer got,
+                    not a ReyGuild screen. */}
+                <div className="fl-prev-head">
+                  <div className="fl-prev-co">{profile.name || "Your company"}</div>
+                  {profile.address ? <div>{profile.address}</div> : null}
+                  {profile.phone ? <div>{profile.phone}</div> : null}
+                </div>
+                <div className="fl-prev-for">
+                  <span>Prepared for</span>
+                  <strong>{previewEst.client || "Customer"}</strong>
+                  {previewEst.clientAddr ? <div>{previewEst.clientAddr}</div> : null}
+                  {previewEst.estimateNo ? <div>Proposal #{previewEst.estimateNo}</div> : null}
+                </div>
+                <div className="fl-prev-sec">
+                  <b>Description</b>
+                  <p>{previewEst.jobDescription || previewEst.lumpDescription || "The work we discussed"}</p>
+                </div>
+                {String(previewEst.mode || "") === "lumpsum" ? (
+                  <div className="fl-prev-sec"><b>{previewEst.lumpDescription || "The work described above"}</b></div>
+                ) : (
+                  (previewEst.lines || []).filter((l) => String(l.name || "").trim()).map((l, i) => (
+                    <div className="fl-prev-sec" key={i}>
+                      <b>{l.name}</b>
+                      {Number(l.qty) > 1 ? <p>Quantity: {l.qty}</p> : null}
+                      {String(previewEst.priceDisplay || "total") === "lines"
+                        ? <p>{money(num(l.qty) * num(l.unitPrice))}</p> : null}
+                    </div>
+                  ))
+                )}
+                {previewEst.includeLabor !== false ? (
+                  <div className="fl-prev-sec"><b>Labor &amp; materials included</b>
+                    <p>{profile.laborMaterials || "Labor and material are both included in every line item above."}</p></div>
+                ) : null}
+                {previewEst.includeWarranty !== false ? (
+                  <div className="fl-prev-sec"><b>Warranty</b><p>{warrantyText()}</p></div>
+                ) : null}
+                {previewEst.includeContract !== false ? (
+                  <div className="fl-prev-sec"><b>Contract agreement</b><p>{contractText()}</p></div>
+                ) : null}
+                <div className="fl-prev-total">
+                  <span>Total</span><strong>{money(recSub(previewEst))}</strong>
+                </div>
+              </div>
+            </div>
+          )}
           {answers.map((a) => {
             const est = estimates.find((e) => String(e.id) === String(a.ref_id));
             const who = est ? (est.client || est.clientContact || "") : "";
@@ -2080,9 +2132,26 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                     {a.responded_at ? new Date(a.responded_at).toLocaleString() : ""}
                   </div>
                 </div>
-                <button className="fl-answer-x" onClick={() => clearAnswer(a.ref_id)}>
-                  {accepted ? "Scheduled" : "Got it"}
-                </button>
+                {/* ACCEPTED MEANS THERE IS A JOB TO BOOK, SO GO AND BOOK IT.
+                    This button used to only tick the row off, which left the
+                    person to find their own way into T&M and retype what the
+                    proposal already knew. It now hands over to the same
+                    prefilled job page the calendar uses. */}
+                {accepted ? (
+                  <div className="fl-answer-acts">
+                    {est ? (
+                      <button className="fl-answer-eye" title="See it the way the customer saw it"
+                        onClick={() => setPreviewEst(est)}>&#128065;</button>
+                    ) : null}
+                    <a className="fl-answer-go"
+                       href={"/tm/admin/jobs/new?fromProposal=" + encodeURIComponent(a.ref_id)}>
+                      Schedule
+                    </a>
+                    <button className="fl-answer-x" onClick={() => clearAnswer(a.ref_id)}>Hide</button>
+                  </div>
+                ) : (
+                  <button className="fl-answer-x" onClick={() => clearAnswer(a.ref_id)}>Got it</button>
+                )}
               </div>
             );
           })}

@@ -376,6 +376,49 @@ const STYLE_FIX = `
 .fl-pricemode-help p{ font-size:12.5px; line-height:1.6; color:#9FB0CC; margin:0 0 8px; }
 .fl-pricemode-help p:last-child{ margin-bottom:0; }
 
+/* The accepted row: see it, book it, or hide it. Gold chrome on the action
+   that matters, because it is the one thing that should happen next. */
+.fl-answer-acts{ display:flex; align-items:center; gap:8px; flex:none; }
+.fl-answer-eye{
+  width:30px; height:30px; border-radius:8px; cursor:pointer; padding:0;
+  border:1px solid #2A3C5E; background:transparent; font-size:14px; line-height:1;
+}
+.fl-answer-eye:hover{ border-color:#CC9000; }
+.fl-answer-go{
+  display:inline-block; padding:8px 16px; border-radius:8px; text-decoration:none;
+  font-size:13px; font-weight:800; letter-spacing:.02em; color:#16243F;
+  background:var(--metal, linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A));
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 2px 6px rgba(0,0,0,.35);
+}
+.fl-answer-go:hover{ filter:brightness(1.06); }
+
+/* The customer's copy, as they saw it. Paper, not app. */
+.fl-prevwrap{
+  position:fixed; inset:0; z-index:9000; background:rgba(3,8,18,.72);
+  display:flex; align-items:flex-start; justify-content:center; padding:24px 12px; overflow:auto;
+}
+.fl-prev{
+  position:relative; width:100%; max-width:640px; background:#fff; color:#1e293b;
+  border-radius:10px; padding:26px 24px 22px;
+  font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+.fl-prev-x{
+  position:absolute; top:10px; right:12px; border:none; background:transparent;
+  font-size:26px; line-height:1; cursor:pointer; color:#94a3b8;
+}
+.fl-prev-head{ border-bottom:2px solid #111; padding-bottom:10px; font-size:12.5px; color:#555; }
+.fl-prev-co{ font-size:17px; font-weight:700; color:#111; }
+.fl-prev-for{ margin-top:12px; font-size:12.5px; color:#555; }
+.fl-prev-for span{ display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#888; }
+.fl-prev-for strong{ font-size:15px; color:#111; }
+.fl-prev-sec{ border-bottom:1px solid #d4d4d4; padding:12px 0; }
+.fl-prev-sec b{ font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:#111; }
+.fl-prev-sec p{ margin:6px 0 0; font-size:13px; line-height:1.6; color:#333; white-space:pre-wrap; }
+.fl-prev-total{ display:flex; justify-content:space-between; align-items:baseline; padding-top:14px; }
+.fl-prev-total span{ font-size:15px; font-weight:700; }
+.fl-prev-total strong{ font-size:22px; }
+
 /* Another proposal already exists at this address. Amber, not red - it is a
    caution, not an error, and sometimes two jobs at one address are correct. */
 .fl-dupwarn{

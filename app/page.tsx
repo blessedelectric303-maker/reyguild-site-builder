@@ -246,15 +246,22 @@ export default async function Home() {
           {acceptedWaiting.length > 0 && isOffice && (
             <Link
               href="/apps/estimating?tab=estimates"
-              className="mt-3 w-full max-w-xl rounded-lg border px-4 py-3 text-center"
-              style={{ borderColor: "#34d399", background: "rgba(52,211,153,.12)" }}
+              className="mt-3 w-full max-w-xl rounded-lg px-4 py-3 text-center"
+              style={{
+                // Gold chrome with a white edge. This is the one thing on the
+                // command centre that means money is waiting - it should look
+                // like it, not like another grey tile.
+                background: "var(--metal, linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A))",
+                border: "1px solid rgba(255,255,255,.65)",
+                boxShadow: "0 1px 0 rgba(255,255,255,.5) inset, 0 3px 10px rgba(0,0,0,.4)",
+              }}
             >
-              <div className="text-sm font-bold text-emerald-300">
+              <div className="text-sm font-extrabold" style={{ color: "#16243F" }}>
                 {acceptedWaiting.length === 1
                   ? "1 customer has accepted a proposal"
                   : acceptedWaiting.length + " customers have accepted proposals"}
               </div>
-              <div className="mt-0.5 text-xs text-slate-300">
+              <div className="mt-0.5 text-xs" style={{ color: "#16243F", opacity: .85 }}>
                 {acceptedWaiting
                   .slice(0, 3)
                   .map((r: any) => r.client || r.ref_id)

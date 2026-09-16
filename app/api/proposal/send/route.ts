@@ -92,8 +92,9 @@ export async function POST(req: NextRequest) {
       </p>
       ${total ? `<p style="font-size:22px;font-weight:700;margin:0 0 18px">${total}</p>` : ""}
       <a href="${link}"
-         style="display:inline-block;background:#0F6E56;color:#fff;text-decoration:none;
-                padding:14px 22px;border-radius:8px;font-weight:700;font-size:16px">
+         style="display:inline-block;background:#CC9000;background-image:linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A);color:#16243F;text-decoration:none;
+                padding:14px 24px;border-radius:8px;font-weight:800;font-size:16px;
+                border:1px solid rgba(255,255,255,.55)">
         View and accept this proposal
       </a>
       <p style="font-size:13px;line-height:1.6;color:#64748b;margin:20px 0 0">
