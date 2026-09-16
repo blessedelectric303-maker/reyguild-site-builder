@@ -375,6 +375,17 @@ const STYLE_FIX = `
 .fl-pricemode-help{ margin-top:10px; border-top:1px solid #2A3C5E; padding-top:10px; }
 .fl-pricemode-help p{ font-size:12.5px; line-height:1.6; color:#9FB0CC; margin:0 0 8px; }
 .fl-pricemode-help p:last-child{ margin-bottom:0; }
+
+/* Another proposal already exists at this address. Amber, not red - it is a
+   caution, not an error, and sometimes two jobs at one address are correct. */
+.fl-dupwarn{
+  margin-top:8px; border:1px solid #B45309; border-left:4px solid #B45309;
+  border-radius:8px; padding:10px 12px; background:rgba(180,83,9,.08);
+}
+.fl-dupwarn strong{ display:block; font-size:13px; color:#E8A33D; margin-bottom:6px; }
+.fl-dupwarn ul{ margin:0 0 6px; padding-left:18px; }
+.fl-dupwarn li{ font-size:12.5px; color:#C7D3E6; line-height:1.55; }
+.fl-dupwarn span{ font-size:12px; color:#9FB0CC; }
 .fl-setcard-text{ flex:1; min-width:0; }
 .fl-setcard-title{
   display:block; font-size:17px; font-weight:700; color:#16243F;

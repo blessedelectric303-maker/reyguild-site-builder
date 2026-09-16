@@ -201,8 +201,44 @@ export default async function ProposalPage({
 
   const laborText = String(prof.laborMaterials || "").trim() ||
     "Labor and material are both included in every line item above. Nothing is billed separately after the fact.";
-  const warrantyText = String(prof.warranty || "").trim();
-  const contractText = String(prof.contract || "").trim();
+
+  // THE APP DOES NOT STORE THESE UNTIL SOMEBODY EDITS THEM. It falls back to
+  // a default at render time, so a company that never opened Settings has a
+  // blank stored value and a full warranty on its own preview. Reading the
+  // stored value alone dropped both sections off the customer's copy - the
+  // same text has to fall back the same way here.
+  const co = company;
+  const warrantyText = String(prof.warranty || "").trim() ||
+    `ONE-YEAR WORKMANSHIP WARRANTY
+
+${co} warrants all work we service for a period of one (1) year from the date of completion. During this period we will repair or correct any defect in our workmanship at no additional charge.
+
+This warranty covers the labor and workmanship on services we performed. It does not cover damage from misuse, alteration or repair by others, normal wear and tear, or conditions beyond our control.`;
+  const contractText = String(prof.contract || "").trim() ||
+    `SERVICE AGREEMENT
+
+This Agreement is between ${co} ("Company") and the client identified on this estimate ("Client").
+
+1. SCOPE. Company will perform the work described in this estimate.
+
+2. PAYMENT TERMS. Payment is due Net 15 days from the invoice date. Balances not paid within 15 days may accrue a late charge as permitted by law.
+
+3. COLLECTION & LEGAL COSTS. If any amount is not paid when due and the matter is referred to a third party for collection or legal action, Client agrees to pay all third-party costs of collection, including collection-agency fees, court costs, and reasonable attorney's fees.
+
+4. WARRANTY. Completed work is covered by Company's one (1) year workmanship warranty, provided separately.
+
+5. CHANGES. Any change to the scope of work must be agreed in writing and may adjust the price.
+
+6. ACCEPTANCE. Client's signature on, or written approval of, this estimate constitutes acceptance of these terms.
+
+${co}`;
+
+  // Each section is included or left off per job, chosen on the estimate form
+  // before sending. Default to on - a document with no terms on it is the
+  // riskier accident.
+  const showLabor = est.includeLabor !== false;
+  const showWarranty = est.includeWarranty !== false;
+  const showContract = est.includeContract !== false;
 
   const RULE = "1px solid #d4d4d4";
   const sectionTitle = {
@@ -312,9 +348,9 @@ export default async function ProposalPage({
         {/* These three carry no price on purpose. They are part of what the
             customer is buying, at no separate charge, and saying so plainly
             is worth more than a row of $0.00. */}
-        <Row title="Labor &amp; materials included" note={laborText} />
-        {warrantyText ? <Row title="Warranty" note={warrantyText} /> : null}
-        {contractText ? <Row title="Contract agreement" note={contractText} /> : null}
+        {showLabor ? <Row title="Labor &amp; materials included" note={laborText} /> : null}
+        {showWarranty ? <Row title="Warranty" note={warrantyText} /> : null}
+        {showContract ? <Row title="Contract agreement" note={contractText} /> : null}
 
         <Photos label="Proposal photos" list={proposalPhotos} />
         <Photos label="Completion photos" list={completionPhotos} />

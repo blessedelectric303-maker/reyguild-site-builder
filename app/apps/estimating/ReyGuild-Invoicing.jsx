@@ -497,7 +497,7 @@ const emptyPriceItem = () => ({
   unit: "ea", price: "", cost: "",
 });
 const emptySupplier = () => ({ id: null, name: "", url: "" });
-const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
+const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", includeLabor: true, includeWarranty: true, includeContract: true, date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
 const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [] });
 const PAY_METHODS = ["Card", "Online deposit", "Check", "Cash", "Other"];
 const NET_DAYS = 15;
@@ -544,6 +544,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   });
 
   const [priceHelp, setPriceHelp] = useState(false);
+  // Same address typed two different ways is still the same house, so compare
+  // on a flattened form: lowercase, no punctuation, single spaces.
+  const flatAddr = (a) => String(a || "").toLowerCase().replace(/[.,#]/g, " ").replace(/\s+/g, " ").trim();
   const [people, setPeople] = useState([]);
   const [clients, setClients] = useState([]);
   const [priceList, setPriceList] = useState([]);
@@ -587,6 +590,15 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
   // forms
   const [estForm, setEstForm] = useState(emptyEstimate());
+  // Declared HERE, after both estimates and estForm. Above either of them this
+  // is a temporal dead zone crash: white screen, no build error.
+  const addrMatches = (() => {
+    const a = flatAddr(estForm.clientAddr);
+    if (a.length < 6) return [];
+    return (estimates || []).filter(
+      (e) => e && !e.archived && e.id !== estForm.id && flatAddr(e.clientAddr) === a
+    );
+  })();
   const [invForm, setInvForm] = useState(emptyInvoice());
   const [clientForm, setClientForm] = useState(emptyClient());
   const [cliCsv, setCliCsv] = useState(null);
@@ -2094,6 +2106,27 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                         placeholder="Start typing, then pick from the list"
                         onChange={(e) => setEstForm({ ...estForm, clientAddr: e.target.value, addrLat: null, addrLng: null })}
                       />
+                      {/* DOUBLE-BOOKING GUARD. The admin writes an estimate,
+                          the tech goes out and writes a second one for the
+                          same work, and the job gets booked twice. Surfacing
+                          what already exists at this address is cheaper than
+                          untangling it afterwards. */}
+                      {addrMatches.length > 0 && (
+                        <div className="fl-dupwarn">
+                          <strong>Careful &mdash; {addrMatches.length === 1 ? "another proposal exists" : addrMatches.length + " other proposals exist"} at this address.</strong>
+                          <ul>
+                            {addrMatches.slice(0, 5).map((m) => (
+                              <li key={m.id}>
+                                {m.estimateNo ? "#" + m.estimateNo + " " : ""}
+                                {m.client || "Customer"}
+                                {m.status ? " \u2014 " + m.status : ""}
+                                {m.date ? " \u2014 " + m.date : ""}
+                              </li>
+                            ))}
+                          </ul>
+                          <span>Check this is not the same job before you send it.</span>
+                        </div>
+                      )}
                     </Field>
                     <div className="fl-two">
                       <Field label="Email">
@@ -2237,6 +2270,31 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                       <p>Either way they see the full scope, the warranty and the agreement. This only changes whether a figure sits beside each line.</p>
                     </div>
                   )}
+                </div>
+                {/* WHAT GETS ATTACHED TO THIS ONE. Three separate calls -
+                    a quick service call may not want a full service agreement
+                    on it, while a panel upgrade certainly does. */}
+                <div className="fl-pricemode">
+                  <div className="fl-pricemode-head">
+                    <span>Attach to the customer's copy</span>
+                  </div>
+                  <div className="fl-pricemode-opts">
+                    <button type="button"
+                      className={"fl-pricemode-btn" + (estForm.includeLabor !== false ? " on" : "")}
+                      onClick={() => setEstForm({ ...estForm, includeLabor: estForm.includeLabor === false })}>
+                      Labor &amp; materials
+                    </button>
+                    <button type="button"
+                      className={"fl-pricemode-btn" + (estForm.includeWarranty !== false ? " on" : "")}
+                      onClick={() => setEstForm({ ...estForm, includeWarranty: estForm.includeWarranty === false })}>
+                      Warranty
+                    </button>
+                    <button type="button"
+                      className={"fl-pricemode-btn" + (estForm.includeContract !== false ? " on" : "")}
+                      onClick={() => setEstForm({ ...estForm, includeContract: estForm.includeContract === false })}>
+                      Contract agreement
+                    </button>
+                  </div>
                 </div>
                 <button
                   className="fl-primary"
