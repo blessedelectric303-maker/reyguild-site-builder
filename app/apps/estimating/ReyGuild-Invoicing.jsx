@@ -543,6 +543,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     }
   });
 
+  // WHAT THIS BROWSER ALREADY KNEW ABOUT, PER LIST.
+  // Needed to tell "somebody else added this while I was working" apart from
+  // "I deleted this". Without that distinction a merge either resurrects
+  // deleted rows or keeps losing other people's.
+  const seenIds = useRef({});
   const [priceHelp, setPriceHelp] = useState(false);
   // Same address typed two different ways is still the same house, so compare
   // on a flattened form: lowercase, no punctuation, single spaces.
@@ -636,7 +641,14 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       try {
         if (window.storage) {
           const load = async (key, fallback) => {
-            try { const r = await window.storage.get(key, false); return r && r.value ? JSON.parse(r.value) : fallback; }
+            try {
+              const r = await window.storage.get(key, false);
+              const v = r && r.value ? JSON.parse(r.value) : fallback;
+              if (Array.isArray(v)) {
+                seenIds.current[key] = new Set(v.map((x) => x && x.id).filter(Boolean));
+              }
+              return v;
+            }
             catch (e) { return fallback; }
           };
           setPeople(await load(STORAGE.people, []));
@@ -676,10 +688,52 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     })();
   }, []);
 
+  // SAVING A LIST MUST NOT ERASE SOMEBODY ELSE'S WORK.
+  //
+  // Every list here lives as one JSON document. Writing the whole array back
+  // means the last person to press save wins and everything added since this
+  // browser loaded is gone - silently. Two phones on the same Tuesday is all
+  // it takes, and it already cost a real proposal.
+  //
+  // So: re-read the document, then merge three ways.
+  //   in my list          -> mine wins, it is the edit being saved
+  //   on the server only, and I never knew about it -> somebody else added
+  //                          it while I was working. KEEP IT.
+  //   on the server only, and I did know about it   -> I deleted it. Drop it.
   async function save(key, next, setter) {
     setter(next);
-    try { if (window.storage) await window.storage.set(key, JSON.stringify(next), false); }
-    catch (e) { setErr("Couldn't save — changes are held for this session but may not persist."); }
+    try {
+      if (!window.storage) return;
+
+      const mergeable = Array.isArray(next) && next.every((x) => x && typeof x === "object" && x.id);
+      if (!mergeable) {
+        await window.storage.set(key, JSON.stringify(next), false);
+        return;
+      }
+
+      let server = [];
+      try {
+        const r = await window.storage.get(key, false);
+        const v = r && r.value ? JSON.parse(r.value) : [];
+        if (Array.isArray(v)) server = v;
+      } catch (e) {
+        // Cannot read what is there, so cannot merge safely. Writing the
+        // whole array now is exactly the overwrite this exists to prevent.
+        setErr("Couldn't check for other changes — nothing was saved. Try again.");
+        return;
+      }
+
+      const mine = new Set(next.map((x) => x.id));
+      const knew = seenIds.current[key] || new Set();
+      const theirs = server.filter((r) => r && r.id && !mine.has(r.id) && !knew.has(r.id));
+      const merged = theirs.length ? [...next, ...theirs] : next;
+
+      await window.storage.set(key, JSON.stringify(merged), false);
+      seenIds.current[key] = new Set(merged.map((x) => x && x.id).filter(Boolean));
+      if (theirs.length) setter(merged);
+    } catch (e) {
+      setErr("Couldn't save — changes are held for this session but may not persist.");
+    }
   }
 
   // ── who's using it + permissions ────────────────────────────────────────────
