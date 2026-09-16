@@ -564,6 +564,13 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // The proposal being previewed exactly as the customer received it, so
   // whoever is booking knows what was agreed before they commit to it.
   const [previewEst, setPreviewEst] = useState(null);
+  // THE LIST IS THE SCREEN. THE FORM IS SOMETHING YOU OPEN.
+  // The builder is long, and on a narrow window the two-column grid stacked
+  // it on top of the list - so the work you already did sat below a whole
+  // screen of empty form and looked like it had vanished. You land on what
+  // exists; you press + to add to it.
+  const [estFormOpen, setEstFormOpen] = useState(false);
+  const [invFormOpen, setInvFormOpen] = useState(false);
   const [priceHelp, setPriceHelp] = useState(false);
   // Same address typed two different ways is still the same house, so compare
   // on a flattened form: lowercase, no punctuation, single spaces.
@@ -2168,9 +2175,14 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       )}
 
       {page === "estimates" && (
-        <div className="fl-grid">
+        <div className={"fl-grid" + (estFormOpen || estForm.id ? "" : " fl-grid--listonly")}>
+          {(estFormOpen || estForm.id) && (
           <section className="fl-panel" ref={formRef}>
-            <div className="fl-panel-head"><h2>{estForm.id ? "Edit estimate" : "New estimate"}</h2></div>
+            <div className="fl-panel-head">
+              <h2>{estForm.id ? "Edit estimate" : "New estimate"}</h2>
+              <button className="fl-panel-close" title="Close"
+                onClick={() => { setEstForm(emptyEstimate()); setEstFormOpen(false); setErr(""); }}>&times;</button>
+            </div>
             {/* A document with no company name on it looks like a scam to the
                 person receiving it. Say so here, where somebody is about to
                 send one. Address, phone and website are all optional - plenty
@@ -2490,16 +2502,23 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               </div>
             </div>
           </section>
+          )}
 
           <section className="fl-list">
             <div className="fl-toolbar">
               <input className="fl-search" value={query} placeholder="Search client, estimate #, estimator…" onChange={(e) => setQuery(e.target.value)} />
+              {/* Always here, always visible. Starting a new one should never
+                  mean scrolling past everything you have already done. */}
+              <button className="fl-newbtn" title="New estimate"
+                onClick={() => { setEstForm(emptyEstimate()); setEstFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
+                + New estimate
+              </button>
               <div className="fl-filters">
                 {["All", "Pending", "Approved", "Declined", "Cleared"].map((f) => <button key={f} className={"fl-pill" + (estFilter === f ? " active" : "")} onClick={() => setEstFilter(f)}>{f}</button>)}
               </div>
             </div>
             {loading ? <div className="fl-empty">Loading…</div> : shownEstimates.length === 0 ? (
-              <div className="fl-empty">{myEstimates.length === 0 ? "No estimates yet. Build your first one with the form." : "Nothing matches that filter."}</div>
+              <div className="fl-empty">{myEstimates.length === 0 ? "No estimates yet. Press + New estimate to build your first one." : "Nothing matches that filter."}</div>
             ) : (
               <div className="fl-cards">
                 {shownEstimates.map((e) => {
@@ -2580,9 +2599,14 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
       {/* ════════════════════ INVOICES ════════════════════ */}
       {page === "invoices" && (
-        <div className="fl-grid">
+        <div className={"fl-grid" + (invFormOpen || invForm.id ? "" : " fl-grid--listonly")}>
+          {(invFormOpen || invForm.id) && (
           <section className="fl-panel" ref={formRef}>
-            <div className="fl-panel-head"><h2>{invForm.id ? "Edit invoice" : "New invoice"}</h2></div>
+            <div className="fl-panel-head">
+              <h2>{invForm.id ? "Edit invoice" : "New invoice"}</h2>
+              <button className="fl-panel-close" title="Close"
+                onClick={() => { setInvForm(emptyInvoice()); setInvFormOpen(false); setErr(""); }}>&times;</button>
+            </div>
             <div className="fl-form">
               {invForm.fromEstimate && <p className="fl-match ok" style={{ marginTop: 0 }}>From estimate <strong>{invForm.fromEstimate}</strong></p>}
               <div className="fl-two">
@@ -2649,10 +2673,15 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               </div>
             </div>
           </section>
+          )}
 
           <section className="fl-list">
             <div className="fl-toolbar">
               <input className="fl-search" value={query} placeholder="Search client, invoice #, person…" onChange={(e) => setQuery(e.target.value)} />
+              <button className="fl-newbtn" title="New invoice"
+                onClick={() => { setInvForm(emptyInvoice()); setInvFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
+                + New invoice
+              </button>
               <div className="fl-filters">
                 {["All", ...INV_STATUSES, "Archived"].map((f) => <button key={f} className={"fl-pill" + (invFilter === f ? " active" : "")} onClick={() => setInvFilter(f)}>{f}</button>)}
               </div>

@@ -419,6 +419,52 @@ const STYLE_FIX = `
 .fl-prev-total span{ font-size:15px; font-weight:700; }
 .fl-prev-total strong{ font-size:22px; }
 
+/* THE LIST IS THE SCREEN, THE FORM IS A PANEL YOU OPEN.
+   With no form open the grid is a single column so the list gets the whole
+   width instead of half of it. */
+.fl-grid--listonly{ grid-template-columns:1fr !important; }
+.fl-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.fl-panel-close{
+  border:none; background:transparent; color:#9FB0CC; font-size:26px;
+  line-height:1; cursor:pointer; padding:0 4px;
+}
+.fl-panel-close:hover{ color:#CC9000; }
+.fl-newbtn{
+  flex:none; padding:9px 16px; border-radius:9px; cursor:pointer;
+  font-size:13px; font-weight:800; color:#16243F; font-family:inherit;
+  background:var(--metal, linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A));
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 2px 6px rgba(0,0,0,.35);
+}
+.fl-newbtn:hover{ filter:brightness(1.06); }
+
+/* The accepted notice, small. It used to be a card tall enough to push the
+   whole form off the screen. */
+.fl-acceptbar{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  margin:0 0 12px; padding:9px 14px; border-radius:10px;
+  background:var(--metal, linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A));
+  border:1px solid #16243F;
+  box-shadow:0 0 0 1px rgba(255,255,255,.75) inset, 0 2px 8px rgba(0,0,0,.35);
+}
+.fl-acceptbar-txt{
+  flex:1 1 auto; min-width:0; font-size:13px; font-weight:800; color:#fff;
+  text-shadow:0 1px 0 rgba(0,0,0,.55), 0 0 2px rgba(0,0,0,.4);
+}
+
+/* The whole accepted block, kept short. Two rows at most, then it scrolls -
+   so it can never push the rest of the screen out of sight again. */
+.fl-answers{ max-height:210px; overflow-y:auto; margin-bottom:12px; }
+.fl-answers-h{
+  position:sticky; top:0; z-index:2;
+  padding:8px 14px; border-radius:10px 10px 0 0;
+  font-size:12px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+  color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.55);
+  background:var(--metal, linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A));
+  border:1px solid #16243F;
+  box-shadow:0 0 0 1px rgba(255,255,255,.75) inset;
+}
+
 /* Hours per line. Internal only - it never reaches the customer's copy. */
 .so-line-hrs{ width:56px; flex:none; text-align:center; }
 .so-totals-hrs{
