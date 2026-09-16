@@ -14,32 +14,50 @@ import { useEffect, useState } from "react";
 
 const KEY = "rg_splash_seen";
 
+// NO FLASH OF THE PAGE BEFORE THE SPLASH.
+//
+// The first version started hidden and switched itself on in an effect, which
+// runs AFTER the browser has already painted. So the command centre, or the
+// proposal, appeared for a frame, the splash dropped on top of it, and then
+// it cleared - an entrance that looked like a glitch.
+//
+// Now the markup is in the HTML from the first byte, so it covers the page on
+// the very first paint. A tiny script in the layout runs before this paints
+// and marks the document when the splash has already been seen this session,
+// and CSS hides it with no JavaScript involved. React then removes it.
 export default function Splash() {
-  const [show, setShow] = useState(false);
+  // Starts VISIBLE, and the server renders it the same way, so there is no
+  // hydration mismatch and nothing to wait for.
+  const [gone, setGone] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
+    let seen = false;
     try {
-      if (sessionStorage.getItem(KEY)) return;
-      sessionStorage.setItem(KEY, "1");
+      seen = !!sessionStorage.getItem(KEY);
+      if (!seen) sessionStorage.setItem(KEY, "1");
     } catch {
       // Private browsing with storage blocked. Show it once and move on
       // rather than failing.
     }
-    setShow(true);
+    if (seen) {
+      // Already hidden by CSS before this ran - just take it out of the tree.
+      setGone(true);
+      return;
+    }
     const t1 = setTimeout(() => setLeaving(true), 2400);
-    const t2 = setTimeout(() => setShow(false), 3000);
+    const t2 = setTimeout(() => setGone(true), 3000);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
   }, []);
 
-  if (!show) return null;
+  if (gone) return null;
 
   function skip() {
     setLeaving(true);
-    setTimeout(() => setShow(false), 500);
+    setTimeout(() => setGone(true), 500);
   }
 
   // Rising sparks. Positions are fixed rather than random so the server and
