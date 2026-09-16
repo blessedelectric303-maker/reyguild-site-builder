@@ -1721,9 +1721,22 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     if (query.trim()) { const hay = [e.client, e.estimateNo, e.createdBy, e.notes, e.lumpDescription].join(" ").toLowerCase(); if (!hay.includes(query.toLowerCase())) return false; }
     return true;
   });
+  // Invoices, in the same words the office uses for proposals.
+  //   Waiting on - drafts, not sent yet
+  //   Sent       - out with the customer, not overdue, not paid
+  //   Overdue    - past due with money still owed (same test as the red stamp)
+  //   Paid       - done
+  //   Archived   - cleared away; kept so nothing archived is lost for good
+  function invTab(i) {
+    const st = String(i.status || "").toLowerCase();
+    if (st === "paid") return "Paid";
+    if (isPastDue(i)) return "Overdue";
+    if (st === "sent" || i.sentAt) return "Sent";
+    return "Waiting on";
+  }
   const shownInvoices = myInvoices.filter((i) => {
     if (invFilter === "Archived") { if (!i.archived) return false; }
-    else { if (i.archived) return false; if (invFilter !== "All" && i.status !== invFilter) return false; }
+    else { if (i.archived) return false; if (invFilter !== "All" && invTab(i) !== invFilter) return false; }
     if (query.trim()) { const hay = [i.client, i.invoiceNo, i.createdBy, i.notes].join(" ").toLowerCase(); if (!hay.includes(query.toLowerCase())) return false; }
     return true;
   });
@@ -1979,7 +1992,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <button type="button" className="fl-dashcard" onClick={() => setPage("estimates")}>
               <span className="fl-dashlbl">Out for answer</span>
               <span className="fl-dashnum">
-                {myEstimates.filter((e) => e.status === "sent" && !e.invoiced && !e.archived).length}
+                {myEstimates.filter((e) => { const st = String(e.status || "").toLowerCase(); return !!e.sentAt && !st.includes("approv") && !st.includes("declin") && !e.invoiced && !e.archived; }).length}
               </span>
             </button>
             {/* Accepted and not yet booked. This is the one that costs money
@@ -1996,7 +2009,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <button type="button" className="fl-dashcard" onClick={() => setPage("invoices")}>
               <span className="fl-dashlbl">Unpaid</span>
               <span className="fl-dashnum">
-                {myInvoices.filter((i) => i.status !== "paid" && !i.archived).length}
+                {myInvoices.filter((i) => String(i.status || "").toLowerCase() !== "paid" && !i.archived).length}
               </span>
             </button>
             {isAdmin && (
@@ -2038,14 +2051,14 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 <h2>Unpaid invoices</h2>
                 <button type="button" onClick={() => setPage("invoices")}>View all &rarr;</button>
               </div>
-              {myInvoices.filter((i) => i.status !== "paid").length === 0 ? (
+              {myInvoices.filter((i) => String(i.status || "").toLowerCase() !== "paid" && !i.archived).length === 0 ? (
                 <p className="fl-dashnone">Nothing outstanding.</p>
               ) : (
                 <ul className="fl-dashlist">
-                  {myInvoices.filter((i) => i.status !== "paid").slice(0, 4).map((i) => (
+                  {myInvoices.filter((i) => String(i.status || "").toLowerCase() !== "paid" && !i.archived).slice(0, 4).map((i) => (
                     <li key={i.id}>
                       <span className="fl-dashlist-name">{i.client || i.clientContact || "No client"}</span>
-                      <span className="fl-dashlist-amt">{money(i.total)}</span>
+                      <span className="fl-dashlist-amt">{money(invBalance(i))}</span>
                     </li>
                   ))}
                 </ul>
@@ -2729,19 +2742,35 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
           <section className="fl-list">
             <div className="fl-toolbar">
               <input className="fl-search" value={query} placeholder="Search client, invoice #, person…" onChange={(e) => setQuery(e.target.value)} />
-              <button className="fl-newbtn" title="New invoice"
-                onClick={() => { setInvForm(emptyInvoice()); setInvFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
-                + New invoice
-              </button>
+              {/* Same tabs-and-button shape as Proposals. Overdue carries its
+                  count, because that is money somebody should be chasing. */}
               <div className="fl-filters">
-                {["All", ...INV_STATUSES, "Archived"].map((f) => <button key={f} className={"fl-pill" + (invFilter === f ? " active" : "")} onClick={() => setInvFilter(f)}>{f}</button>)}
+                {["All", "Waiting on", "Sent", "Overdue", "Paid", "Archived"].map((f) => {
+                  const n = f === "Overdue" ? myInvoices.filter((x) => !x.archived && invTab(x) === "Overdue").length : 0;
+                  return (
+                    <button key={f} className={"fl-pill" + (invFilter === f ? " active" : "")} onClick={() => setInvFilter(f)}>
+                      {f}
+                      {n > 0 && <span className="fl-pillcount">{n}</span>}
+                    </button>
+                  );
+                })}
               </div>
+              <button className="fl-newbig"
+                onClick={() => { setInvForm(emptyInvoice()); setInvFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
+                NEW INVOICE
+              </button>
             </div>
             {loading ? <div className="fl-empty">Loading…</div> : shownInvoices.length === 0 ? (
-              <div className="fl-empty">{myInvoices.length === 0 ? "No invoices yet. Build one, or approve an estimate and convert it." : "Nothing matches that filter."}</div>
+              <div className="fl-empty">{myInvoices.length === 0 ? "No invoices yet. Tap NEW INVOICE, or turn an approved proposal into one." : "None in this tab."}</div>
             ) : (
               <div className="fl-cards">
-                {shownInvoices.map((i) => {
+                {byMonth(shownInvoices, (r) => recTotals(r).total).map((g) => (
+                  <div className="fl-month" key={g.key}>
+                    <div className="fl-monthhead">
+                      <span>{g.label}</span>
+                      <strong>{money(g.total)}</strong>
+                    </div>
+                {g.rows.map((i) => {
                   const t = recTotals(i);
                   return (
                     <article key={i.id} className="fl-card" style={{ "--accent": INV_COLOR[i.status] || "var(--ink-2)" }}>
@@ -2834,6 +2863,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                     </article>
                   );
                 })}
+                  </div>
+                ))}
               </div>
             )}
           </section>
