@@ -176,6 +176,55 @@ export default async function ProposalPage({
     );
   }
 
+  // THE OFFICE HEARS THAT IT WAS OPENED - ONCE.
+  //
+  // A proposal opened at nine at night and not answered is worth a phone call
+  // in the morning. The same alert on every refresh is noise the office would
+  // learn to ignore, so the email_log row goes in FIRST and its unique index
+  // is what guarantees one email: a second open is refused by the database
+  // before any mail is sent, not by logic that could race itself.
+  if (est && est.notifyOnOpen !== false) {
+    try {
+      const { error: logErr } = await sb.schema("suite").from("email_log").insert({
+        company_id: claim.companyId,
+        kind: "proposal_opened",
+        ref_id: claim.refId,
+        stage: 0,
+        to_email: companyEmail || "",
+        subject: "Your proposal was opened",
+        ok: true,
+      });
+      const resendKey = process.env.RESEND_API_KEY;
+      if (!logErr && resendKey && companyEmail) {
+        const who = String(est.client || "The customer");
+        const what = String(est.jobDescription || est.lumpDescription || "").slice(0, 120);
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + resendKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "ReyGuild <noreply@reyguild.com>",
+            to: [companyEmail],
+            subject: who + " opened your proposal",
+            html:
+              '<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:15px;color:#1e293b;max-width:520px;margin:0 auto;padding:24px">' +
+              "<p><strong>" + who + "</strong> has just opened " +
+              (est.estimateNo ? "proposal #" + est.estimateNo : "your proposal") +
+              (what ? " for " + what : "") + ".</p>" +
+              "<p>They have not answered it yet. This is the moment a call lands best.</p>" +
+              '<p style="font-size:12px;color:#64748b">You are told once per proposal, not on every visit. Turn this off for a proposal before you send it.</p>' +
+              "</div>",
+          }),
+        });
+      }
+    } catch {
+      // The customer is reading their proposal. Nothing about telling the
+      // office may get in the way of that.
+    }
+  }
+
   // Sixty days is a term in the contract they were sent, so an old link gets a
   // plain explanation rather than a dead button.
   const sentAt = est.sentAt ? Date.parse(est.sentAt) : 0;

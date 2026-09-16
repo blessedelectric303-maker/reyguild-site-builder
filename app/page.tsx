@@ -130,6 +130,26 @@ export default async function Home() {
       ? "Sales Rep"
       : myRole.charAt(0).toUpperCase() + myRole.slice(1);
 
+  // ACCEPTED AND NOT YET BOOKED.
+  // A customer says yes at eleven at night. Without this the office finds out
+  // whenever somebody next happens to open Proposals & Invoicing - which on a
+  // Saturday could be Monday. It belongs on the screen they open first.
+  let acceptedWaiting: any[] = [];
+  try {
+    const { data: openResp, error: orErr } = await supabase
+      .schema("suite")
+      .rpc("open_proposal_responses");
+    if (orErr) {
+      console.error("[accepted banner] open_proposal_responses failed:", orErr.message);
+    } else if (Array.isArray(openResp)) {
+      acceptedWaiting = openResp.filter(
+        (r: any) => String(r.response || "").toLowerCase() === "accepted"
+      );
+    }
+  } catch (e: any) {
+    console.error("[accepted banner] threw:", e?.message || e);
+  }
+
   const { data: apps } = await supabase
     .schema("suite")
     .from("apps")
@@ -222,6 +242,29 @@ export default async function Home() {
             </>
           )}
           <span className="mt-2 rounded-full px-3 py-0.5 text-xs font-semibold text-slate-900" style={{ background: soloMode ? "#CC9000" : "#34d399" }}>{soloMode ? "One Man Army" : "Army Mode"} &middot; {roleLabel}</span>
+
+          {acceptedWaiting.length > 0 && isOffice && (
+            <Link
+              href="/apps/estimating?tab=estimates"
+              className="mt-3 w-full max-w-xl rounded-lg border px-4 py-3 text-center"
+              style={{ borderColor: "#34d399", background: "rgba(52,211,153,.12)" }}
+            >
+              <div className="text-sm font-bold text-emerald-300">
+                {acceptedWaiting.length === 1
+                  ? "1 customer has accepted a proposal"
+                  : acceptedWaiting.length + " customers have accepted proposals"}
+              </div>
+              <div className="mt-0.5 text-xs text-slate-300">
+                {acceptedWaiting
+                  .slice(0, 3)
+                  .map((r: any) => r.client || r.ref_id)
+                  .join(" \u00b7 ")}
+                {acceptedWaiting.length > 3 ? " and more" : ""}
+                {" \u2014 tap a day on the calendar to book "}
+                {acceptedWaiting.length === 1 ? "it" : "them"}.
+              </div>
+            </Link>
+          )}
 
           {/* STEP ONE. Every call starts here and leaves pointed at a colour.
               White on purpose - it is not one of the eight call colours. */}

@@ -497,7 +497,7 @@ const emptyPriceItem = () => ({
   unit: "ea", price: "", cost: "",
 });
 const emptySupplier = () => ({ id: null, name: "", url: "" });
-const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", includeLabor: true, includeWarranty: true, includeContract: true, date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
+const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", notifyOnOpen: true, includeLabor: true, includeWarranty: true, includeContract: true, date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
 const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [] });
 const PAY_METHODS = ["Card", "Online deposit", "Check", "Cash", "Other"];
 const NET_DAYS = 15;
@@ -2274,6 +2274,26 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {/* WHAT GETS ATTACHED TO THIS ONE. Three separate calls -
                     a quick service call may not want a full service agreement
                     on it, while a panel upgrade certainly does. */}
+                {/* Tell me when they look at it. Knowing a proposal was
+                    opened at 9pm and not answered is worth a phone call the
+                    next morning; being told about every one of fifty is not. */}
+                <div className="fl-pricemode">
+                  <div className="fl-pricemode-head">
+                    <span>Email me when the customer opens this</span>
+                  </div>
+                  <div className="fl-pricemode-opts">
+                    <button type="button"
+                      className={"fl-pricemode-btn" + (estForm.notifyOnOpen !== false ? " on" : "")}
+                      onClick={() => setEstForm({ ...estForm, notifyOnOpen: true })}>
+                      Yes, tell me
+                    </button>
+                    <button type="button"
+                      className={"fl-pricemode-btn" + (estForm.notifyOnOpen === false ? " on" : "")}
+                      onClick={() => setEstForm({ ...estForm, notifyOnOpen: false })}>
+                      No
+                    </button>
+                  </div>
+                </div>
                 <div className="fl-pricemode">
                   <div className="fl-pricemode-head">
                     <span>Attach to the customer's copy</span>
