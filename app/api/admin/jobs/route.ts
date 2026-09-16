@@ -14,7 +14,19 @@ const schema = z.object({
   scheduledStartAt: z.string().nullable().optional(),
   scheduledEndAt: z.string().nullable().optional(),
   scopeOfWork: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
   assignedTechIds: z.array(z.string()).default([]),
+  // Material and other costs entered while booking the job. Both deduct from
+  // the sale price exactly like the ones logged later from the job page -
+  // they are the same records, just created at the start instead of the end.
+  materials: z.array(z.object({
+    name: z.string().min(1).max(200),
+    cost: z.number().min(0),
+  })).default([]),
+  otherCosts: z.array(z.object({
+    name: z.string().min(1).max(200),
+    cost: z.number().min(0),
+  })).default([]),
 });
 
 export async function POST(req: Request) {
@@ -52,9 +64,39 @@ export async function POST(req: Request) {
           scheduledStart: data.scheduledStartAt ? new Date(data.scheduledStartAt) : null,
           scheduledEnd: data.scheduledEndAt ? new Date(data.scheduledEndAt) : null,
           jobDescription: data.scopeOfWork || null,
+          notes: data.notes || null,
           status: "scheduled",
         },
       });
+
+      // Costs known up front. MaterialPurchase wants a purchase date, so use
+      // today - it can be corrected on the job page, and a dated row is far
+      // more useful than no row at all.
+      if (data.materials.length > 0) {
+        await tx.materialPurchase.createMany({
+          data: data.materials.map((mm) => ({
+            id: "mp_" + crypto.randomUUID(),
+            jobId: newJob.id,
+            purchasedByUserId: actor.id,
+            vendor: mm.name,
+            totalAmount: mm.cost,
+            purchaseDate: new Date(),
+          })),
+        });
+      }
+
+      if (data.otherCosts.length > 0) {
+        await tx.otherJobCost.createMany({
+          data: data.otherCosts.map((oc) => ({
+            id: "ojc_" + crypto.randomUUID(),
+            orgId: actor.orgId,
+            jobId: newJob.id,
+            loggedByUserId: actor.id,
+            description: oc.name,
+            amount: oc.cost,
+          })),
+        });
+      }
 
       if (data.assignedTechIds.length > 0) {
         const techs = await tx.user.findMany({

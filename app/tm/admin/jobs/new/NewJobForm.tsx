@@ -12,23 +12,50 @@ declare global {
   }
 }
 
-export default function NewJobForm({ technicians }: { technicians: Technician[] }) {
+export type JobPrefill = {
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  address?: string;
+  lat?: number | null;
+  lng?: number | null;
+  salePrice?: string;
+  scopeOfWork?: string;
+  proposalRef?: string;
+};
+
+type CostRow = { id: string; name: string; cost: string };
+const newRow = (): CostRow => ({ id: Math.random().toString(36).slice(2), name: "", cost: "" });
+
+export default function NewJobForm({
+  technicians,
+  prefill,
+}: {
+  technicians: Technician[];
+  prefill?: JobPrefill;
+}) {
   const router = useRouter();
+  const pf = prefill || {};
   const addressInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
 
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [lat, setLat] = useState<number | null>(null);
-  const [lng, setLng] = useState<number | null>(null);
-  const [salePrice, setSalePrice] = useState("");
+  const [customerName, setCustomerName] = useState(pf.customerName || "");
+  const [customerPhone, setCustomerPhone] = useState(pf.customerPhone || "");
+  const [customerEmail, setCustomerEmail] = useState(pf.customerEmail || "");
+  const [address, setAddress] = useState(pf.address || "");
+  const [lat, setLat] = useState<number | null>(pf.lat ?? null);
+  const [lng, setLng] = useState<number | null>(pf.lng ?? null);
+  const [salePrice, setSalePrice] = useState(pf.salePrice || "");
   const [scheduledStart, setScheduledStart] = useState("");
   const [scheduledEnd, setScheduledEnd] = useState("");
-  const [scopeOfWork, setScopeOfWork] = useState("");
+  const [scopeOfWork, setScopeOfWork] = useState(pf.scopeOfWork || "");
   const [assignedTechIds, setAssignedTechIds] = useState<string[]>([]);
   const [mapsReady, setMapsReady] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [noNotes, setNoNotes] = useState(false);
+  const [materials, setMaterials] = useState<CostRow[]>([newRow()]);
+  const [noMaterial, setNoMaterial] = useState(false);
+  const [otherCosts, setOtherCosts] = useState<CostRow[]>([]);
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -82,6 +109,37 @@ export default function NewJobForm({ technicians }: { technicians: Technician[] 
       return;
     }
 
+    // NOTHING GOES OUT HALF-FILLED. A tech arriving at a job with no scope,
+    // no material list and no notes has to ring the office, which is the
+    // thing this whole flow exists to stop. Either say what is needed or
+    // tick the box saying none is - both are an answer, a blank is not.
+    if (!scopeOfWork.trim()) {
+      setError("Scope of work is required - what is being done on this job?");
+      return;
+    }
+    const cleanMaterials = materials
+      .filter((r) => r.name.trim() || r.cost.trim())
+      .map((r) => ({ name: r.name.trim(), cost: Number(r.cost || 0) }));
+    if (!noMaterial && cleanMaterials.length === 0) {
+      setError("Add the material needed, or tick 'No material needed'.");
+      return;
+    }
+    if (cleanMaterials.some((r) => !r.name || isNaN(r.cost) || r.cost < 0)) {
+      setError("Every material line needs a name and a cost of zero or more.");
+      return;
+    }
+    const cleanOther = otherCosts
+      .filter((r) => r.name.trim() || r.cost.trim())
+      .map((r) => ({ name: r.name.trim(), cost: Number(r.cost || 0) }));
+    if (cleanOther.some((r) => !r.name || isNaN(r.cost) || r.cost < 0)) {
+      setError("Every other-cost line needs a name and a cost of zero or more.");
+      return;
+    }
+    if (!noNotes && !notes.trim()) {
+      setError("Add a note for the tech, or tick 'Nothing extra to know'.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -99,6 +157,9 @@ export default function NewJobForm({ technicians }: { technicians: Technician[] 
           scheduledStartAt: scheduledStart || null,
           scheduledEndAt: scheduledEnd || null,
           scopeOfWork: scopeOfWork || null,
+          notes: noNotes ? "None" : notes,
+          materials: noMaterial ? [] : cleanMaterials,
+          otherCosts: cleanOther,
           assignedTechIds,
         }),
       });
@@ -242,6 +303,95 @@ export default function NewJobForm({ technicians }: { technicians: Technician[] 
             className="input"
             placeholder="What work needs to be done? Customer notes, special instructions..."
           />
+        </Section>
+
+        <Section title="Material">
+          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer mb-2">
+            <input type="checkbox" checked={noMaterial} onChange={(e) => setNoMaterial(e.target.checked)} className="rounded" />
+            No material needed for this job
+          </label>
+          {!noMaterial && (
+            <>
+              {materials.map((row, i) => (
+                <div key={row.id} className="flex gap-2 items-start">
+                  <input
+                    type="text"
+                    value={row.name}
+                    onChange={(e) => setMaterials(materials.map((r) => r.id === row.id ? { ...r, name: e.target.value } : r))}
+                    placeholder="What to pick up, and where"
+                    className="input flex-1"
+                  />
+                  <div className="relative w-32 shrink-0">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                    <input
+                      type="number" step="0.01" min="0"
+                      value={row.cost}
+                      onChange={(e) => setMaterials(materials.map((r) => r.id === row.id ? { ...r, cost: e.target.value } : r))}
+                      placeholder="0.00"
+                      className="input pl-7"
+                    />
+                  </div>
+                  {materials.length > 1 && (
+                    <button type="button" onClick={() => setMaterials(materials.filter((r) => r.id !== row.id))}
+                      className="text-slate-400 hover:text-red-600 px-2 py-2 text-lg leading-none">&times;</button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={() => setMaterials([...materials, newRow()])}
+                className="text-sm text-brand-600 hover:underline">+ Add material</button>
+              <p className="text-xs text-slate-500">
+                The cost comes off the sale price automatically. The tech sees what to pick up; the cost stays in the office.
+              </p>
+            </>
+          )}
+        </Section>
+
+        <Section title="Other Costs">
+          {otherCosts.length === 0 ? (
+            <p className="text-sm text-slate-500">Permits, dump fees, equipment hire &mdash; anything that is not material or labor.</p>
+          ) : (
+            otherCosts.map((row) => (
+              <div key={row.id} className="flex gap-2 items-start">
+                <input
+                  type="text"
+                  value={row.name}
+                  onChange={(e) => setOtherCosts(otherCosts.map((r) => r.id === row.id ? { ...r, name: e.target.value } : r))}
+                  placeholder="What the cost is for"
+                  className="input flex-1"
+                />
+                <div className="relative w-32 shrink-0">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                  <input
+                    type="number" step="0.01" min="0"
+                    value={row.cost}
+                    onChange={(e) => setOtherCosts(otherCosts.map((r) => r.id === row.id ? { ...r, cost: e.target.value } : r))}
+                    placeholder="0.00"
+                    className="input pl-7"
+                  />
+                </div>
+                <button type="button" onClick={() => setOtherCosts(otherCosts.filter((r) => r.id !== row.id))}
+                  className="text-slate-400 hover:text-red-600 px-2 py-2 text-lg leading-none">&times;</button>
+              </div>
+            ))
+          )}
+          <button type="button" onClick={() => setOtherCosts([...otherCosts, newRow()])}
+            className="text-sm text-brand-600 hover:underline">+ Add a cost</button>
+        </Section>
+
+        <Section title="Notes for the tech">
+          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer mb-2">
+            <input type="checkbox" checked={noNotes} onChange={(e) => setNoNotes(e.target.checked)} className="rounded" />
+            Nothing extra to know
+          </label>
+          {!noNotes && (
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="input"
+              placeholder="Gate code, dog in the yard, park on the street, pick up the part on the way..."
+            />
+          )}
         </Section>
 
         <Section title="Assign Technicians">

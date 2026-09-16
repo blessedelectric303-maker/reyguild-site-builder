@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
 type Ev = {
@@ -52,6 +53,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
   const today = new Date();
   const [y, setY] = useState(today.getFullYear());
   const [m, setM] = useState(today.getMonth());
+  const router = useRouter();
   const [events, setEvents] = useState<Ev[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [selDay, setSelDay] = useState<string | null>(null);
@@ -130,6 +132,15 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
     setFProp(ref);
     const p = props.find((x) => x.ref_id === ref);
     if (!p) return;
+    // A PROPOSAL GETS THE FULL JOB PAGE, NOT THIS BOX.
+    // The quick form on the calendar is for a job somebody invents on the
+    // spot. A proposal already has a customer, an address, a scope and a
+    // price the customer signed for, and it needs material, costs and a tech
+    // rate attached to it - none of which fit here. Hand it over instead.
+    if (ref) {
+      router.push("/tm/admin/jobs/new?fromProposal=" + encodeURIComponent(ref));
+      return;
+    }
     if (p.client) setFTitle(p.client);
     if (p.address) setFAddr(p.address);
     if (p.description) setFDesc(p.description);
