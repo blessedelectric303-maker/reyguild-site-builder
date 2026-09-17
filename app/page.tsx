@@ -35,16 +35,19 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center text-center p-8">
-        <img src="/crest.png" alt="ReyGuild" className="w-28 h-auto mb-6" />
-        <h1 className="rg-wordmark text-5xl tracking-wide"><span className="gold-shine gold-outline">REY</span><span className="text-white">GUILD</span></h1>
-        <p className="mt-4 text-slate-300 max-w-md">One login. Every ReyGuild app in one place.</p>
-        <Link href="/login" className="mt-6 rounded-md px-5 py-2 text-sm font-semibold text-slate-900" style={{ background: "#CC9000" }}>Sign in</Link>
-        <div className="mt-10 h-[3px] w-16 rounded bg-[#CC9000]" />
-      </main>
-    );
+  // NO IN-BETWEEN PAGE. This used to be a crest, a line of text and a Sign in
+  // button - one more tap between somebody and their app, and one more thing
+  // to explain. Anyone not signed in goes straight to the sign in and sign up
+  // page, which says the same thing and does something.
+  if (!user) redirect("/login");
+
+  // The company is created on first arrival, before anything else asks about
+  // it - so a brand new owner has a company of their own from the first
+  // second, rather than being taken for somebody's employee.
+  try {
+    await supabase.schema("suite").rpc("ensure_company");
+  } catch (e) {
+    // The block below tries again and shows the real error if it matters.
   }
 
   // PAPERWORK FIRST. Anyone who still owes a signature - owner included -

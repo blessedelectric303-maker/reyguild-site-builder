@@ -204,6 +204,38 @@ export default function TeamManager({
           </div>
         </div>
 
+        {/* READ THIS BEFORE INVITING ANYONE. The documents your people sign
+            carry your company name, pulled from Settings. Invite somebody with
+            Settings half empty and they sign paperwork with your own name on
+            it instead of the business. */}
+        <div className="mt-6 rounded-xl border p-5" style={{ borderColor: "#CC9000", background: "rgba(204,144,0,.08)" }}>
+          <h2 className="font-semibold" style={{ color: "#F0CE7A" }}>
+            Before you invite anybody
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-200">
+            <strong>Fill in your company details first.</strong> Your name,
+            logo, address and phone go straight onto every document your people
+            sign. If they are not filled in, your employees sign paperwork with
+            your own name on it rather than the company&rsquo;s.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-slate-200">
+            <strong>Read what you are handing them.</strong> We have written the
+            whole set for you - conduct, safety, drug and alcohol, harassment,
+            non-solicit, company property and the rest - with your company named
+            throughout. They are yours: read them, change the wording, or add
+            your own. Whatever they say on the day somebody signs is what they
+            signed.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a href="/company" className="rounded-md px-3 py-2 text-sm font-semibold text-slate-900" style={{ background: "#CC9000" }}>
+              Company details
+            </a>
+            <a href="/tm/tech/documents" className="rounded-md border border-slate-500 px-3 py-2 text-sm font-semibold text-slate-200">
+              Read and edit the documents
+            </a>
+          </div>
+        </div>
+
         <div className="mt-6 rounded-xl border border-slate-700 bg-slate-900/50 p-5">
           <h2 className="text-white font-semibold mb-3">Invite someone</h2>
           <div className="flex flex-col sm:flex-row gap-3">
