@@ -33,6 +33,16 @@ export default async function OnboardingDocumentPage({
 
   const tokens = await companyTokensForCurrentUser();
 
+  // Is this one of MINE to sign? An owner reading the conduct policy their
+  // techs will sign gets the words, not a signature box.
+  let mustSign = false;
+  try {
+    const { data: mineRows } = await supabase.schema("suite").rpc("my_documents");
+    mustSign = ((mineRows as any[]) || []).some((d) => d && d.doc_key === key);
+  } catch (e) {
+    mustSign = false;
+  }
+
   return (
     <main className="min-h-screen bg-slate-50">
       <header className="bg-slate-900 text-white">
@@ -63,7 +73,13 @@ export default async function OnboardingDocumentPage({
               <DocumentBody body={doc.body || ""} tokens={tokens} />
             </div>
 
-            {doc.requires_signature ? (
+            {doc.requires_signature && !mustSign ? (
+              <p className="mt-6 rounded-xl border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-600">
+                This is your company&rsquo;s document. The people you invite sign
+                it; you do not. It stays in the app so you can read, update or
+                hand it out whenever you need.
+              </p>
+            ) : doc.requires_signature ? (
               <SignBlock
                 docKey={doc.doc_key}
                 title={doc.title}

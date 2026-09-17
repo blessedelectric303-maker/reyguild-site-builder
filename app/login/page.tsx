@@ -64,17 +64,11 @@ export default function LoginPage() {
         return;
       }
       if (data.session) {
-        // Record the acceptance as three separate signatures - terms, privacy
-        // and cookies - rather than one "agreed to everything" row, which is
-        // worth very little later. Best effort: if it fails, the onboarding
-        // page asks again rather than the sign up dying here.
-        try {
-          await fetch("/api/documents/accept-platform", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: fullName }),
-          });
-        } catch {}
+        // NOTHING IS SIGNED HERE ANY MORE. Signing up used to tick the terms,
+        // the privacy policy and the cookie policy on the person's behalf, so
+        // a brand new owner walked straight into the app having signed four
+        // documents they never saw. Every signature is now made by hand, on
+        // the document itself, at /onboarding.
         window.location.href = next;
       } else {
         setNotice("Account created. Check your email to confirm it, then you'll be signed in.");
