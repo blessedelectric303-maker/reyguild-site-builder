@@ -186,6 +186,47 @@ function customerEmailShell(headline: string, bodyLine: string): string {
   );
 }
 
+// THE INVITE. One email, one link: they set a password, sign the paperwork,
+// and land in the right portal for the role the office picked. The company's
+// own name is on it, not ours, because that is who is doing the inviting.
+export async function sendTeamInviteEmail(args: {
+  to: string;
+  companyName: string;
+  roleLabel: string;
+  inviterName?: string;
+  token: string;
+}) {
+  const joinUrl = APP_URL + "/join/" + encodeURIComponent(args.token);
+  const company = args.companyName || "your company";
+  const subject = company + " has added you on ReyGuild";
+
+  const text =
+    "You have been added to " + company + " on ReyGuild as " + args.roleLabel + ".\n\n" +
+    "Open the link below to set your password, sign your paperwork and get to your jobs:\n\n" +
+    joinUrl + "\n\n" +
+    "This link is for you - please do not pass it on.\n\n" +
+    "- ReyGuild";
+
+  const html =
+    '<div style="font-family:system-ui,-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a">' +
+    '<h1 style="font-size:20px;font-weight:600;margin:0 0 16px 0;">' +
+    escapeHtml(company) + " has added you" +
+    "</h1>" +
+    '<p style="font-size:15px;line-height:1.5;margin:0 0 16px 0;">You have been added as ' +
+    escapeHtml(args.roleLabel) +
+    (args.inviterName ? " by " + escapeHtml(args.inviterName) : "") +
+    ". Open the link below to set your password, sign your paperwork and see your jobs.</p>" +
+    '<p style="margin:24px 0;"><a href="' + joinUrl +
+    '" style="display:inline-block;background:#1e3157;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Set up my account</a></p>' +
+    '<p style="font-size:13px;color:#475569;line-height:1.5;margin:0 0 16px 0;">If the button does not work, paste this into your browser:<br><a href="' +
+    joinUrl + '" style="color:#1e3157;word-break:break-all;">' + joinUrl + "</a></p>" +
+    '<p style="font-size:13px;color:#475569;margin:24px 0 0 0;">This link is for you - please do not pass it on.</p>' +
+    '<p style="font-size:13px;color:#94a3b8;margin:24px 0 0 0;">- <span style="color:#c68a22;font-weight:600;">Rey</span>Guild</p>' +
+    "</div>";
+
+  return sendEmail({ to: args.to, subject, html, text });
+}
+
 export async function sendCustomerOnTheWayEmail(args: {
   to: string;
   scheduledStart?: Date | null;

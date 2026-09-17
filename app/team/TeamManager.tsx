@@ -111,24 +111,38 @@ export default function TeamManager({
   }
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const [note, setNote] = useState("");
 
+  // The invite is made on the server, which also emails it. Doing it from
+  // here used to write the row and stop - no email, and nobody could tell.
   async function createInvite() {
     if (!email.trim()) return;
     setBusy(true);
-    const { data, error } = await supabase
-      .schema("suite")
-      .from("invites")
-      .insert({ company_id: companyId, email: email.trim(), role })
-      .select("id,email,role,token,status")
-      .single();
-    setBusy(false);
-    if (error) {
-      alert("Couldn't create invite: " + error.message);
-      return;
-    }
-    if (data) {
-      setInvites([data as Invite, ...invites]);
-      setEmail("");
+    setNote("");
+    try {
+      const res = await fetch("/api/team/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), role }),
+      });
+      const json = await res.json().catch(() => ({}));
+      setBusy(false);
+      if (!res.ok) {
+        setNote(json.error || "Could not create the invite.");
+        return;
+      }
+      if (json.invite) {
+        setInvites([json.invite as Invite, ...invites]);
+        setNote(
+          json.emailed
+            ? "Invite emailed to " + email.trim() + "."
+            : "Invite created, but the email did not go out. Use Copy link and send it yourself."
+        );
+        setEmail("");
+      }
+    } catch (e) {
+      setBusy(false);
+      setNote("No connection. The invite was not created.");
     }
   }
 
@@ -142,7 +156,9 @@ export default function TeamManager({
   }
 
   function copyLink(token: string) {
-    const link = "https://reyguild-site-builder.vercel.app/join/" + token;
+    // Whatever address this page is open on - the old hard-coded preview
+    // address here was handing people a link to a frozen build.
+    const link = (origin || "https://tm.serviceopspro.com") + "/join/" + token;
     navigator.clipboard.writeText(link);
     setCopied(token);
     setTimeout(() => setCopied(""), 1500);
@@ -206,9 +222,10 @@ export default function TeamManager({
               className="rounded-md px-4 py-2 text-sm font-semibold text-slate-900"
               style={{ background: "#CC9000" }}
             >
-              {busy ? "..." : "Create invite"}
+              {busy ? "..." : "Send invite"}
             </button>
           </div>
+          {note ? <p className="mt-2 text-sm text-slate-300">{note}</p> : null}
         </div>
 
         {invites.length > 0 && (
