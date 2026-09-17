@@ -245,7 +245,7 @@ export default async function Home() {
 
           {acceptedWaiting.length > 0 && isOffice && (
             <Link
-              href="/apps/estimating?tab=estimates"
+              href={"/tm/enter?next=" + encodeURIComponent("/tm/admin/scheduling")}
               className="mt-3 w-full max-w-xl rounded-lg px-4 py-3 text-center"
               style={{
                 // Gold chrome with a white edge. This is the one thing on the
@@ -267,7 +267,7 @@ export default async function Home() {
                   .map((r: any) => r.client || r.ref_id)
                   .join(" \u00b7 ")}
                 {acceptedWaiting.length > 3 ? " and more" : ""}
-                {" \u2014 tap a day on the calendar to book "}
+                {" \u2014 tap here to book "}
                 {acceptedWaiting.length === 1 ? "it" : "them"}.
               </div>
             </Link>

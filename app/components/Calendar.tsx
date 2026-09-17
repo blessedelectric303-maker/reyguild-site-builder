@@ -395,7 +395,7 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
         <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: TYPE_COLOR.estimate }} />Proposal</span>
         <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: TYPE_COLOR.warranty_call }} />Warranty</span>
       </div>
-      <div className="mt-2 text-center text-xs text-slate-500">{canEdit ? "Tap a day to open it and add jobs." : "Tap a day to see the jobs."}</div>
+      <div className="mt-2 text-center text-xs text-slate-500">{canEdit ? "Tap a day to see its jobs. Edit changes the job everywhere." : "Tap a day to see the jobs."}</div>
 
       {selDay ? (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 sm:items-center" onClick={() => setSelDay(null)}>
@@ -422,106 +422,22 @@ export default function Calendar({ companyId, canEdit, userId, userEmail, logoUr
                         {e.job_description ? <div className="mt-1 text-xs text-slate-300 break-words">{e.job_description}</div> : null}
                         {e.material ? <div className="mt-1 text-xs text-amber-300 break-words">Material: {e.material}</div> : null}
                       </div>
-                      {canEdit ? (
-                        <button type="button" onClick={() => removeEvent(e)} aria-label="Remove" className="shrink-0 text-slate-500 hover:text-red-400">&times;</button>
+                      {canEdit && !(e as any).legacy ? (
+                        <a href={"/tm/enter?next=" + encodeURIComponent("/tm/admin/jobs/" + e.id)} className="shrink-0 rounded-md border px-2 py-1 text-xs font-semibold" style={{ borderColor: "#CC9000", color: "#CC9000" }}>Edit</a>
                       ) : null}
                     </div>
                   ))
                 )}
               </div>
 
+              {/* REFERENCE ONLY. A job exists because a customer signed a
+                  proposal - so nothing is booked from here. The booking
+                  happens in T&M; this shows the result, and Edit opens the job
+                  itself, so a change lands in T&M and P&L at the same time. */}
               {canEdit ? (
-                <div className="mt-4 border-t border-slate-800 pt-4 space-y-2">
-                  <div className="text-sm font-semibold text-white">Add a job</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {typeToggle("service_call", "Service Call")}
-                    {typeToggle("estimate", "Proposal")}
-                    {typeToggle("warranty_call", "Warranty")}
-                    {typeToggle("emergency", "Emergency")}
-                  </div>
-                  {/* Accepted proposals waiting to be booked. Above the form,
-                      because picking one fills the form in - and a job booked
-                      from the proposal is the job that was quoted, rather
-                      than a retyped version that drifts by a room and two
-                      hours. Hidden entirely when there are none, so a company
-                      not using proposals sees the calendar it always had. */}
-                  {waiting.length > 0 ? (
-                    <div className="rounded-md border border-amber-800 bg-amber-950/20 p-2.5">
-                      <div className="text-[11px] font-bold uppercase tracking-wide text-amber-300">
-                        {waiting.length} accepted proposal{waiting.length === 1 ? "" : "s"} waiting to be booked
-                      </div>
-                      <select
-                        value={fProp}
-                        onChange={(e) => pickProposal(e.target.value)}
-                        className="mt-2 w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100"
-                      >
-                        <option value="">Not from a proposal</option>
-                        {waiting.map((p) => (
-                          <option key={p.ref_id} value={p.ref_id}>
-                            {(p.client || p.ref_id) + (p.description ? " - " + String(p.description).slice(0, 40) : "")}
-                          </option>
-                        ))}
-                      </select>
-                      {fProp ? (
-                        <p className="mt-1.5 text-[11px] leading-snug text-amber-200">
-                          Booking this proposal. It cannot be booked twice.
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="Job / customer name" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
-                  <input
-                    ref={calAddrRef}
-                    value={fAddr}
-                    onChange={(e) => { setFAddr(e.target.value); setFLat(null); setFLng(null); }}
-                    placeholder="Start typing, then pick from the list"
-                    className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100"
-                  />
-                  {fAddr.trim() ? (
-                    fLat != null ? (
-                      <p className="text-[11px] text-emerald-400">
-                        Confirmed on the map.
-                      </p>
-                    ) : (
-                      <p className="text-[11px] text-amber-400">
-                        Pick it from the dropdown so the crew is sent to the
-                        right place.
-                      </p>
-                    )
-                  ) : null}
-                  <input value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="Start time - 9:00 AM or 09:00" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
-                  <textarea value={fDesc} onChange={(e) => setFDesc(e.target.value)} rows={2} placeholder="Job description - what is happening on this job" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
-                  <textarea value={fMat} onChange={(e) => setFMat(e.target.value)} rows={2} placeholder="Material - what to pick up and where" className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100" />
-
-                  <div>
-                    <div className="text-xs text-slate-500 mb-1">How long?</div>
-                    <div className="flex gap-2">
-                      {durToggle(2)}
-                      {durToggle(4)}
-                      {durToggle(8)}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-slate-500 mb-1">Assign a tech (optional)</div>
-                    <div className="flex flex-wrap gap-2">
-                      {techOptions.map((t) => {
-                        const wouldExceed = hoursBooked(t.user_id, selDay) + fDur > WORKDAY;
-                        const on = fTech === t.user_id;
-                        const busy = wouldExceed && !on;
-                        const label = t.role === "me" ? "Me" : shortName(t.email);
-                        const cls = "rounded-full px-3 py-1 text-xs font-semibold border " + (on ? "text-slate-900 border-transparent" : busy ? "text-slate-600 border-slate-800" : "text-slate-200 border-slate-600");
-                        return (
-                          <button type="button" key={t.user_id} disabled={busy} onClick={() => setFTech(on ? "" : t.user_id)} className={cls} style={on ? { background: "#CC9000" } : undefined}>{label}{busy ? " (full)" : ""}</button>
-                        );
-                      })}
-                      {techOptions.length === 0 ? <span className="text-xs text-slate-600">Invite your team to assign techs.</span> : null}
-                    </div>
-                  </div>
-
-                  {err ? <p className="text-xs text-red-400">{err}</p> : null}
-                  <button type="button" onClick={addEvent} disabled={saving || !fTitle.trim()} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-50" style={{ background: "#CC9000" }}>{saving ? "Adding..." : "Add to calendar"}</button>
+                <div className="mt-4 border-t border-slate-800 pt-3 text-xs leading-relaxed text-slate-400">
+                  Jobs come from signed proposals.{" "}
+                  <a href={"/tm/enter?next=" + encodeURIComponent("/tm/admin/scheduling")} className="font-semibold" style={{ color: "#CC9000" }}>Book an accepted proposal &rsaquo;</a>
                 </div>
               ) : null}
             </div>
