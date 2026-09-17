@@ -12,7 +12,7 @@ const FROM_ADDRESS =
 // Public URL used in email links. Falls back to the production URL.
 // Override per environment via NEXT_PUBLIC_APP_URL.
 const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL || "https://blessed-track.vercel.app";
+  process.env.NEXT_PUBLIC_APP_URL || "https://tm.serviceopspro.com";
 
 type SendArgs = {
   to: string;
