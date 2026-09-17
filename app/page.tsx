@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { hasUnsignedDocuments } from "@/lib/signingGate";
 import { createClient } from "@/utils/supabase/server";
 import { isStaff, homeFor } from "@/utils/roles";
 import SettingsMenu from "@/app/components/SettingsMenu";
@@ -45,6 +46,11 @@ export default async function Home() {
       </main>
     );
   }
+
+  // PAPERWORK FIRST. Anyone who still owes a signature - owner included -
+  // lands on the documents instead of the command centre, every time, until
+  // they are done.
+  if (await hasUnsignedDocuments()) redirect("/onboarding");
 
   let companyName = "";
   let companyLogo = "";

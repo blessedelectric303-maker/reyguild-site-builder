@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { hasUnsignedDocuments } from "@/lib/signingGate";
 import { createClient } from "@/utils/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { createSessionToken, setSessionCookie, getCurrentUser } from "@/lib/auth";
@@ -32,6 +33,11 @@ export async function GET(req: Request) {
     if (detail) u.searchParams.set("detail", detail);
     return NextResponse.redirect(u);
   };
+
+  // Paperwork first, for the field side too - checked before the session
+  // shortcut below, or somebody who signed in yesterday would walk straight
+  // past documents added today.
+  if (await hasUnsignedDocuments()) return NextResponse.redirect(new URL("/onboarding", origin));
 
   // Already carrying a valid T and M session? Go straight in.
   try {

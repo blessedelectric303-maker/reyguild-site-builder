@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import SignaturePad from "@/components/SignaturePad";
 
 // The signature block that sits at the bottom of every signable document.
 //
 // Two deliberate choices:
 //
-//   - You have to TYPE your name. A single "I agree" button is weaker
-//     evidence, and typing is the closest thing on a phone to putting pen to
-//     paper.
+//   - You SIGN by hand and type your name. The drawing is what people expect
+//     a signature to be; the typed name keeps the record readable and is what
+//     the database has always stored.
 //   - There is a Yes/No confirm. Ben asked for one on every irreversible
 //     action, and a signature is the most irreversible thing in the app.
 
@@ -30,6 +31,7 @@ export default function SignBlock({
   backHref: string;
 }) {
   const [name, setName] = useState(suggestedName || "");
+  const [png, setPng] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +52,17 @@ export default function SignBlock({
         setBusy(false);
         setConfirming(false);
         return;
+      }
+      // The signature itself is saved, so the drawing goes up after it. If
+      // this part fails the signature still stands - nobody has to sign twice.
+      if (png) {
+        try {
+          await fetch("/api/documents/sign-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: docKey, png }),
+          });
+        } catch (e) {}
       }
       setDone(true);
       setBusy(false);
@@ -80,11 +93,15 @@ export default function SignBlock({
     <div className="mt-6 rounded-xl border-2 border-slate-300 bg-white p-4">
       <div className="text-sm font-bold uppercase tracking-wide text-slate-900">Sign here</div>
       <p className="mt-1 text-xs leading-snug text-slate-500">
-        Typing your full name below and pressing Sign is your electronic
+        Signing in the box and typing your full name is your electronic
         signature on &ldquo;{title}&rdquo;. It has the same effect as signing on
-        paper. The date, time and the exact wording you were shown are saved
-        with it.
+        paper. Your signature, the date, the time and the exact wording you
+        were shown are all saved together.
       </p>
+
+      <div className="mt-3">
+        <SignaturePad onChange={setPng} disabled={busy} />
+      </div>
 
       <label className="mt-3 block text-xs font-semibold text-slate-600">
         Your full name
@@ -106,7 +123,7 @@ export default function SignBlock({
       {!confirming ? (
         <button
           type="button"
-          disabled={busy || name.trim().length < 2}
+          disabled={busy || name.trim().length < 2 || !png}
           onClick={() => setConfirming(true)}
           className="mt-3 w-full rounded-md bg-slate-900 py-3 text-sm font-bold text-white disabled:opacity-40"
         >

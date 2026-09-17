@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { hasUnsignedDocuments } from "@/lib/signingGate";
 import { createClient } from "@/utils/supabase/server";
 import { canAccess, homeFor } from "@/utils/roles";
 import Invoicing from "./Invoicing";
@@ -14,6 +15,9 @@ export default async function EstimatingPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  // Paperwork first. Nobody writes a proposal for the company before they
+  // have signed the company's documents.
+  if (await hasUnsignedDocuments()) redirect("/onboarding");
 
   // SCOPED TO THIS USER, and never maybeSingle() on an unfiltered read.
   //
