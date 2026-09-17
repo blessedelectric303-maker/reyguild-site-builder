@@ -170,6 +170,17 @@ export default function Respond({
     );
   }
 
+  // THE APP'S CHROME GOLD with navy lettering - the same metal as the
+  // buttons inside ReyGuild, so the customer's page looks like it came from us.
+  const GOLD = {
+    background: "#B07A00",
+    backgroundImage: "linear-gradient(160deg,#F0CE7A 0%,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A 100%)",
+    color: "#16243F",
+    border: "1px solid #8A5E00",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,.55), 0 1px 2px rgba(0,0,0,.25)",
+    fontWeight: 800,
+  };
+
   const btn = {
     display: "block",
     width: "100%",
@@ -223,7 +234,7 @@ export default function Respond({
         {error ? <p style={{ color: "#b91c1c", fontSize: 14 }}>{error}</p> : null}
 
         <button type="button" disabled={busy || !ready} onClick={() => send("accepted")}
-          style={{ ...btn, background: ready ? "#111" : "#999", color: "#fff", borderColor: ready ? "#111" : "#999", opacity: busy ? 0.5 : 1 }}>
+          style={ready ? { ...btn, ...GOLD, opacity: busy ? 0.5 : 1 } : { ...btn, background: "#999", color: "#fff", borderColor: "#999", opacity: busy ? 0.5 : 1 }}>
           {busy ? "Sending..." : "Approve this proposal"}
         </button>
         <button type="button" disabled={busy} onClick={() => setMode("")}
@@ -265,7 +276,7 @@ export default function Respond({
     <div>
       {error ? <p style={{ color: "#b91c1c", fontSize: 14 }}>{error}</p> : null}
       <button type="button" onClick={() => setMode("sign")}
-        style={{ ...btn, background: "#111", color: "#fff" }}>
+        style={{ ...btn, ...GOLD }}>
         Sign to approve
       </button>
       <button type="button" onClick={() => setMode("thinking")}

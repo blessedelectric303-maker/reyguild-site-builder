@@ -393,6 +393,14 @@ ${company}`;
             ))
         )}
 
+        {/* Notes the estimator wrote for the customer. */}
+        {String(est.notes || "").trim() ? (
+          <div style={{ borderBottom: RULE, padding: "14px 0" }}>
+            <div style={sectionTitle}>Notes</div>
+            <p style={bodyText}>{String(est.notes)}</p>
+          </div>
+        ) : null}
+
         {/* These three carry no price on purpose. They are part of what the
             customer is buying, at no separate charge, and saying so plainly
             is worth more than a row of $0.00. */}

@@ -91,12 +91,18 @@ export async function POST(req: NextRequest) {
         Here is the proposal from <strong>${companyName}</strong>${description ? " for " + description : ""}.
       </p>
       ${total ? `<p style="font-size:22px;font-weight:700;margin:0 0 18px">${total}</p>` : ""}
-      <a href="${link}"
-         style="display:inline-block;background:#CC9000;background-image:linear-gradient(160deg,#F0CE7A,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A);color:#16243F;text-decoration:none;
-                padding:14px 24px;border-radius:8px;font-weight:800;font-size:16px;
-                border:1px solid rgba(255,255,255,.55)">
-        View and accept this proposal
-      </a>
+      <!-- CHROME GOLD, NAVY LETTERING. Gmail and Outlook drop gradients, so
+           the table cell carries a deep metal gold of its own (not the flat
+           bright yellow they used to fall back to), and the gradient rides
+           on top for the mail apps that draw it. -->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate"><tr>
+        <td bgcolor="#B07A00" style="border-radius:8px;background:#B07A00;background-image:linear-gradient(160deg,#F0CE7A 0%,#CC9000 34%,#8A5E00 58%,#D89000 82%,#F0CE7A 100%);border:1px solid #8A5E00;border-top-color:#F0CE7A;border-bottom-color:#6B4900">
+          <a href="${link}"
+             style="display:inline-block;padding:14px 24px;color:#16243F;text-decoration:none;font-weight:800;font-size:16px;border-radius:8px">
+            <span style="color:#16243F">View and accept this proposal</span>
+          </a>
+        </td>
+      </tr></table>
       <p style="font-size:13px;line-height:1.6;color:#64748b;margin:20px 0 0">
         Accepting takes one tap and there is nothing to sign up for.
         ${companyPhone ? "Questions first? Call " + companyPhone + " - there is no rush." : ""}

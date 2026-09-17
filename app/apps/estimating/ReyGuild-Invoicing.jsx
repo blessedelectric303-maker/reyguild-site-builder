@@ -375,12 +375,16 @@ function downloadTextFile(name, text, type) {
 // hours is the estimator's own figure and never appears on the customer's
 // copy. It is what tells T&M how long to block out, so nobody guesses twice.
 function emptyLine() { return { id: uid(), name: "", qty: 1, unitPrice: "", hours: "" }; }
-// Total time for a whole estimate: the lump-sum figure, or the line hours
-// added up. Returns 0 when nobody has filled any in.
+// HOURS ARE PER UNIT, the same way price is. One light at half an hour, ten
+// lights = five hours. lineHours is one line; recHours is the whole job.
+function lineHours(l) { return num(l.qty) * num(l.hours); }
+function fmtHours(h) { const r = Math.round(h * 100) / 100; return r + (r === 1 ? " hr" : " hrs"); }
+// Total time for a whole job: the lump-sum figure, or every line's hours.
+// Returns 0 when nobody has filled any in.
 function recHours(r) {
   if (!r) return 0;
   if (String(r.mode || "") === "lumpsum") return num(r.lumpHours);
-  return (r.lines || []).reduce((t, l) => t + num(l.hours), 0);
+  return Math.round((r.lines || []).reduce((t, l) => t + lineHours(l), 0) * 100) / 100;
 }
 function lineTotal(l) { return num(l.qty) * num(l.unitPrice); }
 function subtotalOf(lines) { return (lines || []).reduce((s, l) => s + lineTotal(l), 0); }
@@ -441,7 +445,7 @@ function guessClientMap(fields) {
 }
 
 const emptyPerson = () => ({ id: null, name: "", role: "Estimator", email: "", phone: "", payout: "" });
-const emptyClient = () => ({ id: null, company: "", contact: "", phone: "", email: "", address: "", notes: "", owner: "" });
+const emptyClient = () => ({ id: null, company: "", contact: "", phone: "", email: "", address: "", notes: "", owner: "", shareWith: [] });
 const emptyProfile = () => ({ name: "", tagline: "", address: "", phone: "", email: "", website: "", logo: "", warranty: "", contract: "", laborMaterials: "", emailFollowup1: "", emailFollowup2: "", emailReview: "", emailOverdue: "", reviewUrl: "", fromEmail: "", replyTo: "" });
 // {tokens} fill in automatically from the company info + the estimate
 const DEFAULT_FOLLOWUP_1 =
@@ -513,8 +517,8 @@ const emptyPriceItem = () => ({
   unit: "ea", price: "", cost: "",
 });
 const emptySupplier = () => ({ id: null, name: "", url: "" });
-const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", lumpHours: "", notifyOnOpen: true, includeLabor: true, includeWarranty: true, includeContract: true, date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [], changeOrderFor: "" });
-const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [], changeOrderFor: "" });
+const emptyEstimate = () => ({ id: null, estimateNo: "", priceDisplay: "total", lumpHours: "", notifyOnOpen: true, includeLabor: true, includeWarranty: true, includeContract: true, date: toLocalDate(new Date()), client: "", clientAddr: "", addrLat: null, addrLng: null, clientEmail: "", clientPhone: "", jobDescription: "", status: "Draft", createdBy: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", sentAt: "", fuDone: 0, fuStopped: false, archived: false, invoiced: false, attachLegal: true, photos: [] });
+const emptyInvoice = () => ({ id: null, invoiceNo: "", date: toLocalDate(new Date()), client: "", address: "", status: "Draft", createdBy: "", fromEstimate: "", mode: "itemized", lines: [emptyLine()], lumpDescription: "", lumpPrice: "", notes: "", pushedToOutreach: false, payments: [], archived: false, sentAt: "", reviewSent: false, dueDate: "", overdueEmailSent: false, overdueEmailSentAt: "", collectionDone: false, photos: [] });
 const PAY_METHODS = ["Card", "Online deposit", "Check", "Cash", "Other"];
 const NET_DAYS = 15;
 
@@ -908,6 +912,24 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // sidebar and the menu could drift, and they did.
   const SETTINGS_PAGES = [];
 
+  // CLIENTS THIS PERSON HAS WORKED FOR IN T&M.
+  // A supervisor or tech sees a client once they have touched them: their own
+  // proposal or invoice, a job they were put on, or the office sharing the
+  // client with them. The office sees everybody, so it never asks.
+  const [jobClients, setJobClients] = useState([]);
+  useEffect(() => {
+    if (isAdmin) return;
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/my-job-clients");
+        const j = await r.json().catch(() => ({}));
+        if (alive && Array.isArray(j.items)) setJobClients(j.items);
+      } catch (e) { /* no T&M link - the other rules still apply */ }
+    })();
+    return () => { alive = false; };
+  }, [isAdmin]);
+
   // WHAT THE CUSTOMER SAID.
   // A proposal answered by email is worthless if nobody in the office
   // notices. This is the count behind the badge on Proposals, and the list
@@ -1117,6 +1139,16 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       setErr("Could not reach the mail service.");
     }
     setSending(false);
+  }
+
+  // PREVIEW FROM THE FORM. Saves, then opens the same document view the
+  // list uses - so what you check is exactly what gets emailed and printed.
+  // The form stays open underneath; closing the preview lands back on it.
+  async function previewFromForm() {
+    const id = await saveEstimate();
+    if (!id) return;
+    docPanel(null, null);
+    setOpenDoc({ kind: "estimate", id });
   }
 
   async function saveEstimate(status) {
@@ -1337,11 +1369,25 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   function matchContact(name, addr) {
     const n = normExact(name), a = normExact(addr);
     if (!n || !a) return null;
-    const pool = can.seeAllWork ? clients : clients.filter((c) => (c.owner || "") === myName);
+    const pool = clients.filter(seesClient);
     return pool.find((c) => normExact(c.company) === n && normExact(c.address) === a) || null;
   }
-  // each rep sees only their own clients; admins see all
-  const myClients = can.seeAllWork ? clients : clients.filter((c) => (c.owner || "") === myName);
+  // WHO SEES A CLIENT.
+  // Owner and Admin: everybody. Supervisor and tech: clients they added, wrote
+  // a proposal or invoice for, were put on a job for, or that the office
+  // shared with them (for an emergency call to someone new, say).
+  // This hides clients in the app; it is not a lock on the data itself.
+  function seesClient(c) {
+    if (can.seeAllWork) return true;
+    if (!c) return false;
+    if ((c.owner || "") === myName) return true;
+    if ((c.shareWith || []).includes(myName)) return true;
+    const n = normExact(c.company);
+    const a = flatAddr(c.address);
+    if (n && [...estimates, ...invoices].some((r) => (r.createdBy || "").trim() === myName && normExact(r.client) === n)) return true;
+    return jobClients.some((j) => (n && normExact(j.name) === n) || (a && flatAddr(j.address) === a));
+  }
+  const myClients = clients.filter(seesClient);
 
   // The names offered while typing. Built from myClients, so it obeys the
   // same rule as the client page: the office sees everybody, a tech sees only
@@ -2434,12 +2480,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 );
               })()}
               {role !== "Estimator" && (
-                <Field label="Estimator (gets the credit)">
+                <Field label="Estimator">
                   <input list="so-reps" value={estForm.createdBy} placeholder="Who built this" onChange={(e) => setEstForm({ ...estForm, createdBy: e.target.value })} />
                 </Field>
               )}
 
-              <Field label="Adds to (change order - optional)"><input value={estForm.changeOrderFor || ""} placeholder="Proposal or invoice #, e.g. 26" onChange={(e) => setEstForm({ ...estForm, changeOrderFor: e.target.value })} /></Field>
               <Field label="Job description"><textarea rows={3} value={estForm.jobDescription} placeholder="Describe the job in plain language — what you'll do and what's included." onChange={(e) => setEstForm({ ...estForm, jobDescription: e.target.value })} /></Field>
               <p className="fl-hint">Build it as a priced-out sheet: write the job description, then add each item from the price list as its own line (include labor as a line too). Your one-year warranty and service agreement are attached to every proposal automatically.</p>
 
@@ -2454,7 +2499,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 </>
               ) : (
                 <>
-                  <p className="fl-hint">Pick from the price list and the unit price fills in. Adjust the quantity; change the price only if there's a reason.</p>
+                  <p className="fl-hint">Pick from the price list and the unit price fills in. Put the hours for ONE in "Hrs each" - the quantity multiplies both the price and the time.</p>
                   {estForm.lines.map((l) => (
                     <div className="so-line" key={l.id}>
                       <input className="so-line-name" list="so-items" value={l.name} placeholder="Item / material" onChange={(e) => pickItem(estForm, setEstForm, l.id, e.target.value)} />
@@ -2464,8 +2509,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                           on the proposal - they are what tells T&M how long to
                           block out, so the office is not guessing at a job
                           somebody already sized. */}
-                      <input className="so-line-hrs" inputMode="decimal" value={l.hours} placeholder="Hrs" title="Hours - internal only, the customer never sees this" onChange={(e) => setLine(estForm, setEstForm, l.id, "hours", e.target.value)} />
-                      <span className="so-line-amt">{money(lineTotal(l))}</span>
+                      <input className="so-line-hrs" inputMode="decimal" value={l.hours} placeholder="Hrs each" title="Hours for ONE - internal only, the customer never sees this. Multiplied by the quantity." onChange={(e) => setLine(estForm, setEstForm, l.id, "hours", e.target.value)} />
+                      <span className="so-line-amt">{money(lineTotal(l))}{num(l.hours) > 0 && <small className="so-line-hrtot">{fmtHours(lineHours(l))}</small>}</span>
                       <button className="so-line-x" onClick={() => removeLine(estForm, setEstForm, l.id)} aria-label="remove line">×</button>
                     </div>
                   ))}
@@ -2481,7 +2526,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 {can.seeNumbers && estForm.mode !== "lumpsum" && <div className="so-totals-margin"><span>Est. margin</span><span>{money(estTotals.sub - costOfLines(estForm.lines))}</span></div>}
               </div>
 
-              <Field label="Scope / notes"><textarea rows={3} value={estForm.notes} placeholder="What's included, exclusions, access notes…" onChange={(e) => setEstForm({ ...estForm, notes: e.target.value })} /></Field>
+              <Field label="Notes for the customer (shows on the proposal)"><textarea rows={3} value={estForm.notes} placeholder="What's included, what's not, access notes…" onChange={(e) => setEstForm({ ...estForm, notes: e.target.value })} /></Field>
               <label className="so-legal-toggle"><input type="checkbox" checked={estForm.attachLegal !== false} onChange={(e) => setEstForm({ ...estForm, attachLegal: e.target.checked })} /> Attach the warranty &amp; contract to this proposal</label>
               <Field label="Photos">
                 <div className="so-photo-btns">
@@ -2496,6 +2541,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <div className="fl-actions">
                 <button className="fl-primary" onClick={() => saveEstimate("Draft")}>{estForm.id ? "Save" : "Save draft"}</button>
                 <button className="fl-ghost" onClick={() => saveEstimate("Submitted")}>Submit</button>
+                <button className="fl-ghost" onClick={previewFromForm}>Preview</button>
                 {/* Saves first, then emails. Sending an unsaved proposal
                     would put a link in a customer's inbox pointing at
                     something that does not exist yet. */}
@@ -2647,7 +2693,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                       <div className="fl-meta">
                         <span><strong>{money(t.total)}</strong></span>
                         <span>{e.mode === "lumpsum" ? "lump sum" : (e.lines || []).length + " line" + ((e.lines || []).length === 1 ? "" : "s")}</span>
-                        {String(e.changeOrderFor || "").trim() && <span className="fl-paychip">adds to #{String(e.changeOrderFor).replace(/^#/, "")}</span>}
                         {e.signedAt && <span className="fl-paychip">signed ✓</span>}
                         {e.invoiced && <span className="fl-paychip">invoiced ✓</span>}
                         {can.seeNumbers && e.mode !== "lumpsum" && <span className="fl-paychip">margin {money(t.sub - costOfLines(e.lines))}</span>}
@@ -2697,7 +2742,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                 </Field>
               </div>
               <Field label="Client"><input list="so-clients" value={invForm.client} placeholder="Pick or type a client" onChange={(e) => { const name = e.target.value; const c = clientOf(name); setInvForm((f) => ({ ...f, client: name, address: (!f.address && c) ? (c.address || "") : f.address })); }} /></Field>
-              <Field label="Adds to (change order - optional)"><input value={invForm.changeOrderFor || ""} placeholder="Proposal or invoice #, e.g. 26" onChange={(e) => setInvForm({ ...invForm, changeOrderFor: e.target.value })} /></Field>
               <Field label="Job address (links to outreach royalties)"><input list="so-addrs" value={invForm.address} placeholder="123 Industrial Rd — where the work was done" onChange={(e) => setInvForm({ ...invForm, address: e.target.value })} /></Field>
               {role !== "Estimator" && (
                 <Field label="Submitted by"><input list="so-reps" value={invForm.createdBy} placeholder="Who's invoicing" onChange={(e) => setInvForm({ ...invForm, createdBy: e.target.value })} /></Field>
@@ -2801,7 +2845,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                       <div className="fl-meta">
                         <span><strong>{money(t.total)}</strong></span>
                         <span>{i.mode === "lumpsum" ? "lump sum" : (i.lines || []).length + " line" + ((i.lines || []).length === 1 ? "" : "s")}</span>
-                        {String(i.changeOrderFor || "").trim() && <span className="fl-paychip">adds to #{String(i.changeOrderFor).replace(/^#/, "")}</span>}
                         {can.seeNumbers && i.mode !== "lumpsum" && <span className="fl-paychip">margin {money(t.sub - costOfLines(i.lines))}</span>}
                       </div>
                       {i.mode === "lumpsum" && i.lumpDescription && <p className="fl-notes">{i.lumpDescription}</p>}
@@ -2954,6 +2997,25 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               <Field label="Email"><input value={clientForm.email} onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })} /></Field>
               <Field label="Address"><input value={clientForm.address} placeholder="Job site / billing address" onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })} /></Field>
               <Field label="Notes"><textarea rows={2} value={clientForm.notes} onChange={(e) => setClientForm({ ...clientForm, notes: e.target.value })} /></Field>
+              {can.seeAllWork && repNames.filter((nm) => nm !== (clientForm.owner || myName)).length > 0 && (
+                <Field label="Also let these people see this client">
+                  <div className="fl-sharewith">
+                    {repNames.filter((nm) => nm !== (clientForm.owner || myName)).map((nm) => {
+                      const on = (clientForm.shareWith || []).includes(nm);
+                      return (
+                        <label key={nm} className={"fl-sharechip" + (on ? " on" : "")}>
+                          <input type="checkbox" checked={on} onChange={() => setClientForm({
+                            ...clientForm,
+                            shareWith: on ? (clientForm.shareWith || []).filter((x) => x !== nm) : [...(clientForm.shareWith || []), nm],
+                          })} />
+                          {nm}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="fl-hint">Techs and supervisors only see clients they have worked with. Tick someone here to send them to a client they have not met, like an emergency call.</p>
+                </Field>
+              )}
               {err && <p className="fl-error">{err}</p>}
               <div className="fl-actions">
                 <button className="fl-primary" onClick={saveClient}>{clientForm.id ? "Update client" : "Add client"}</button>
@@ -3010,6 +3072,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                       <p className="fl-pmeta">{[c.contact, c.phone, c.email].filter(Boolean).join(" · ") || "no contact details"}</p>
                       {c.address && <p className="fl-pmeta">{c.address}</p>}
                       {c.notes && <p className="fl-pmeta">{c.notes}</p>}
+                      {can.seeAllWork && (c.shareWith || []).length > 0 && <p className="fl-pmeta">Shared with: {(c.shareWith || []).join(", ")}</p>}
                     </div>
                     <div className="fl-card-actions">
                       <button className="fl-link" onClick={() => setClientForm({ ...emptyClient(), ...c })}>Edit</button>
@@ -4060,7 +4123,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                     <strong>{d.client || "Customer"}</strong>
                     {d.clientAddr ? <div>{d.clientAddr}</div> : null}
                     {d.estimateNo ? <div>Proposal #{d.estimateNo}</div> : null}
-                    {String(d.changeOrderFor || "").trim() ? <div className="fl-prev-co-for">Change order &middot; adds to #{String(d.changeOrderFor).replace(/^#/, "")}</div> : null}
                     {d.date ? <div>{fmtDate(d.date)}</div> : null}
                   </div>
                   <div className="fl-prev-sec">
@@ -4107,7 +4169,6 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                     <strong>{d.client || "Customer"}</strong>
                     {d.address ? <div>{d.address}</div> : null}
                     {d.invoiceNo ? <div>Invoice #{d.invoiceNo}</div> : null}
-                    {String(d.changeOrderFor || "").trim() ? <div className="fl-prev-co-for">Change order &middot; adds to #{String(d.changeOrderFor).replace(/^#/, "")}</div> : null}
                     {d.date ? <div>Date: {fmtDate(d.date)}</div> : null}
                     {d.dueDate ? <div>Due: {fmtDate(d.dueDate)}</div> : null}
                   </div>
@@ -4535,6 +4596,10 @@ const CSS = `
 .fl-emp-tags{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); text-align:right}
 .fl-foot-note{font-size:12px; color:var(--muted); margin-top:14px; line-height:1.5}
 .fl-person{display:flex; justify-content:space-between; align-items:center; gap:12px; background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--accent,var(--ink-2)); border-radius:2px; padding:12px 14px; margin-bottom:8px}
+.fl-sharewith{display:flex; flex-wrap:wrap; gap:6px}
+.fl-sharechip{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--line); border-radius:999px; font-size:13px; cursor:pointer; background:var(--paper-2)}
+.fl-sharechip input{margin:0}
+.fl-sharechip.on{border-color:var(--gold,#CC9000); background:rgba(204,144,0,.12)}
 .fl-person h3{font-family:'Archivo',sans-serif; font-weight:700; font-size:16px; margin:0}
 .fl-pmeta{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); margin:3px 0 0; word-break:break-word}
 
@@ -4656,7 +4721,6 @@ const CSS = `
 
 /* ── ZZ-124: the letterhead logo, and the same logo faint behind the page ── */
 .fl-docwrap .fl-prev{isolation:isolate}
-.fl-prev-co-for{margin-top:4px; font-weight:700; color:#111}
 .fl-prev-logo{display:block; height:64px; width:auto; max-width:220px; object-fit:contain; margin:0 0 8px}
 .fl-prev-mark{
   position:absolute; z-index:-1; pointer-events:none;
@@ -4724,6 +4788,7 @@ const CSS = `
 .so-line input{border:1px solid var(--line); border-radius:2px; padding:8px; font-family:'Inter',sans-serif; font-size:13px; background:var(--field-bg); color:var(--ink); width:100%}
 .so-line input:focus{outline:none; border-color:var(--green); box-shadow:0 0 0 2px rgba(223,166,58,.28)}
 .so-line-amt{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink); text-align:right; white-space:nowrap}
+.so-line-hrtot{display:block; font-size:10px; color:var(--ink-3,#888); line-height:1.1}
 .so-line-x{background:none; border:none; color:var(--muted); font-size:18px; line-height:1; cursor:pointer; padding:0}
 .so-line-x:hover{color:var(--red)}
 

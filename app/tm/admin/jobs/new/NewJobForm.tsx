@@ -163,7 +163,7 @@ export default function NewJobForm({
           scheduledStartAt: scheduledStart || null,
           // The server works out the end from how long it takes, so nobody
           // has to do arithmetic to book a job.
-          hours: pf.hours || (days ? days * 8 : hours),
+          hours: pf.hours ? (Number(hours) > 0 ? Number(hours) : pf.hours) : (days ? days * 8 : hours),
           days: pf.hours ? 0 : days,
           scopeOfWork: scopeOfWork || null,
           notes: noNotes ? "None" : notes,
@@ -298,9 +298,19 @@ export default function NewJobForm({
             </Field>
             <Field label="How long">
               {pf.hours ? (
-                <div className="text-sm text-slate-700 py-2">
-                  <strong>{pf.hours} {pf.hours === 1 ? "hour" : "hours"}</strong>
-                  <span className="text-slate-500"> &mdash; from the proposal</span>
+                // From the proposal, but still yours to change - a two-hour
+                // plan can be two one-hour visits, or run long.
+                <div className="flex items-center gap-2 py-1">
+                  <input
+                    type="number"
+                    min={0.25}
+                    step={0.25}
+                    inputMode="decimal"
+                    value={hours}
+                    onChange={(e) => setHours(Number(e.target.value))}
+                    className="input w-28"
+                  />
+                  <span className="text-sm text-slate-500">hours &mdash; {pf.hours} from the proposal</span>
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">

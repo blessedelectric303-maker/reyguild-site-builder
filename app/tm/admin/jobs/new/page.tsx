@@ -113,7 +113,8 @@ async function loadProposal(refId: string): Promise<JobPrefill | undefined> {
       // re-guesses a job that was already sized when it was quoted.
       hours: String(e.mode || "") === "lumpsum"
         ? (Number(e.lumpHours) || null)
-        : ((e.lines || []).reduce((t: number, l: any) => t + (Number(l.hours) || 0), 0) || null),
+        // Hours on a line are for ONE unit, so they multiply by quantity.
+        : (Math.round((e.lines || []).reduce((t: number, l: any) => t + (Number(l.qty) || 0) * (Number(l.hours) || 0), 0) * 100) / 100 || null),
       scopeOfWork: e.jobDescription || e.lumpDescription || "",
       proposalRef: String(e.id),
     };
