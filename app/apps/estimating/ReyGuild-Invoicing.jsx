@@ -1219,7 +1219,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   function setEstStatus(id, status) { const e = estimates.find((x) => x.id === id); save(STORAGE.estimates, estimates.map((x) => (x.id === id ? { ...x, status } : x)), setEstimates); logAudit("Proposal → " + status, e ? (e.client || "") + (e.estimateNo ? " #" + e.estimateNo : "") : ""); }
   function removeEstimate(id) { save(STORAGE.estimates, estimates.filter((e) => e.id !== id), setEstimates); setConfirmId(null); }
   function convertToInvoice(e) {
-    logAudit("Converted proposal to invoice", e.client || ""); setInvForm({ ...emptyInvoice(), client: e.client, address: e.clientAddr || (clientOf(e.client)?.address) || "", createdBy: e.createdBy || myName, fromEstimate: e.estimateNo || e.id, mode: e.mode || "itemized", lines: (e.lines || []).map((l) => ({ ...l, id: uid() })), lumpDescription: e.lumpDescription || "", lumpPrice: e.lumpPrice || "", notes: e.notes });
+    logAudit("Converted proposal to invoice", e.client || ""); setInvForm({ ...emptyInvoice(), client: e.client, address: e.clientAddr || (clientOf(e.client)?.address) || "", createdBy: e.createdBy || myName, fromEstimate: e.estimateNo || e.id, invoiceNo: e.estimateNo || "", mode: e.mode || "itemized", lines: (e.lines || []).map((l) => ({ ...l, id: uid() })), lumpDescription: e.lumpDescription || "", lumpPrice: e.lumpPrice || "", notes: e.notes });
     save(STORAGE.estimates, estimates.map((x) => (x.id === e.id ? { ...x, invoiced: true } : x)), setEstimates);
     // Since the form became hidden-until-asked-for, converting filled in a
     // form nobody could see. Open it.
@@ -2357,7 +2357,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             ) : null}
             <div className="fl-form">
               <div className="fl-two">
-                <Field label="Proposal #"><input value={estForm.estimateNo} placeholder="EST-1001" onChange={(e) => setEstForm({ ...estForm, estimateNo: e.target.value })} /></Field>
+                <Field label="Proposal #"><input value={estForm.estimateNo} readOnly placeholder={numberingReady ? "Given when you save" : "Set your numbering first"} title="The app hands out the next number so two people can never get the same one. Change where it starts on the Numbering screen." /></Field>
                 <Field label="Date"><input type="date" value={estForm.date} onChange={(e) => setEstForm({ ...estForm, date: e.target.value })} /></Field>
               </div>
               {(() => {
@@ -2732,7 +2732,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             <div className="fl-form">
               {invForm.fromEstimate && <p className="fl-match ok" style={{ marginTop: 0 }}>From proposal <strong>{invForm.fromEstimate}</strong></p>}
               <div className="fl-two">
-                <Field label="Invoice #"><input value={invForm.invoiceNo} placeholder="INV-1042" onChange={(e) => setInvForm({ ...invForm, invoiceNo: e.target.value })} /></Field>
+                <Field label="Invoice #"><input value={invForm.invoiceNo} readOnly placeholder={numberingReady ? "Given when you save" : "Set your numbering first"} title="Given when you save. An invoice made from a proposal keeps that proposal's number." /></Field>
                 <Field label="Date"><input type="date" value={invForm.date} onChange={(e) => setInvForm({ ...invForm, date: e.target.value })} /></Field>
                 <Field label="Payment due date">
                   <div className="so-due-row">
