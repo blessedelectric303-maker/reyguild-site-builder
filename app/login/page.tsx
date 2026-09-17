@@ -45,6 +45,21 @@ export default function LoginPage() {
     }
 
     if (mode === "signup") {
+      // NOBODY WHO WAS INVITED MAY START A SECOND COMPANY.
+      // Signing up here means "I am an owner, build me a company". If this
+      // email was already invited by somebody, doing that would split them off
+      // into a company of their own and the office would never see them. Send
+      // them to their invite instead - same password box, right company.
+      {
+        const { data: inv } = await supabase
+          .schema("suite")
+          .rpc("invite_for_email", { p_email: email });
+        const row = Array.isArray(inv) && inv.length ? inv[0] : null;
+        if (row?.token) {
+          window.location.href = "/join/" + row.token;
+          return;
+        }
+      }
       if (!agreed) {
         setError("Tick the box to agree to the terms before creating an account.");
         setBusy(false);
@@ -93,9 +108,21 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
       setBusy(false);
-    } else {
-      window.location.href = next;
+      return;
     }
+    // Invited, but signed in here instead of opening the invite link? Finish
+    // the job for them so they land inside the company that asked for them.
+    try {
+      const { data: inv } = await supabase
+        .schema("suite")
+        .rpc("invite_for_email", { p_email: email });
+      const row = Array.isArray(inv) && inv.length ? inv[0] : null;
+      if (row?.token) {
+        window.location.href = "/join/" + row.token;
+        return;
+      }
+    } catch {}
+    window.location.href = next;
   }
 
   const tabCls = (active: boolean) =>
@@ -151,6 +178,12 @@ export default function LoginPage() {
                 Ticking this box and creating an account is my electronic signature on all three.
               </span>
             </label>
+          )}
+
+          {mode === "signin" && (
+            <p className="text-xs text-slate-500">
+              We keep you signed in on this device, so you only do this once.
+            </p>
           )}
 
           <button type="button" onClick={handleSubmit} disabled={busy || (mode === "signup" && !agreed)} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-60" style={{ background: "#CC9000" }}>{buttonLabel}</button>

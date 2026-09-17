@@ -4,7 +4,11 @@ import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "./prisma";
 
 const SESSION_COOKIE = "blessed_track_session";
-const SESSION_DAYS = 30;
+// A YEAR, NOT A MONTH. These are people on a roof with gloves on. Being
+// thrown back to a sign in page every few weeks is the fastest way to have
+// them stop clocking in at all. The session still refreshes every time they
+// use the app, so in practice they sign in once on that phone.
+const SESSION_DAYS = 365;
 
 function getSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
