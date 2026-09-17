@@ -64,12 +64,24 @@ export default function LoginPage() {
         return;
       }
       if (data.session) {
-        // NOTHING IS SIGNED HERE ANY MORE. Signing up used to tick the terms,
-        // the privacy policy and the cookie policy on the person's behalf, so
-        // a brand new owner walked straight into the app having signed four
-        // documents they never saw. Every signature is now made by hand, on
+        // NOTHING IS SIGNED HERE. Signing up used to tick the terms, the
+        // privacy policy and the cookie policy on the person's behalf, so a
+        // brand new owner walked straight into the app having signed four
+        // documents they never saw. Every signature is made by hand now, on
         // the document itself, at /onboarding.
-        window.location.href = next;
+        //
+        // And a sign up always lands on the command centre, never on whatever
+        // page they happened to arrive from. Somebody signing up IS an owner
+        // starting a company; the command centre is what creates that company.
+        // Sent to a T and M address instead, they arrived with no company at
+        // all and were taken for an employee.
+        // Make the company and clear any leftover T and M cookie BEFORE
+        // going anywhere, so the first page this person opens already knows
+        // they are an owner with a company of their own.
+        try {
+          await fetch("/api/start-company", { method: "POST" });
+        } catch {}
+        window.location.href = "/";
       } else {
         setNotice("Account created. Check your email to confirm it, then you'll be signed in.");
         setBusy(false);
