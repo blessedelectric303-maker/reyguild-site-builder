@@ -173,6 +173,14 @@ export default function TeamManager({
         <h1 className="mt-4 text-2xl font-bold text-white">
           {companyName} &middot; Team
         </h1>
+        {/* How many people are on this company - the number the office is
+            billed on, and the first thing anybody asks. */}
+        <p className="mt-1 text-sm font-semibold" style={{ color: "#CC9000" }}>
+          {team.length} {team.length === 1 ? "person" : "people"} on this company
+          {invites.length > 0
+            ? " \u00b7 " + invites.length + " invite" + (invites.length === 1 ? "" : "s") + " waiting"
+            : ""}
+        </p>
         <p className="text-slate-400 text-sm mt-1">
           Add people and send them an invite link. The moment someone joins, your
           account switches from One Man Army to Army Mode.
