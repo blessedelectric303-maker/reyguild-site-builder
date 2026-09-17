@@ -1002,6 +1002,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // leaving somebody to wonder why the dropdown never appears.
   const [mapsMissing, setMapsMissing] = useState(false);
 
+  // The script is fetched once the proposal screen is open. estFormOpen is in
+  // the list so this runs again when the form appears, not only when the tab
+  // does.
   useEffect(() => {
     if (page !== "estimates") return;
     if (window.google && window.google.maps && window.google.maps.places) {
@@ -1017,9 +1020,16 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     el.async = true;
     el.onload = () => setMapsReady(true);
     document.head.appendChild(el);
-  }, [page]);
+  }, [page, estFormOpen]);
 
+  // WIRING THE ADDRESS BOX.
+  // This has to run when the box actually exists. The form is hidden until
+  // NEW PROPOSAL is tapped, so watching only the tab meant the dropdown was
+  // attached to a box that was not on screen yet - and the real one, opened a
+  // moment later, was never connected. estFormOpen brings it back each time
+  // the form opens; the ref is cleared on close so the next open re-wires.
   useEffect(() => {
+    if (!estFormOpen) { addrAutoRef.current = null; return; }
     if (!mapsReady || !addrInputRef.current || addrAutoRef.current) return;
     if (!window.google || !window.google.maps || !window.google.maps.places) return;
     addrAutoRef.current = new window.google.maps.places.Autocomplete(addrInputRef.current, {
@@ -1037,7 +1047,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
         addrLng: place.geometry.location.lng(),
       }));
     });
-  }, [mapsReady, page]);
+  }, [mapsReady, page, estFormOpen]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   // Field checklists and procedures live in T and M and P and L only - they
