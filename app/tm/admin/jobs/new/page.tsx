@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 // accepted proposal. Everything the customer already agreed to is loaded here
 // and handed to the form, so the job that gets booked is the job that was
 // quoted rather than a retyped approximation of it.
-async function loadProposal(refId: string): Promise<JobPrefill | undefined> {
+async function loadProposal(refId: string, orgId: string): Promise<JobPrefill | undefined> {
   try {
     // READ IT WITH THE SERVICE ROLE, NOT THE BROWSER SESSION.
     //
@@ -47,37 +47,40 @@ async function loadProposal(refId: string): Promise<JobPrefill | undefined> {
         cid = ((mem as any) || {}).company_id || "";
       }
     } catch {
-      // No Supabase session in this context - fall through to the lookup by
-      // proposal id below, which is still scoped to one company's row.
+      // No Supabase session readable in this context. The T&M org below
+      // answers the same question without guessing.
     }
 
-    let row: any = null;
-    if (cid) {
-      const { data } = await sb
+    // NO SUPABASE SESSION? THE COMPANY STILL HAS TO BE PROVED, NOT SEARCHED.
+    //
+    // This used to fall back to reading EVERY company's proposal list and
+    // taking whichever one happened to contain this id. That is a hole: a
+    // proposal link carries its reference in plain sight, so anybody holding
+    // one forwarded email from another company could paste the id into this
+    // page and read that company's customer, address, scope and price - and
+    // then book it as their own job. The T&M organisation this person is
+    // signed into maps to exactly one company, so ask that instead.
+    if (!cid && orgId) {
+      const { data: co } = await sb
         .schema("suite")
-        .from("app_storage")
-        .select("value")
-        .eq("company_id", cid)
-        .eq("key", "so_estimates")
+        .from("companies")
+        .select("id")
+        .eq("tm_org_id", orgId)
         .maybeSingle();
-      row = data;
-    } else {
-      // Without a company id, find the one company whose estimate list holds
-      // this proposal. The id is a signed-link reference, not a guessable
-      // number, and only an office user who is already signed into T&M can
-      // reach this page at all.
-      const { data: rows } = await sb
-        .schema("suite")
-        .from("app_storage")
-        .select("value")
-        .eq("key", "so_estimates");
-      for (const r of (rows || []) as any[]) {
-        try {
-          const l = JSON.parse(r.value || "[]");
-          if (Array.isArray(l) && l.some((x: any) => String(x.id) === refId)) { row = r; break; }
-        } catch { /* skip a list that will not parse */ }
-      }
+      cid = ((co as any) || {}).id || "";
     }
+    if (!cid) {
+      console.error("[job prefill] could not establish the company for", refId, "- refusing");
+      return undefined;
+    }
+
+    const { data: row } = await sb
+      .schema("suite")
+      .from("app_storage")
+      .select("value")
+      .eq("company_id", cid)
+      .eq("key", "so_estimates")
+      .maybeSingle();
     if (!row) {
       console.error("[job prefill] no estimate list found for", refId);
       return undefined;
@@ -141,7 +144,9 @@ export default async function NewJobPage({
   }
 
   const sp = await searchParams;
-  const prefill = sp.fromProposal ? await loadProposal(String(sp.fromProposal)) : undefined;
+  const prefill = sp.fromProposal
+    ? await loadProposal(String(sp.fromProposal), user.orgId)
+    : undefined;
 
   const technicians = await prisma.user.findMany({
     where: {

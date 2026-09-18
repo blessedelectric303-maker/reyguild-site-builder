@@ -25,9 +25,40 @@ async function whoami() {
       data: { user },
     } = await supabase.auth.getUser();
     const email = (user?.email || "").trim().toLowerCase();
-    if (!email) return null;
+    if (!email || !user) return null;
+
+    // AN EMAIL ADDRESS IS NOT AN IDENTITY HERE.
+    //
+    // The same address is allowed to exist in two different companies - the
+    // sign-in screen has a "which company?" step precisely because of it. So
+    // matching on email alone handed back whichever row the database felt
+    // like returning, and with it that company's whole calendar: customers,
+    // addresses, job descriptions, who is assigned. A man who is a tech at
+    // one company and the owner of another could land in either. It would
+    // have looked like a flaky bug rather than what it is.
+    //
+    // The company this person actually belongs to is written down. Ask it.
+    const { data: mem } = await supabase
+      .schema("suite")
+      .from("memberships")
+      .select("company_id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    const companyId = ((mem as any) || {}).company_id || "";
+    if (!companyId) return null;
+
+    const { data: co } = await supabase
+      .schema("suite")
+      .from("companies")
+      .select("tm_org_id")
+      .eq("id", companyId)
+      .maybeSingle();
+    const orgId = ((co as any) || {}).tm_org_id || "";
+    if (!orgId) return null;
+
     return await prisma.user.findFirst({
-      where: { email: { equals: email, mode: "insensitive" }, isActive: true },
+      where: { email: { equals: email, mode: "insensitive" }, isActive: true, orgId },
     });
   } catch (e) {
     return null;

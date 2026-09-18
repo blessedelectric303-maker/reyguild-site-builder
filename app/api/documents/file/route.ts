@@ -29,6 +29,27 @@ export async function GET(req: NextRequest) {
   const path = ((row as any) || {}).storage_path;
   if (!path) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
+  // THIS IS THE MOST SENSITIVE DATA IN THE SYSTEM - licences, W-4s, I-9
+  // support documents, voided checks. The read above leans entirely on a
+  // database policy, and the step below signs whatever path comes back with
+  // the service role, which ignores policies altogether. If that policy is
+  // ever dropped, renamed or lost in a migration, this becomes "any signed-in
+  // person reads any company's paperwork by trying ids", with nothing else in
+  // the way and no record of it. Uploads write the path as
+  // <companyId>/<userId>/..., so the company can be checked here too - and
+  // two locks that fail independently is the entire point.
+  const { data: mem } = await supabase
+    .schema("suite")
+    .from("memberships")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+  const companyId = ((mem as any) || {}).company_id || "";
+  if (!companyId || !String(path).startsWith(companyId + "/")) {
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
+
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) {

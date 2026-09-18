@@ -56,11 +56,51 @@ export async function GET(req: Request) {
   const email = (user.email || "").trim().toLowerCase();
   if (!email) return problem("noemail");
 
+  // WHICH COMPANY, BEFORE WHICH PERSON.
+  //
+  // This used to find a T&M user by email alone and then mint a year-long
+  // session as them - including, if that row happened to be an owner, a
+  // session with owner powers over a company this person has nothing to do
+  // with. The same email is deliberately allowed in two companies, so the
+  // match was a coin toss. The membership says where this person belongs;
+  // everything below is scoped to it.
+  let myOrgId = "";
+  try {
+    const { data: mem } = await supabase
+      .schema("suite")
+      .from("memberships")
+      .select("company_id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    const cid = ((mem as any) || {}).company_id || "";
+    if (cid) {
+      const { data: co } = await supabase
+        .schema("suite")
+        .from("companies")
+        .select("tm_org_id")
+        .eq("id", cid)
+        .maybeSingle();
+      myOrgId = ((co as any) || {}).tm_org_id || "";
+    }
+  } catch (e) {
+    return problem("db");
+  }
+
   let tmUser = null;
   try {
     tmUser = await prisma.user.findFirst({
-      where: { email: { equals: email, mode: "insensitive" }, isActive: true },
+      where: myOrgId
+        ? { email: { equals: email, mode: "insensitive" }, isActive: true, orgId: myOrgId }
+        // No company link yet. One organisation total is still unambiguous;
+        // two or more and a guess would put somebody in the wrong company's
+        // jobs and hours, so the branch below refuses instead.
+        : { email: { equals: email, mode: "insensitive" }, isActive: true },
     });
+    if (!myOrgId && tmUser) {
+      const orgs = await prisma.organization.findMany({ take: 2, select: { id: true } });
+      if (orgs.length !== 1) return problem("nolink", email);
+    }
   } catch (e) {
     return problem("db");
   }

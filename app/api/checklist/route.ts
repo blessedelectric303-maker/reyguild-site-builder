@@ -61,7 +61,11 @@ export async function POST(req: Request) {
       .schema("suite")
       .from("checklist_runs")
       .update({ answers, updated_at: now })
-      .eq("id", runId);
+      .eq("id", runId)
+      // The company is checked on the read and on the insert. It was dropped
+      // on the updates, which left somebody else's checklist answers - the
+      // record this business leans on in a damage claim - writable by id.
+      .eq("company_id", ctx.companyId);
   } else {
     const { data, error } = await ctx.supabase
       .schema("suite")
@@ -110,7 +114,8 @@ export async function POST(req: Request) {
         .schema("suite")
         .from("checklist_runs")
         .update({ call_id: callId, updated_at: now })
-        .eq("id", runId);
+        .eq("id", runId)
+        .eq("company_id", ctx.companyId);
     }
     return NextResponse.json({ id: runId, callId });
   }

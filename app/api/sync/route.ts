@@ -138,9 +138,21 @@ export async function POST(req: Request) {
     });
 
     if (body.techId) {
+      // THE JOB WAS CHECKED. THE PERSON WAS NOT.
+      // Without this, a company could post another company's user id and put
+      // their own job on that stranger's phone - and the stranger's hourly
+      // cost into their own labor figures. Nobody is assigned to a job unless
+      // they work for the company that owns it.
+      const tech = await prisma.user.findFirst({
+        where: { id: String(body.techId), orgId: me.orgId, isActive: true },
+        select: { id: true },
+      });
+      if (!tech) {
+        return NextResponse.json({ error: "That person is not on your team." }, { status: 400 });
+      }
       await prisma.jobAssignment.upsert({
-        where: { jobId_userId: { jobId, userId: String(body.techId) } },
-        create: { id: crypto.randomUUID(), jobId, userId: String(body.techId), isPrimary: true },
+        where: { jobId_userId: { jobId, userId: tech.id } },
+        create: { id: crypto.randomUUID(), jobId, userId: tech.id, isPrimary: true },
         update: { isPrimary: true },
       });
     }

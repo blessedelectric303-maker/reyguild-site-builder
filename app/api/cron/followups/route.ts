@@ -115,12 +115,18 @@ function asHtml(body: string, facts: CompanyFacts): string {
 export async function GET(req: NextRequest) {
   // Vercel signs its cron calls. A CRON_SECRET means nobody else can make the
   // app email your customers by hitting a URL.
+  // REFUSE TO RUN UNGUARDED.
+  // This used to skip the check entirely when CRON_SECRET was missing, so one
+  // typo in an environment variable turned a job that touches every company on
+  // the platform into a public URL anybody could fire. Unconfigured is a
+  // failure, not permission.
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = req.headers.get("authorization") || "";
-    if (auth !== "Bearer " + secret) {
-      return NextResponse.json({ error: "Not authorised." }, { status: 401 });
-    }
+  if (!secret) {
+    return NextResponse.json({ error: "CRON_SECRET is not set." }, { status: 500 });
+  }
+  const auth = req.headers.get("authorization") || "";
+  if (auth !== "Bearer " + secret) {
+    return NextResponse.json({ error: "Not authorised." }, { status: 401 });
   }
 
   const resendKey = process.env.RESEND_API_KEY;

@@ -27,6 +27,22 @@ export default async function ContactsPage() {
   const myRole = (mem as any)?.role || "";
   if (!isStaff(myRole)) redirect(homeFor(myRole));
 
+  // Which T&M organisation this company is, so the gap-filling read below
+  // cannot reach into another one.
+  let orgId = "";
+  {
+    const cid = (mem as any)?.company_id || "";
+    if (cid) {
+      const { data: co } = await supabase
+        .schema("suite")
+        .from("companies")
+        .select("tm_org_id")
+        .eq("id", cid)
+        .maybeSingle();
+      orgId = ((co as any) || {}).tm_org_id || "";
+    }
+  }
+
   const { data: roster } = await supabase.schema("suite").rpc("company_members");
   const members = ((roster as any[]) || []);
 
@@ -39,10 +55,16 @@ export default async function ContactsPage() {
   try {
     const emails = members.map((m) => (m.email || "").toLowerCase()).filter(Boolean);
     if (emails.length) {
-      const tm = await prisma.user.findMany({
-        where: { email: { in: emails, mode: "insensitive" } },
-        select: { email: true, name: true, phone: true },
-      });
+      // Scoped to this company's own T&M organisation. The same email is
+      // allowed in two companies, so an unscoped match could put another
+      // company's record of somebody - their personal phone number - into
+      // this directory.
+      const tm = orgId
+        ? await prisma.user.findMany({
+            where: { email: { in: emails, mode: "insensitive" }, orgId },
+            select: { email: true, name: true, phone: true },
+          })
+        : [];
       tm.forEach((u) => {
         extra[(u.email || "").toLowerCase()] = {
           name: u.name || "",
