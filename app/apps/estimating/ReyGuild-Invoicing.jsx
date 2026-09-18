@@ -821,9 +821,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // Now it comes from suite.messageable_members(), the same function the T&M
   // side uses. One rule, one place.
   const [contacts, setContacts] = useState([]);
-  // Closed by default. Most proposals never need it, and a wall of legal text
-  // in the middle of the form is how people stop reading the form.
-  const [editTerms, setEditTerms] = useState(false);
+  // Which of the three attachments is open to read, and which is open to
+  // edit. One at a time - three walls of legal text at once is how people stop
+  // reading the form.
+  const [attachOpen, setAttachOpen] = useState("");
+  const [attachEdit, setAttachEdit] = useState("");
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -2784,81 +2786,96 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                     </button>
                   </div>
                 </div>
+                {/* READ IT BEFORE IT GOES OUT.
+                    These three are ON until somebody turns them off. They used
+                    to be three plain buttons under a pick-one pair, so a tap
+                    read as "turn this on" when it turned it off - and proposals
+                    went to customers with no warranty, no labor note and no
+                    agreement, with nothing on screen to show it. Each one now
+                    says which way it is set and will show you the exact words
+                    the customer is going to read. */}
                 <div className="fl-pricemode">
                   <div className="fl-pricemode-head">
                     <span>Attach to the customer's copy</span>
                   </div>
-                  {/* EACH ONE SAYS WHICH WAY IT IS SET.
-                      These three are ON until somebody turns them off, but they
-                      used to be three plain buttons sitting directly under a
-                      pick-one pair - so a click read as "turn this on" when it
-                      actually turned it off, and a proposal went to a customer
-                      with no warranty, no labor note and no agreement on it.
-                      Nobody should have to remember which way a tap goes, so
-                      each button now states its own state in words. */}
-                  <div className="fl-pricemode-opts">
+                  <div className="fl-attach-list">
                     {[
-                      ["includeLabor", "Labor & materials"],
-                      ["includeWarranty", "Warranty"],
-                      ["includeContract", "Contract agreement"],
-                    ].map(([key, label]) => {
-                      const on = estForm[key] !== false;
+                      ["includeLabor", "laborTextCustom", "Labor & materials", laborTextDefault],
+                      ["includeWarranty", "warrantyTextCustom", "Warranty", warrantyText],
+                      ["includeContract", "contractTextCustom", "Contract agreement", contractText],
+                    ].map(([onKey, textKey, label, standard]) => {
+                      const on = estForm[onKey] !== false;
+                      const custom = String(estForm[textKey] || "").trim();
+                      const editing = attachEdit === onKey;
+                      const open = attachOpen === onKey || editing;
                       return (
-                        <button
-                          type="button"
-                          key={key}
-                          className={"fl-pricemode-btn fl-attach" + (on ? " on" : "")}
-                          title={on
-                            ? "On the customer's copy. Tap to leave it off this proposal."
-                            : "Not on the customer's copy. Tap to put it back."}
-                          onClick={() => setEstForm({ ...estForm, [key]: !on })}
-                        >
-                          <span className="fl-attach-name">{label}</span>
-                          <span className="fl-attach-state">{on ? "\u2713 Included" : "Left off"}</span>
-                        </button>
+                        <div className={"fl-attach-card" + (on ? "" : " off")} key={onKey}>
+                          <div className="fl-attach-row">
+                            <button
+                              type="button"
+                              className={"fl-attach-toggle" + (on ? " on" : "")}
+                              title={on
+                                ? "On the customer's copy. Tap to leave it off this proposal."
+                                : "Not on the customer's copy. Tap to put it back."}
+                              onClick={() => setEstForm({ ...estForm, [onKey]: !on })}
+                            >
+                              {on ? "\u2713 Included" : "Left off"}
+                            </button>
+                            <span className="fl-attach-name">{label}</span>
+                            {custom ? <span className="fl-attach-tag">Reworded for this job</span> : null}
+                            <span className="fl-attach-links">
+                              <button type="button" className="fl-attach-link"
+                                onClick={() => {
+                                  setAttachEdit("");
+                                  setAttachOpen(attachOpen === onKey && !editing ? "" : onKey);
+                                }}>
+                                {open && !editing ? "Hide" : "Read it"}
+                              </button>
+                              <button type="button" className="fl-attach-link"
+                                onClick={() => {
+                                  setAttachEdit(editing ? "" : onKey);
+                                  setAttachOpen(onKey);
+                                }}>
+                                {editing ? "Done" : "Edit"}
+                              </button>
+                            </span>
+                          </div>
+
+                          {open && !editing ? (
+                            <pre className="so-legal fl-attach-text">{custom || standard()}</pre>
+                          ) : null}
+
+                          {editing ? (
+                            <div className="fl-attach-edit">
+                              <textarea
+                                rows={12}
+                                value={estForm[textKey] || ""}
+                                placeholder={standard()}
+                                onChange={(e) => setEstForm({ ...estForm, [textKey]: e.target.value })}
+                              />
+                              <p className="fl-hint">
+                                Leave this empty and your standard wording goes out.
+                                Anything typed here changes this one proposal - your
+                                settings are not touched, and the next proposal starts
+                                from standard again.
+                              </p>
+                              {custom ? (
+                                <button type="button" className="fl-ghost"
+                                  onClick={() => setEstForm({ ...estForm, [textKey]: "" })}>
+                                  Back to standard wording
+                                </button>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
                       );
                     })}
                   </div>
                   <p className="fl-hint">
-                    All three go out unless you turn one off. Anything reading
-                    &ldquo;Left off&rdquo; will not be on the customer&rsquo;s copy.
+                    All three go out unless you turn one off. <b>Read it</b> shows the
+                    exact words the customer sees; whatever it says the day they sign
+                    is what gets saved against their signature.
                   </p>
-                  {/* CHANGE THE WORDING FOR THIS ONE JOB.
-                      Most jobs go out on the company's standard wording, and
-                      that is what these boxes show. Type in one and only this
-                      proposal changes; Settings is untouched, and the next
-                      proposal starts from standard again. Whatever is on the
-                      page the day the customer signs is frozen onto the
-                      record, so it can be proved later. */}
-                  <button type="button" className="fl-ghost" style={{ marginTop: 8 }}
-                    onClick={() => setEditTerms(!editTerms)}>
-                    {editTerms ? "Hide wording" : "Change the wording for this job"}
-                  </button>
-                  {editTerms ? (
-                    <div style={{ marginTop: 8 }}>
-                      {[
-                        ["laborTextCustom", "Labor & materials", () => laborTextDefault()],
-                        ["warrantyTextCustom", "Warranty", () => warrantyText()],
-                        ["contractTextCustom", "Contract agreement", () => contractText()],
-                      ].map(([key, label, base]) => (
-                        <Field key={key} label={label + " (blank = your standard wording)"}>
-                          <textarea
-                            rows={5}
-                            value={estForm[key] || ""}
-                            placeholder={base()}
-                            onChange={(e) => setEstForm({ ...estForm, [key]: e.target.value })}
-                          />
-                        </Field>
-                      ))}
-                      <button type="button" className="fl-ghost"
-                        onClick={() => setEstForm({
-                          ...estForm,
-                          laborTextCustom: "", warrantyTextCustom: "", contractTextCustom: "",
-                        })}>
-                        Put all three back to standard
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
                 <button
                   className="fl-primary"
@@ -4443,16 +4460,28 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                       </div>
                     ))
                   )}
-                  {d.includeLabor !== false ? (
-                    <div className="fl-prev-sec"><b>Labor &amp; materials included</b>
-                      <p>{(d.laborTextCustom || "").trim() || laborTextDefault()}</p></div>
-                  ) : null}
-                  {d.includeWarranty !== false ? (
-                    <div className="fl-prev-sec"><b>Warranty</b><p>{(d.warrantyTextCustom || "").trim() || warrantyText()}</p></div>
-                  ) : null}
-                  {d.includeContract !== false ? (
-                    <div className="fl-prev-sec"><b>Contract agreement</b><p>{(d.contractTextCustom || "").trim() || contractText()}</p></div>
-                  ) : null}
+                  {/* AN ABSENT SECTION LOOKS EXACTLY LIKE A BUG.
+                      When one of these is switched off it used to vanish, so
+                      there was no way to tell a proposal built without a
+                      warranty from a proposal that had lost it. This is our
+                      own copy, never the customer's, so it says so plainly. */}
+                  {[
+                    ["includeLabor", "laborTextCustom", "Labor & materials included", laborTextDefault],
+                    ["includeWarranty", "warrantyTextCustom", "Warranty", warrantyText],
+                    ["includeContract", "contractTextCustom", "Contract agreement", contractText],
+                  ].map(([onKey, textKey, heading, standard]) => (
+                    d[onKey] !== false ? (
+                      <div className="fl-prev-sec" key={onKey}>
+                        <b>{heading}</b>
+                        <p>{(d[textKey] || "").trim() || standard()}</p>
+                      </div>
+                    ) : (
+                      <div className="fl-prev-sec fl-prev-omitted" key={onKey}>
+                        <b>{heading}</b>
+                        <p>Left off this proposal &mdash; the customer will not see this.</p>
+                      </div>
+                    )
+                  ))}
                   <div className="fl-prev-total">
                     <span>Total</span><strong>{money(recSub(d))}</strong>
                   </div>

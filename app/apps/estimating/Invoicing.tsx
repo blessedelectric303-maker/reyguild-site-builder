@@ -372,12 +372,38 @@ const STYLE_FIX = `
   font-size:13px; font-weight:600; font-family:inherit;
 }
 .fl-pricemode-btn.on{ background:#CC9000; color:#16243F; border-color:#CC9000; }
-/* The three attachments say what they are and how they are set, one above the
-   other, so the state is readable without remembering what a tap does. */
-.fl-attach{ display:flex; flex-direction:column; gap:3px; text-align:left; }
-.fl-attach-name{ font-size:13px; font-weight:600; }
-.fl-attach-state{ font-size:11px; font-weight:700; letter-spacing:.04em; opacity:.85; }
-.fl-attach:not(.on) .fl-attach-state{ color:#E08A6B; opacity:1; }
+/* The three attachments. Each is a row you can read, not a button you have to
+   remember the meaning of: state on the left, name next to it, and the exact
+   wording one tap away. */
+.fl-attach-list{ display:flex; flex-direction:column; gap:8px; }
+.fl-attach-card{ border:1px solid #2A3C5E; border-radius:8px; padding:10px 12px; }
+.fl-attach-card.off{ border-color:#5A3B2E; background:rgba(224,138,107,.06); }
+.fl-attach-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.fl-attach-toggle{
+  flex:none; min-width:96px; padding:6px 10px; border-radius:6px; cursor:pointer;
+  border:1px solid #E08A6B; background:transparent; color:#E08A6B;
+  font-size:11px; font-weight:700; letter-spacing:.04em; font-family:inherit;
+}
+.fl-attach-toggle.on{ border-color:#CC9000; background:#CC9000; color:#16243F; }
+.fl-attach-name{ font-size:13.5px; font-weight:600; color:#C7D3E6; }
+.fl-attach-tag{ font-size:11px; font-weight:700; color:#CC9000; }
+.fl-attach-links{ margin-left:auto; display:flex; gap:10px; }
+.fl-attach-link{
+  background:none; border:0; padding:0; cursor:pointer; font-family:inherit;
+  font-size:12.5px; font-weight:600; color:#9FB0CC; text-decoration:underline;
+}
+.fl-attach-link:hover{ color:#CC9000; }
+.fl-attach-text{
+  margin:10px 0 0; max-height:260px; overflow:auto;
+  background:#0F1A2E; border:1px solid #2A3C5E; border-radius:6px; padding:10px 12px;
+  color:#C7D3E6;
+}
+.fl-attach-edit{ margin-top:10px; }
+.fl-attach-edit textarea{ width:100%; }
+/* On our own preview a section that was switched off is stated, not hidden -
+   a missing section and a broken one look identical otherwise. */
+.fl-prev-omitted{ opacity:.55; }
+.fl-prev-omitted p{ font-style:italic; }
 .fl-pricemode-help{ margin-top:10px; border-top:1px solid #2A3C5E; padding-top:10px; }
 .fl-pricemode-help p{ font-size:12.5px; line-height:1.6; color:#9FB0CC; margin:0 0 8px; }
 .fl-pricemode-help p:last-child{ margin-bottom:0; }
