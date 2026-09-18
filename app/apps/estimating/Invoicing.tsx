@@ -372,6 +372,12 @@ const STYLE_FIX = `
   font-size:13px; font-weight:600; font-family:inherit;
 }
 .fl-pricemode-btn.on{ background:#CC9000; color:#16243F; border-color:#CC9000; }
+/* The three attachments say what they are and how they are set, one above the
+   other, so the state is readable without remembering what a tap does. */
+.fl-attach{ display:flex; flex-direction:column; gap:3px; text-align:left; }
+.fl-attach-name{ font-size:13px; font-weight:600; }
+.fl-attach-state{ font-size:11px; font-weight:700; letter-spacing:.04em; opacity:.85; }
+.fl-attach:not(.on) .fl-attach-state{ color:#E08A6B; opacity:1; }
 .fl-pricemode-help{ margin-top:10px; border-top:1px solid #2A3C5E; padding-top:10px; }
 .fl-pricemode-help p{ font-size:12.5px; line-height:1.6; color:#9FB0CC; margin:0 0 8px; }
 .fl-pricemode-help p:last-child{ margin-bottom:0; }

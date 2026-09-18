@@ -2788,23 +2788,41 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                   <div className="fl-pricemode-head">
                     <span>Attach to the customer's copy</span>
                   </div>
+                  {/* EACH ONE SAYS WHICH WAY IT IS SET.
+                      These three are ON until somebody turns them off, but they
+                      used to be three plain buttons sitting directly under a
+                      pick-one pair - so a click read as "turn this on" when it
+                      actually turned it off, and a proposal went to a customer
+                      with no warranty, no labor note and no agreement on it.
+                      Nobody should have to remember which way a tap goes, so
+                      each button now states its own state in words. */}
                   <div className="fl-pricemode-opts">
-                    <button type="button"
-                      className={"fl-pricemode-btn" + (estForm.includeLabor !== false ? " on" : "")}
-                      onClick={() => setEstForm({ ...estForm, includeLabor: estForm.includeLabor === false })}>
-                      Labor &amp; materials
-                    </button>
-                    <button type="button"
-                      className={"fl-pricemode-btn" + (estForm.includeWarranty !== false ? " on" : "")}
-                      onClick={() => setEstForm({ ...estForm, includeWarranty: estForm.includeWarranty === false })}>
-                      Warranty
-                    </button>
-                    <button type="button"
-                      className={"fl-pricemode-btn" + (estForm.includeContract !== false ? " on" : "")}
-                      onClick={() => setEstForm({ ...estForm, includeContract: estForm.includeContract === false })}>
-                      Contract agreement
-                    </button>
+                    {[
+                      ["includeLabor", "Labor & materials"],
+                      ["includeWarranty", "Warranty"],
+                      ["includeContract", "Contract agreement"],
+                    ].map(([key, label]) => {
+                      const on = estForm[key] !== false;
+                      return (
+                        <button
+                          type="button"
+                          key={key}
+                          className={"fl-pricemode-btn fl-attach" + (on ? " on" : "")}
+                          title={on
+                            ? "On the customer's copy. Tap to leave it off this proposal."
+                            : "Not on the customer's copy. Tap to put it back."}
+                          onClick={() => setEstForm({ ...estForm, [key]: !on })}
+                        >
+                          <span className="fl-attach-name">{label}</span>
+                          <span className="fl-attach-state">{on ? "\u2713 Included" : "Left off"}</span>
+                        </button>
+                      );
+                    })}
                   </div>
+                  <p className="fl-hint">
+                    All three go out unless you turn one off. Anything reading
+                    &ldquo;Left off&rdquo; will not be on the customer&rsquo;s copy.
+                  </p>
                   {/* CHANGE THE WORDING FOR THIS ONE JOB.
                       Most jobs go out on the company's standard wording, and
                       that is what these boxes show. Type in one and only this
