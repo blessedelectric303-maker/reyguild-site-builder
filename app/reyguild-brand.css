@@ -46,7 +46,10 @@
   --flag:#D9542B;
   --warn:#D89000;
 
-  --crest:url(/crest.png);
+  /* The splash crest only. Every other place the crest appears is left on
+     its own file on purpose - this is the optimised mark, and it goes where
+     the full logo goes. */
+  --crest:url(/logo/crest-chrome.png);
 
   /* The wordmark face. One value, used by every ReyGuild lockup in both
      apps and at every role. */
@@ -263,31 +266,19 @@
 }
 @keyframes rg-sheen{ to{ background-position:190% 0 } }
 
-.rg-splash__word{
-  margin-top:1.5rem;
-  font-weight:700;
-  font-size:clamp(1.7rem,7vw,2.7rem);
-  letter-spacing:.11em;
+/* The name, the line under it and the emblem, as one piece of artwork.
+   Width is tied to the crest above it so the two never drift apart. */
+.rg-splash__mark{
+  margin-top:1.35rem;
+  width:min(76vw,340px);
+  height:auto;
+  display:block;
   opacity:0;
   animation:rg-word .8s 1.25s cubic-bezier(.2,.8,.3,1) forwards;
 }
-.rg-splash__word .rg-rey  { color:var(--rg-gold-500) }
-.rg-splash__word .rg-guild{ color:var(--rg-white) }
 @keyframes rg-word{
-  0%   { opacity:0; transform:translateY(14px); letter-spacing:.3em }
-  100% { opacity:1; transform:none;             letter-spacing:.11em }
-}
-
-.rg-splash__tag{
-  margin-top:.6rem;
-  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
-  font-size:.62rem;
-  font-weight:700;
-  letter-spacing:.34em;
-  text-transform:uppercase;
-  color:var(--rg-mist);
-  opacity:0;
-  animation:rg-word .7s 1.55s ease-out forwards;
+  0%   { opacity:0; transform:translateY(14px) scale(.97) }
+  100% { opacity:1; transform:none }
 }
 
 .rg-splash--out{
@@ -304,8 +295,7 @@
   .rg-splash{ animation:none !important; transition:none !important }
   .rg-splash__glow,
   .rg-splash__crest,
-  .rg-splash__word,
-  .rg-splash__tag{ opacity:1; transform:none; filter:none }
+  .rg-splash__mark{ opacity:1; transform:none; filter:none }
   .rg-splash__spark,
   .rg-splash__ring,
   .rg-splash__sheen{ display:none }
@@ -405,16 +395,12 @@ table th{
 /* ============================================================
    GLOOCK: THE COMPANY NAME AND THE OPENING-SCREEN WORD
    Only two places: the company name above the calendar on the home page
-   (every company, whichever is logged in) and "REYGUILD" on the splash.
+   (every company, whichever is logged in). The splash used to be typed here
+   too; it is artwork now, so this rule has one job left.
    Everything else keeps its own font. Gloock has one weight, so 400 -
    asking for 700 would make the browser fake a smeared bold.
    ============================================================ */
 .rg-wordmark.rg-coname{
-  font-family:"Gloock", Georgia, "Times New Roman", serif !important;
-  font-weight:400;
-  text-transform:uppercase;
-}
-.rg-splash__word{
   font-family:"Gloock", Georgia, "Times New Roman", serif !important;
   font-weight:400;
   text-transform:uppercase;

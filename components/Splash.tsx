@@ -97,11 +97,17 @@ export default function Splash() {
         <div className="rg-splash__sheen" />
       </div>
 
-      <div className="rg-splash__word">
-        <span className="rg-rey">Rey</span>
-        <span className="rg-guild">Guild</span>
-      </div>
-      <div className="rg-splash__tag">Service Company Software</div>
+      {/* THE NAME IS ARTWORK NOW, NOT TYPE.
+          It used to be two spans in a web font, which meant the logo on the
+          splash and the logo on everything else were two different things
+          that only looked alike. This is the mark itself - the same file,
+          the same chrome, the same letters - so there is one logo. It still
+          arrives on its own beat after the crest lands. */}
+      <img
+        className="rg-splash__mark"
+        src="/logo/reyguild-wordmark.png"
+        alt="ReyGuild - Service Company Software"
+      />
     </div>
   );
 }
