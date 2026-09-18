@@ -12,11 +12,26 @@ export async function POST(req: NextRequest) {
   let token = "";
   let response = "";
   let reason = "";
+  let signatureName = "";
+  let signatureData = "";
+  let terms: any = null;
   try {
     const b = await req.json();
     token = String(b.token || "");
     response = String(b.response || "");
     reason = String(b.reason || "").slice(0, 2000);
+    signatureName = String(b.signatureName || "").slice(0, 200);
+    // A drawn signature is a small PNG. Anything wildly bigger than that is
+    // not a signature, so it is dropped rather than stored.
+    const sig = String(b.signatureData || "");
+    signatureData = sig.startsWith("data:image/png") && sig.length < 600000 ? sig : "";
+    if (b.terms && typeof b.terms === "object") {
+      terms = {
+        labor: String(b.terms.labor || "").slice(0, 20000),
+        warranty: String(b.terms.warranty || "").slice(0, 20000),
+        contract: String(b.terms.contract || "").slice(0, 20000),
+      };
+    }
   } catch {
     return NextResponse.json({ error: "Bad request." }, { status: 400 });
   }
@@ -91,7 +106,20 @@ export async function POST(req: NextRequest) {
         // Writing "approved" here made every comparison in that app fail, so a
         // signed proposal still offered a Sign-off button and the wording went
         // inconsistent between screens.
-        return { ...e, status: "Approved", acceptedAt: new Date().toISOString() };
+        // WHAT THEY SIGNED, KEPT WORD FOR WORD.
+        // The drawn signature, the name they typed and the exact warranty,
+        // labor note and agreement that were on the page at that moment are
+        // written onto the proposal. Change the company wording tomorrow and
+        // this record still shows what this customer actually agreed to.
+        return {
+          ...e,
+          status: "Approved",
+          acceptedAt: new Date().toISOString(),
+          signedName: signatureName || e.signedName || "",
+          signaturePng: signatureData || e.signaturePng || "",
+          signedTerms: terms || e.signedTerms || null,
+          signedIp: ip || e.signedIp || "",
+        };
       });
       if (touched) {
         const { error: upErr } = await sb

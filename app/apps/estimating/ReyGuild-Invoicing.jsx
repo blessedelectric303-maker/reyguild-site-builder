@@ -593,6 +593,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   const [people, setPeople] = useState([]);
   const [clients, setClients] = useState([]);
   const [priceList, setPriceList] = useState([]);
+  const [priceCsv, setPriceCsv] = useState(null);      // { rows, fields, fileName }
+  const [priceCsvErr, setPriceCsvErr] = useState("");
+  const [showAiPrompt, setShowAiPrompt] = useState(false);
   const [estimates, setEstimates] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [sops, setSops] = useState([]);
@@ -818,6 +821,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // Now it comes from suite.messageable_members(), the same function the T&M
   // side uses. One rule, one place.
   const [contacts, setContacts] = useState([]);
+  // Closed by default. Most proposals never need it, and a wall of legal text
+  // in the middle of the form is how people stop reading the form.
+  const [editTerms, setEditTerms] = useState(false);
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -1405,6 +1411,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // myClients, and reading it earlier is a dead-zone crash.
   const clientNames = Array.from(new Set(myClients.map((c) => c.company).filter(Boolean)));
   // effective legal text (their saved version, or the premade template prefilled with their company name)
+  const laborTextDefault = () => (profile.laborMaterials && profile.laborMaterials.trim())
+    ? profile.laborMaterials
+    : "Labor and material are both included in every line item above. Nothing is billed separately after the fact.";
   const warrantyText = () => (profile.warranty && profile.warranty.trim()) ? profile.warranty : defaultWarranty(profile.name);
   const contractText = () => (profile.contract && profile.contract.trim()) ? profile.contract : defaultContract(profile.name);
   // the letterhead block that goes at the top of every emailed estimate/invoice — THEIR info, not ours
@@ -1535,11 +1544,32 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       reader.onerror = reject; reader.readAsDataURL(file);
     });
   }
+  // PHOTOS GO TO STORAGE, AND THE PROPOSAL KEEPS A LINK.
+  // The picture is still shrunk here first, on the phone, so a 12 megapixel
+  // camera shot does not crawl up a job-site signal. What is saved on the
+  // proposal is a short link, not the picture itself - every proposal in the
+  // company shares one record, and pictures inside it made that record grow
+  // until saving was slow and then impossible. If the upload cannot go
+  // through, the picture is kept the old way rather than lost.
   async function handlePhotos(fileList, setForm) {
     const files = Array.from(fileList || []).filter((f) => f.type && f.type.startsWith("image/"));
     if (!files.length) return;
     const urls = [];
-    for (const f of files) { try { urls.push(await fileToScaledDataUrl(f, 1100, 0.7)); } catch (e) {} }
+    for (const f of files) {
+      let small = "";
+      try { small = await fileToScaledDataUrl(f, 1100, 0.7); } catch (e) { continue; }
+      try {
+        const res = await fetch("/api/photos/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataUrl: small }),
+        });
+        const j = await res.json();
+        urls.push(res.ok && j.url ? j.url : small);
+      } catch (e) {
+        urls.push(small);
+      }
+    }
     if (urls.length) setForm((prev) => ({ ...prev, photos: [...(prev.photos || []), ...urls] }));
   }
   function removePhoto(setForm, idx) { setForm((prev) => ({ ...prev, photos: (prev.photos || []).filter((_, i) => i !== idx) })); }
@@ -1804,6 +1834,152 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     setPriceForm(emptyPriceItem());
   }
   function removePriceItem(id) { save(STORAGE.price, priceList.filter((p) => p.id !== id), setPriceList); setConfirmId(null); }
+
+  // ── the price book, brought in from a file ────────────────────────────────
+  // THE COLUMN NAMES ARE THE CONTRACT. An electrician is not going to hand-map
+  // eleven columns on a phone, so the template below, the AI prompt below it
+  // and this reader all use the same eleven headers. Anything else in the file
+  // is ignored; a missing column just comes in blank.
+  const PRICE_COLUMNS = [
+    "category", "section", "name", "price_standalone", "price_addon",
+    "internal_hours", "man_count", "material_allowance",
+    "included_scope", "pricing_rule", "tech_notes",
+  ];
+  // Tolerate the obvious human spellings, because somebody will type them.
+  const PRICE_ALIASES = {
+    name: ["item", "service", "service item", "description", "task"],
+    category: ["cat", "group", "trade"],
+    section: ["sub", "subsection", "sub category", "subcategory"],
+    price_standalone: ["standalone", "standalone price", "base price", "price", "base"],
+    price_addon: ["addon", "add on", "add-on", "add on price", "addon price"],
+    internal_hours: ["hours", "hrs", "labor hours", "time"],
+    man_count: ["men", "man count", "crew", "techs"],
+    material_allowance: ["material", "materials", "material $", "material allowance", "matl"],
+    included_scope: ["scope", "included", "what is included", "customer description"],
+    pricing_rule: ["rule", "rules", "pricing rules", "upcharge"],
+    tech_notes: ["notes", "tech notes", "internal notes"],
+  };
+  function priceHeaderMap(fields) {
+    const norm = (x) => String(x || "").trim().toLowerCase().replace(/[\s_-]+/g, " ");
+    const map = {};
+    for (const col of PRICE_COLUMNS) {
+      const want = [col.replace(/_/g, " "), ...(PRICE_ALIASES[col] || [])].map(norm);
+      const hit = fields.find((f) => want.includes(norm(f)));
+      if (hit) map[col] = hit;
+    }
+    return map;
+  }
+  function onPriceCsv(e) {
+    const file = e.target.files && e.target.files[0];
+    if (e.target) e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const res = Papa.parse(reader.result.toString().trim(), { header: true, skipEmptyLines: true });
+        const fields = (res.meta && res.meta.fields) || [];
+        const map = priceHeaderMap(fields);
+        if (!map.name) {
+          setPriceCsvErr("That file has no column of item names. The first row has to be the headings - download the blank template to see them.");
+          setPriceCsv(null);
+          return;
+        }
+        const rows = (res.data || [])
+          .map((r) => {
+            const get = (k) => (map[k] ? String(r[map[k]] == null ? "" : r[map[k]]).trim() : "");
+            const clean = (k) => get(k).replace(/[$,]/g, "");
+            return {
+              ...emptyPriceItem(),
+              category: get("category"), section: get("section"), name: get("name"),
+              price_standalone: clean("price_standalone"), price_addon: clean("price_addon"),
+              internal_hours: clean("internal_hours"), man_count: clean("man_count") || "1",
+              material_allowance: clean("material_allowance"),
+              included_scope: get("included_scope"), pricing_rule: get("pricing_rule"),
+              tech_notes: get("tech_notes"),
+            };
+          })
+          .filter((r) => r.name);
+        if (!rows.length) { setPriceCsvErr("No priced items found in that file."); setPriceCsv(null); return; }
+        setPriceCsv({ rows, fields, fileName: file.name });
+        setPriceCsvErr("");
+      } catch (err) {
+        setPriceCsvErr("Couldn't read that file. Save it as a plain .csv and try again.");
+      }
+    };
+    reader.readAsText(file);
+  }
+  function doPriceImport(mode) {
+    if (!priceCsv) return;
+    // price mirrors standalone, the same way savePriceItem does it, so every
+    // screen that reads item.price keeps working.
+    const rows = priceCsv.rows.map((r) => ({
+      ...r,
+      id: uid(),
+      price: r.price_standalone || "",
+    }));
+    if (mode === "replace") {
+      save(STORAGE.price, rows, setPriceList);
+      logAudit("Replaced the price book from a file", String(rows.length) + " items");
+      setErr("Price book replaced - " + rows.length + " items.");
+    } else {
+      const have = new Set(priceList.map((p) => (p.name || "").trim().toLowerCase()));
+      const fresh = rows.filter((r) => !have.has(r.name.trim().toLowerCase()));
+      save(STORAGE.price, [...priceList, ...fresh], setPriceList);
+      logAudit("Imported price items", String(fresh.length) + " added");
+      setErr("Added " + fresh.length + " items" + (rows.length - fresh.length ? " - skipped " + (rows.length - fresh.length) + " already on the list." : "."));
+    }
+    setPriceCsv(null);
+  }
+  function downloadPriceTemplate() {
+    const example = {
+      category: "Devices", section: "Outlets", name: "Replace standard outlet",
+      price_standalone: "350.00", price_addon: "87.50",
+      internal_hours: "0.5", man_count: "1", material_allowance: "12.00",
+      included_scope: "Remove the old device, install a new one, test it and make good.",
+      pricing_rule: "Add-on price applies only when we are already on site.",
+      tech_notes: "Check the box is not aluminium wired before quoting.",
+    };
+    const csv = Papa.unparse([example]);
+    try {
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "price-book-template.csv";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    } catch (e) { setErr("Couldn't start that download."); }
+  }
+  // THE INTERVIEW. Handed to any AI, this asks the questions an estimator
+  // would ask, then returns a file this app reads without a single edit. The
+  // column list is repeated inside the prompt on purpose - it is the one part
+  // that must not drift.
+  const AI_PRICE_PROMPT = `You are helping a trade contractor build a price book for their estimating app.
+
+Interview me first. Ask me these, a few at a time, and wait for my answers:
+1. What trade am I in, and what work do I actually sell most weeks?
+2. What is my hourly labor rate, and what do I pay my people?
+3. What is my minimum call or trip charge?
+4. How far do I drive on a normal job?
+5. What do I want my margin to be on materials?
+6. Which jobs do I lose money on today?
+7. Are there jobs I refuse, or only do a certain way?
+
+Then, using my answers, build my price book with two prices for every item:
+- price_standalone: the price when that item is the WHOLE job. It has to carry the drive, the setup and my minimum call.
+- price_addon: the price of the same work when we are already on site for something else. Roughly hours x men x my internal rate, because the trip is already paid for.
+
+Rules:
+- included_scope is the ONLY thing my customer ever reads. Write it plainly, no hours, no man count, no rates, no internal numbers.
+- internal_hours, man_count and material_allowance are how the prices were built. Never put them in included_scope.
+- pricing_rule is when an upcharge applies. tech_notes is what my tech needs to know before quoting it.
+- Cover my common work thoroughly. 60 to 150 items is normal. Do not pad it with things I do not sell.
+
+When I say I am happy with it, output ONE csv file and nothing else - no explanation before or after, no code fences. First row exactly these headings, in this order:
+
+category,section,name,price_standalone,price_addon,internal_hours,man_count,material_allowance,included_scope,pricing_rule,tech_notes
+
+Prices as plain numbers, no dollar signs and no commas. Quote any field containing a comma.`;
+
   function saveSupplier() {
     if (!supplierForm.name.trim() || !supplierForm.url.trim()) { setErr("A supplier needs a name and a link."); return; }
     setErr("");
@@ -2629,6 +2805,42 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                       Contract agreement
                     </button>
                   </div>
+                  {/* CHANGE THE WORDING FOR THIS ONE JOB.
+                      Most jobs go out on the company's standard wording, and
+                      that is what these boxes show. Type in one and only this
+                      proposal changes; Settings is untouched, and the next
+                      proposal starts from standard again. Whatever is on the
+                      page the day the customer signs is frozen onto the
+                      record, so it can be proved later. */}
+                  <button type="button" className="fl-ghost" style={{ marginTop: 8 }}
+                    onClick={() => setEditTerms(!editTerms)}>
+                    {editTerms ? "Hide wording" : "Change the wording for this job"}
+                  </button>
+                  {editTerms ? (
+                    <div style={{ marginTop: 8 }}>
+                      {[
+                        ["laborTextCustom", "Labor & materials", () => laborTextDefault()],
+                        ["warrantyTextCustom", "Warranty", () => warrantyText()],
+                        ["contractTextCustom", "Contract agreement", () => contractText()],
+                      ].map(([key, label, base]) => (
+                        <Field key={key} label={label + " (blank = your standard wording)"}>
+                          <textarea
+                            rows={5}
+                            value={estForm[key] || ""}
+                            placeholder={base()}
+                            onChange={(e) => setEstForm({ ...estForm, [key]: e.target.value })}
+                          />
+                        </Field>
+                      ))}
+                      <button type="button" className="fl-ghost"
+                        onClick={() => setEstForm({
+                          ...estForm,
+                          laborTextCustom: "", warrantyTextCustom: "", contractTextCustom: "",
+                        })}>
+                        Put all three back to standard
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
                 <button
                   className="fl-primary"
@@ -3111,6 +3323,68 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
             to a customer.
           </span>
         </a>
+      )}
+
+      {/* BUILDING A PRICE BOOK BY HAND IS WHY MOST PEOPLE NEVER FINISH ONE.
+          Three buttons: get the questions, bring the finished file in, or
+          take a blank one to fill yourself. Only the owner or admin sees it -
+          an estimator quotes from the book, they do not rewrite it. */}
+      {page === "prices" && can.editPrices && (
+        <section className="fl-panel" style={{ marginBottom: 10 }}>
+          <div className="fl-panel-head"><h2>Build or bring in your price book</h2></div>
+          <div className="fl-form">
+            <p className="fl-hint">
+              Copy the questions below into any AI, answer them about your own
+              work, and it hands you back a file. Bring that file in here and
+              your whole price book is loaded - both prices, hours, men,
+              material and the line your customer reads.
+            </p>
+            <div className="fl-row" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button className="fl-job-btn" onClick={() => setShowAiPrompt(!showAiPrompt)}>
+                {showAiPrompt ? "Hide the questions" : "Get the questions"}
+              </button>
+              <label className="fl-ghost" style={{ cursor: "pointer" }}>
+                Bring in a file
+                <input type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={onPriceCsv} />
+              </label>
+              <button className="fl-ghost" onClick={downloadPriceTemplate}>Blank template</button>
+            </div>
+
+            {showAiPrompt ? (
+              <div style={{ marginTop: 10 }}>
+                <button className="fl-ghost" onClick={() => {
+                  try { navigator.clipboard.writeText(AI_PRICE_PROMPT); setErr("Questions copied - paste them into any AI."); }
+                  catch (e) { setErr("Select the text below and copy it."); }
+                }}>Copy the questions</button>
+                <pre className="so-legal" style={{ marginTop: 8 }}>{AI_PRICE_PROMPT}</pre>
+              </div>
+            ) : null}
+
+            {priceCsvErr ? <p className="fl-hint fl-warn">{priceCsvErr}</p> : null}
+
+            {priceCsv ? (
+              <div style={{ marginTop: 10 }}>
+                <p className="fl-hint">
+                  <b>{priceCsv.fileName}</b> &mdash; {priceCsv.rows.length} items read.
+                  {priceList.length > 0
+                    ? " You already have " + priceList.length + " items. Add to them, or replace the lot?"
+                    : ""}
+                </p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button className="fl-job-btn" onClick={() => doPriceImport("add")}>
+                    Add {priceCsv.rows.length} items
+                  </button>
+                  {priceList.length > 0 ? (
+                    <button className="fl-ghost" onClick={() => doPriceImport("replace")}>
+                      Replace my whole price book
+                    </button>
+                  ) : null}
+                  <button className="fl-ghost" onClick={() => setPriceCsv(null)}>Cancel</button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
       )}
 
       {page === "prices" && (
@@ -4153,13 +4427,13 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
                   )}
                   {d.includeLabor !== false ? (
                     <div className="fl-prev-sec"><b>Labor &amp; materials included</b>
-                      <p>{profile.laborMaterials || "Labor and material are both included in every line item above."}</p></div>
+                      <p>{(d.laborTextCustom || "").trim() || laborTextDefault()}</p></div>
                   ) : null}
                   {d.includeWarranty !== false ? (
-                    <div className="fl-prev-sec"><b>Warranty</b><p>{warrantyText()}</p></div>
+                    <div className="fl-prev-sec"><b>Warranty</b><p>{(d.warrantyTextCustom || "").trim() || warrantyText()}</p></div>
                   ) : null}
                   {d.includeContract !== false ? (
-                    <div className="fl-prev-sec"><b>Contract agreement</b><p>{contractText()}</p></div>
+                    <div className="fl-prev-sec"><b>Contract agreement</b><p>{(d.contractTextCustom || "").trim() || contractText()}</p></div>
                   ) : null}
                   <div className="fl-prev-total">
                     <span>Total</span><strong>{money(recSub(d))}</strong>

@@ -248,7 +248,14 @@ export default async function ProposalPage({
   const proposalPhotos = (est.photos || []).filter((p: any) => String(p.stage || "proposal") !== "completion");
   const completionPhotos = (est.photos || []).filter((p: any) => String(p.stage || "") === "completion");
 
-  const laborText = String(prof.laborMaterials || "").trim() ||
+  // WHAT THIS ONE JOB SAYS BEATS THE COMPANY STANDARD.
+  // An estimator can reword any of the three for a single proposal without
+  // touching Settings. Blank means standard, which is nearly always the case.
+  const jobLabor = String(est.laborTextCustom || "").trim();
+  const jobWarranty = String(est.warrantyTextCustom || "").trim();
+  const jobContract = String(est.contractTextCustom || "").trim();
+
+  const laborText = jobLabor || String(prof.laborMaterials || "").trim() ||
     "Labor and material are both included in every line item above. Nothing is billed separately after the fact.";
 
   // THE APP DOES NOT STORE THESE UNTIL SOMEBODY EDITS THEM. It falls back to
@@ -256,13 +263,13 @@ export default async function ProposalPage({
   // blank stored value and a full warranty on its own preview. Reading the
   // stored value alone dropped both sections off the customer's copy - the
   // same text has to fall back the same way here.
-  const warrantyText = String(prof.warranty || "").trim() ||
+  const warrantyText = jobWarranty || String(prof.warranty || "").trim() ||
     `ONE-YEAR WORKMANSHIP WARRANTY
 
 ${company} warrants all work we service for a period of one (1) year from the date of completion. During this period we will repair or correct any defect in our workmanship at no additional charge.
 
 This warranty covers the labor and workmanship on services we performed. It does not cover damage from misuse, alteration or repair by others, normal wear and tear, or conditions beyond our control.`;
-  const contractText = String(prof.contract || "").trim() ||
+  const contractText = jobContract || String(prof.contract || "").trim() ||
     `SERVICE AGREEMENT
 
 This Agreement is between ${company} ("Company") and the client identified on this proposal ("Client").
@@ -477,7 +484,17 @@ ${company}`;
               {phone ? " Call " + phone + " and we will re-quote it for you." : ""}
             </div>
           ) : (
-            <Respond token={token} company={company} phone={phone} total={money(subtotal)} />
+            <Respond
+              token={token}
+              company={company}
+              phone={phone}
+              total={money(subtotal)}
+              terms={{
+                labor: showLabor ? laborText : "",
+                warranty: showWarranty ? warrantyText : "",
+                contract: showContract ? contractText : "",
+              }}
+            />
           )}
         </div>
 

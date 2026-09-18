@@ -22,11 +22,16 @@ export default function Respond({
   company,
   phone,
   total,
+  terms,
 }: {
   token: string;
   company: string;
   phone: string;
   total?: string;
+  // The exact warranty, labor note and agreement shown on this page. Sent back
+  // with the answer so what the customer agreed to is kept word for word, even
+  // if the company edits its standard wording next week.
+  terms?: { labor: string; warranty: string; contract: string };
 }) {
   const [mode, setMode] = useState<"" | "sign" | "decline" | "thinking">("");
   const [reason, setReason] = useState("");
@@ -102,6 +107,7 @@ export default function Respond({
       if (response === "accepted") {
         payload.signatureName = name.trim();
         payload.signatureData = canvasRef.current ? canvasRef.current.toDataURL("image/png") : "";
+        payload.terms = terms || null;
       }
       const res = await fetch("/api/proposal/respond", {
         method: "POST",
