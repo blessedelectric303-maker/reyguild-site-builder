@@ -195,10 +195,14 @@ Core principles:
     id: "s10",
     title: "Using the app · proposal → invoice",
     body:
-`1. Build the proposal — line items pull from the Price List and the warranty + contract attach automatically (uncheck the box on a proposal to leave them off).
-2. Tap Preview to see exactly what the client gets, then Email to client. If there's no email on file, it asks for one.
-3. Get the client's sign-off: on the proposal they can Accept & sign, choose "Let me think on it," or Decline.
-4. Once Approved, hit "→ Invoice" — it copies the client and every line item. Add your invoice number, mark it Sent, and the office records payments.`,
+`1. Build the proposal. Line items pull from the Price List. Hours are entered PER UNIT - four lights at half an hour each is two hours, and the quantity does the multiplying.
+2. The labor note, the warranty and the contract agreement attach on their own. Each one says "Included" or "Left off" on the form, and Read it shows the exact words the customer will see. Edit rewords it for this job only.
+3. The proposal number is given when you save. You never type one.
+4. Tap Preview to see exactly what the customer gets, then Email. If there is no email on file it asks for one.
+5. The customer signs it themselves - by hand, on their phone - or chooses "Let me think about it" or declines.
+6. A SIGNED PROPOSAL IS THE ONLY WAY A JOB OR AN INVOICE EXISTS. There is no blank invoice to start and no work without a signature. More work later is a new proposal, not a change to this one.
+7. Signed proposals appear on the gold banner. Book it from there and it becomes a job on the calendar.
+8. When the work is done, turn the proposal into an invoice - it carries the same number, so the paperwork ties together end to end.`,
   },
   {
     id: "s11",
@@ -298,14 +302,40 @@ const HELP_ARTICLES = [
     body: `Tap Preview on any proposal or invoice to see exactly what the client gets, then Email to client to send it with your business letterhead on top. If no email is on file, it asks for one first.` },
   { title: "Business letterhead", keywords: "business profile logo company name address phone letterhead branding",
     body: `Under Settings → Account (admin only), upload your logo and enter your company name, address, phone, email, and website. This heading appears on every proposal and invoice you email — your branding only.` },
-  { title: "Warranty & contract", keywords: "warranty contract agreement net 15 legal terms one year prefill",
-    body: `The Warranty and Contract editors live under Price List (admin). They hold premade text that fills in your business name automatically; the contract uses Net 15 terms and covers third-party collection/legal fees. Both attach to every proposal — uncheck the box on a proposal to leave them off.` },
+  { title: "Warranty & contract", keywords: "warranty contract agreement net 15 legal terms one year prefill reword per job read it",
+    body: `Your standard wording lives under Price List (admin), and fills in your business name on its own.
+
+On any single proposal you can change it for that job alone. Under "Attach to the customer's copy" each of the three - labor & materials, warranty, contract agreement - says whether it is Included or Left off, and Read it shows the exact words the customer will see. Edit reworks it for this proposal only; your settings are untouched and the next proposal starts from standard again.
+
+Whatever those three say on the day the customer signs is frozen onto the record with their signature. Change your standard wording next year and that signed job still shows what THEY agreed to.` },
   { title: "Follow-up schedule", keywords: "follow up followup reminder cadence call email day 3 8 13 18 sent to client",
     body: `Mark a proposal “Sent to client” and the sequence starts: a call reminder on day 3, a Follow-up 1 email on day 8, a Follow-up 2 email on day 13, and a call reminder on day 18. Due items appear on the Follow-ups tab.` },
   { title: "Approving a proposal & e-signature", keywords: "approve approval sign signature client phone outcome still deciding lost notification",
     body: `On a follow-up call you record the outcome: Approved, Still deciding, or Went with someone else. Or have the client sign the proposal with the Client sign-off button. Either way, approval marks the proposal Approved and notifies the office.` },
-  { title: "Proposal → invoice", keywords: "convert invoice approved create bill",
-    body: `Once a proposal is Approved, hit “→ Invoice” on its card to copy the client and every line item into a new invoice. Add your invoice number and mark it Sent when it goes out.` },
+  { title: "Proposal → invoice", keywords: "convert invoice approved create bill signed proposal only no new invoice",
+    body: `Every invoice is a proposal the customer signed. There is no button to start a blank one, on purpose - an invoice with no signature behind it is a bill for work nobody agreed to.
+
+Open an approved proposal and turn it into an invoice. The customer, every line item and the NUMBER come across, so proposal #1042 becomes invoice #1042 and anybody can follow the job from the quote to the payment.
+
+Once it exists it cannot be edited by anyone, because it is a record of something signed. If it is wrong, an owner or admin voids it - the number and the record stay, marked void with a reason - and the work is re-quoted as a new proposal.` },
+  { title: "The signature is the line", keywords: "signed sealed edit delete void hide rules locked record signature proposal invoice",
+    body: `Everything in this app turns on one moment: the customer signing.
+
+BEFORE they sign, the proposal is yours. Edit it as much as you like - price, scope, wording, hours. If you have not emailed it yet you can delete it outright.
+
+ONCE IT IS EMAILED, no more deleting. The customer is holding a live link, and deleting it sends them to a dead page with no explanation and no phone call. You can still edit it, and you can hide it from your own list.
+
+ONCE THEY SIGN, it is sealed. Nobody edits it, not you and not the owner - it is the record of what they agreed to, with their drawn signature and the exact warranty and contract wording that was in front of them. It becomes an invoice carrying the same number. More work is a NEW proposal.
+
+If something is genuinely wrong, an owner or admin VOIDS it. Voiding asks for a reason, keeps the number and the record, marks it dead, stops the customer's link and writes it into the audit log with a name against it. A deleted invoice leaves a hole in your numbering, and a hole in an invoice sequence is the first thing an auditor asks about.
+
+HIDE FROM MY LIST is yours alone. It clears your own screen and changes nothing for anybody else. The Hidden tab holds them, and puts them back.` },
+  { title: "Hours are per unit", keywords: "hours hrs each time per unit quantity multiply labor estimate duration",
+    body: `Hours on a line are what ONE of that item takes. The quantity does the multiplying.
+
+Four lights at 0.5 hours each is two hours of work, not half an hour. Enter the half.
+
+That figure is yours and the customer never sees it. It is what sets the length of the job on the calendar when the proposal is booked, and the crew can still correct the real hours in T&M when they work it.` },
   { title: "Recording payments", keywords: "payment paid cash check card online partial balance done archive owed",
     body: `On an invoice, hit “Record payment” and enter the amount, method (cash, check, card, or online), and date. Partial payments are tracked — the card shows the balance left. When it's paid in full the invoice is marked Paid; then Archive it to move it to the Done folder.` },
   { title: "Estimator payouts ($50 per invoice)", keywords: "payout commission 50 invoice approve pay my pay deny",

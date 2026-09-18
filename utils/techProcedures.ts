@@ -12,6 +12,11 @@ export type TechCard = {
   mirrors: CallKey | null;
   label: string;
   blurb: string;
+  // Which T&M roles this card is for. Left out means everybody. The two
+  // supervisor cards are the only ones that use it - a tech does not need to
+  // read how to close somebody else's job out, and a shorter wall of cards is
+  // a wall somebody actually reads.
+  roles?: string[];
   // Set only for cards that are not one of the eight call types.
   skin?: { bg: string; text: string };
   // Renders a black and white checker instead of a flat colour.
@@ -69,7 +74,34 @@ export const TECH_CARDS: TechCard[] = [
   { key: "tech_question", mirrors: "question", label: "Questions", blurb: "Answer what you know. Never a price." },
   { key: "tech_material", mirrors: "material", label: "Material", blurb: "You don't buy anything. Ever." },
   { key: "tech_absence", mirrors: "absence", label: "Calling Off", blurb: "Never silence. The office calls the customer." },
+
+  // THE SUPERVISOR'S TWO. Gold, because they are the only cards about running
+  // other people's work rather than your own, and because a supervisor
+  // scrolling on a phone should find them without reading nine labels.
+  {
+    key: "sup_closeout",
+    mirrors: null,
+    label: "Closing Out a Job",
+    blurb: "What done means, and what has to be true before you say it.",
+    skin: { bg: "#CC9000", text: "#16243F" },
+    roles: ["owner", "admin", "estimator"],
+  },
+  {
+    key: "sup_emergency",
+    mirrors: null,
+    label: "Emergency While You're On Something",
+    blurb: "On call in the middle of your own work. Who you tell, and when you send somebody else.",
+    skin: { bg: "#CC9000", text: "#16243F" },
+    roles: ["owner", "admin", "estimator"],
+  },
 ];
+
+// The cards this person should see. Everything with no role list, plus the
+// ones that name their role.
+export function cardsForRole(role: string): TechCard[] {
+  const r = String(role || "").toLowerCase();
+  return TECH_CARDS.filter((c) => !c.roles || c.roles.includes(r));
+}
 
 export function techCard(key: string): TechCard | null {
   return TECH_CARDS.find((c) => c.key === key) || null;

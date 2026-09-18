@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { TECH_CARDS, skinFor, type TextPart } from "@/utils/techProcedures";
+import { cardsForRole, skinFor, type TextPart } from "@/utils/techProcedures";
 
 
 // The white outline that keeps text legible on top of the checkerboard.
@@ -37,7 +37,7 @@ export default async function TechProceduresPage() {
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        {TECH_CARDS.map((c) => {
+        {cardsForRole(user.role).map((c) => {
           const skin = skinFor(c);
           return (
             <Link
