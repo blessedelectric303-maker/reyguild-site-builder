@@ -3059,7 +3059,7 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
           {(invFormOpen || invForm.id) && (
           <section className="fl-panel" ref={formRef}>
             <div className="fl-panel-head">
-              <h2>{invForm.id ? "Edit invoice" : "New invoice"}</h2>
+              <h2>{invForm.id ? "Edit invoice" : "Invoice from a signed proposal"}</h2>
               <button className="fl-panel-close" title="Close"
                 onClick={() => { setInvForm(emptyInvoice()); setInvFormOpen(false); setErr(""); }}>&times;</button>
             </div>
@@ -3147,13 +3147,14 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                   );
                 })}
               </div>
-              <button className="fl-newbig"
-                onClick={() => { setInvForm(emptyInvoice()); setInvFormOpen(true); setErr(""); setTimeout(() => { try { formRef.current && formRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 40); }}>
-                NEW INVOICE
-              </button>
+              {/* THERE IS NO SUCH THING AS AN INVOICE FROM NOWHERE.
+                  Every invoice is a proposal a customer signed. Starting one
+                  from a blank form is how you end up billing for work nobody
+                  agreed to, with no signature behind it and no number that
+                  ties back to anything. The route in is the proposal. */}
             </div>
             {loading ? <div className="fl-empty">Loading…</div> : shownInvoices.length === 0 ? (
-              <div className="fl-empty">{myInvoices.length === 0 ? "No invoices yet. Tap NEW INVOICE, or turn an approved proposal into one." : "None in this tab."}</div>
+              <div className="fl-empty">{myInvoices.length === 0 ? "No invoices yet. An invoice comes from a proposal the customer has signed - open one on the Proposals tab and turn it into an invoice." : "None in this tab."}</div>
             ) : (
               <div className="fl-cards">
                 {byMonth(shownInvoices, (r) => recTotals(r).total).map((g) => (

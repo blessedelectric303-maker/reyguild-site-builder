@@ -101,15 +101,20 @@ export default function MarkJobDoneButton({ jobId }: { jobId: string }) {
         onClick={() => setOpen(true)}
         className="rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
       >
-        Mark Job Done
+        Job Complete
       </button>
 
       {open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="mb-1 text-lg font-bold text-gray-900">Mark Job Done</h2>
+            <h2 className="mb-1 text-lg font-bold text-gray-900">Job Complete</h2>
+            {/* Say what the button does before it does it. It clocks him off
+                too, and a man who does not know that will clock out again
+                afterwards and wonder why it says he is not on anything. */}
             <p className="mb-4 text-sm text-gray-600">
-              Add at least one completion photo. Notes are optional.
+              Add at least one completion photo. Notes are optional. This closes
+              the job and clocks you off it &mdash; you do not need to clock out
+              afterwards.
             </p>
 
             <div className="mb-3">

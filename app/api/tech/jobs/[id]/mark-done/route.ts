@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUnlocked, ROLES } from "@/lib/auth";
 import { uploadPhoto } from "@/lib/supabase-storage";
+import {
+  calcTotalMinutes,
+  calcLaborCost,
+  stampLaborCostTag,
+  getEffectiveHourlyRate,
+} from "@/lib/labor-cost";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
 
@@ -83,15 +89,62 @@ export async function POST(
         { status: 400 }
       );
     }// Block if anyone is still clocked in on this job
-    const activeOnThisJob = await prisma.timeEntry.findFirst({
+    // JOB COMPLETE SIGNS YOU OUT. THAT IS THE POINT OF THE BUTTON.
+    //
+    // It used to refuse until you had clocked out first, which meant a man who
+    // finished a five-hour job in half an hour had to remember two steps while
+    // standing in somebody's driveway - and if he forgot the second one, his
+    // clock ran all afternoon and the job carried hours nobody worked.
+    // Finishing the job IS clocking off it.
+    //
+    // His own entry closes here, priced the same way clocking out prices it,
+    // so the P&L reads the same either way. Anybody ELSE still on the clock is
+    // left alone: that is their timesheet and their pay, and no man should be
+    // able to end another man's day from his own phone. If someone else is
+    // still on it, this says who, by name, and stops.
+    const stillOn = await prisma.timeEntry.findMany({
       where: { jobId: job.id, clockOutAt: null },
-      select: { id: true },
+      select: {
+        id: true,
+        userId: true,
+        clockInAt: true,
+        notes: true,
+        user: { select: { name: true } },
+      },
     });
-    if (activeOnThisJob) {
+    const others = stillOn.filter((t) => t.userId !== user.id);
+    if (others.length > 0) {
+      const names = Array.from(
+        new Set(others.map((t) => (t.user && t.user.name) || "somebody"))
+      ).join(", ");
       return NextResponse.json(
-        { error: "All techs must clock out before marking the job done." },
+        {
+          error:
+            names +
+            (others.length === 1 ? " is" : " are") +
+            " still clocked in on this job. They need to clock out before it can be closed.",
+        },
         { status: 400 }
       );
+    }
+
+    const mine = stillOn.filter((t) => t.userId === user.id);
+    if (mine.length > 0) {
+      const closeAt = new Date();
+      const rate = await getEffectiveHourlyRate(user.id, job.id);
+      for (const entry of mine) {
+        const totalMinutes = calcTotalMinutes(entry.clockInAt, closeAt);
+        const laborCost = calcLaborCost(totalMinutes, rate);
+        await prisma.timeEntry.update({
+          where: { id: entry.id },
+          data: {
+            clockOutAt: closeAt,
+            totalMinutes,
+            notes: stampLaborCostTag(entry.notes, laborCost),
+            updatedAt: closeAt,
+          },
+        });
+      }
     }
 
     // Upload photos to Supabase Storage BEFORE the transaction
