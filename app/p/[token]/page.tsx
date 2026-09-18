@@ -424,6 +424,33 @@ ${company}`;
           </div>
         </div>
 
+        {/* ---- who wrote this ------------------------------------------ */}
+        {/* NOBODY TYPES THIS IN. The name is whoever was signed in when the
+            proposal was written, taken from their profile, so the customer
+            always knows which person at the company this came from and the
+            office can see who built it. Replies go to the company address, not
+            to the person - one inbox, nothing lost when somebody leaves. */}
+        {String(est.createdBy || "").trim() || companyEmail || phone ? (
+          <div style={{ borderTop: RULE, marginTop: 18, paddingTop: 14 }}>
+            <div style={sectionTitle}>Company contact</div>
+            {String(est.createdBy || "").trim() ? (
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>
+                {String(est.createdBy).trim()}
+              </div>
+            ) : null}
+            <div style={{ fontSize: 13, color: "#555", marginTop: 2 }}>{company}</div>
+            {phone ? <div style={{ fontSize: 13, color: "#555" }}>{phone}</div> : null}
+            {companyEmail ? (
+              <div style={{ fontSize: 13, color: "#555" }}>
+                {companyEmail}
+                {String(est.createdBy || "").trim()
+                  ? " \u2014 mention " + String(est.createdBy).trim() + " when you reply"
+                  : ""}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         {/* ---- answer -------------------------------------------------- */}
         <div style={{ marginTop: 18 }}>
           {already ? (
