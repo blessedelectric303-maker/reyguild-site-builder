@@ -30,6 +30,14 @@ function Card({ row, onDone }: { row: FormRow; onDone: () => void }) {
   const [expires, setExpires] = useState("");
 
   const isLicence = row.slot === "license";
+  // A SELFIE IS A CAMERA JOB, NOT A FILE PICKER.
+  // Opening the gallery here invites somebody to hand in a picture of
+  // somebody else, or one from four years ago. capture="user" opens the
+  // front camera on a phone and takes the picture there and then. A desktop
+  // browser ignores it and falls back to a file dialog, which is the right
+  // failure - the office is not the one being photographed.
+  const isSelfie = row.slot === "selfie";
+  const isPhotoId = row.slot === "photo_id";
   const canDownload = row.action === "download" || row.action === "both";
   const canUpload = row.action === "upload" || row.action === "both";
 
@@ -138,7 +146,9 @@ function Card({ row, onDone }: { row: FormRow; onDone: () => void }) {
             <input
               ref={input}
               type="file"
-              accept="image/*,application/pdf"
+              accept={isSelfie || isPhotoId ? "image/*" : "image/*,application/pdf"}
+              {...(isSelfie ? { capture: "user" as const } : {})}
+              {...(isPhotoId ? { capture: "environment" as const } : {})}
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files && e.target.files[0];
@@ -152,7 +162,15 @@ function Card({ row, onDone }: { row: FormRow; onDone: () => void }) {
               onClick={() => input.current && input.current.click()}
               className="rounded-md bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
             >
-              {busy ? "Uploading..." : name ? "Replace it" : "Take a photo or upload"}
+              {busy
+                ? "Uploading..."
+                : name
+                  ? (isSelfie ? "Take it again" : "Replace it")
+                  : isSelfie
+                    ? "Take your photo"
+                    : isPhotoId
+                      ? "Photograph your ID"
+                      : "Take a photo or upload"}
             </button>
           </>
         ) : null}
