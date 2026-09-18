@@ -824,6 +824,9 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   // Which of the three attachments is open to read, and which is open to
   // edit. One at a time - three walls of legal text at once is how people stop
   // reading the form.
+  // Typed once, kept forever. A void with no reason is just a deletion that
+  // left a mark, and it tells nobody anything six months later.
+  const [voidReason, setVoidReason] = useState("");
   const [attachOpen, setAttachOpen] = useState("");
   const [attachEdit, setAttachEdit] = useState("");
   useEffect(() => {
@@ -1235,6 +1238,67 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
   function editEstimate(e) { if (isSealed(e)) { setErr("This proposal is signed, so it is sealed. For more work, start a NEW PROPOSAL and fill in \"Adds to\" with #" + (e.estimateNo || "") + "."); return; } setEstForm({ ...emptyEstimate(), ...e, lines: e.lines && e.lines.length ? e.lines : [emptyLine()] }); setPage("estimates"); setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }
   function setEstStatus(id, status) { const e = estimates.find((x) => x.id === id); save(STORAGE.estimates, estimates.map((x) => (x.id === id ? { ...x, status } : x)), setEstimates); logAudit("Proposal → " + status, e ? (e.client || "") + (e.estimateNo ? " #" + e.estimateNo : "") : ""); }
+  // WHAT MAY BE DONE TO THIS DOCUMENT, AND BY WHOM.
+  // One place, because the answer has to be the same on every screen.
+  //
+  //   A proposal is editable until the customer signs it. Signing is what
+  //   turns it into an invoice, so an invoice is a signed proposal and is
+  //   never editable by anybody - more work is a new proposal.
+  //
+  //   Deleting stops at SENT, not at signed. The moment it is emailed a
+  //   customer is holding a live link; deleting it sends them to "this link
+  //   is not valid" with no explanation and no phone call. An admin voids it
+  //   instead, which kills it cleanly and leaves the record behind.
+  //
+  //   Hiding is per person. It changes what one person sees and nothing else.
+  function docRights(d, isEst) {
+    const mine = String((d && d.createdBy) || "").trim() === myName;
+    const sealed = isEst ? isSealed(d) : true;
+    const sent = !!(d && d.sentAt);
+    const voided = String((d && d.status) || "").toLowerCase() === "void";
+    return {
+      mine,
+      sealed,
+      voided,
+      // Only ever the person who wrote it, or an admin.
+      canEdit: isEst && !sealed && !voided && (mine || can.seeAllWork),
+      canDelete: isEst && !sent && !sealed && !voided && (mine || can.seeAllWork),
+      canVoid: !voided && can.seeAllWork,
+      canHide: mine || can.seeAllWork,
+    };
+  }
+  function isHidden(d) {
+    return Array.isArray(d && d.hiddenBy) && d.hiddenBy.includes(myName);
+  }
+  // PER PERSON. A tired list is one person's problem, not the company's, so
+  // hiding never takes a document away from anybody else.
+  function hideDoc(id, isEst, on) {
+    const list = isEst ? estimates : invoices;
+    const next = list.map((d) => {
+      if (d.id !== id) return d;
+      const had = Array.isArray(d.hiddenBy) ? d.hiddenBy : [];
+      return { ...d, hiddenBy: on ? Array.from(new Set([...had, myName])) : had.filter((n) => n !== myName) };
+    });
+    if (isEst) save(STORAGE.estimates, next, setEstimates);
+    else save(STORAGE.invoices, next, setInvoices);
+  }
+  // VOIDING KEEPS THE NUMBER AND THE RECORD.
+  // A deleted invoice leaves a hole in the numbering, and a hole in an invoice
+  // sequence is the first thing an auditor asks about. A void answers the
+  // question by itself, in writing, with a name against it.
+  function voidDoc(id, isEst, reason) {
+    const stamp = { status: "Void", voidedAt: new Date().toISOString(), voidedBy: myName || "Owner", voidReason: String(reason || "").slice(0, 400) };
+    const list = isEst ? estimates : invoices;
+    const hit = list.find((d) => d.id === id);
+    const next = list.map((d) => (d.id === id ? { ...d, ...stamp } : d));
+    if (isEst) save(STORAGE.estimates, next, setEstimates);
+    else save(STORAGE.invoices, next, setInvoices);
+    logAudit(
+      "Voided " + (isEst ? "proposal" : "invoice") + (hit ? " #" + (isEst ? hit.estimateNo : hit.invoiceNo) : ""),
+      (hit ? hit.client + " \u00b7 " : "") + (reason || "no reason given")
+    );
+  }
+
   function removeEstimate(id) { save(STORAGE.estimates, estimates.filter((e) => e.id !== id), setEstimates); setConfirmId(null); }
   function convertToInvoice(e) {
     logAudit("Converted proposal to invoice", e.client || ""); setInvForm({ ...emptyInvoice(), client: e.client, address: e.clientAddr || (clientOf(e.client)?.address) || "", createdBy: e.createdBy || myName, fromEstimate: e.estimateNo || e.id, invoiceNo: e.estimateNo || "", mode: e.mode || "itemized", lines: (e.lines || []).map((l) => ({ ...l, id: uid() })), lumpDescription: e.lumpDescription || "", lumpPrice: e.lumpPrice || "", notes: e.notes });
@@ -2043,10 +2107,20 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
     //   Declined   - they said no
     if (e.archived) return false;
     const st = String(e.status || "").toLowerCase();
+    // HIDDEN IS ONE PERSON'S VIEW. Voided documents live here too, so there is
+    // a single place to look for anything that is not on the working list.
+    const put = isHidden(e) || st === "void";
+    if (estFilter === "Hidden") { if (!put) return false; }
+    else if (put) return false;
     if (estFilter === "Sent") { if (!e.sentAt || st.includes("approv") || st.includes("declin")) return false; }
     else if (estFilter === "Waiting on") { if (e.sentAt || st.includes("approv") || st.includes("declin")) return false; }
     else if (estFilter === "Approved") { if (!st.includes("approv")) return false; }
     else if (estFilter === "Declined") { if (!st.includes("declin")) return false; }
+    // ONCE IT IS SIGNED IT IS THE OFFICE'S JOB, NOT THE ESTIMATOR'S.
+    // It drops off their working list so they are looking at what still needs
+    // them, and stays under Approved so they can always read back what they
+    // quoted without ringing the office to ask.
+    else if (estFilter === "All" && !can.seeAllWork && st.includes("approv")) return false;
     if (query.trim()) { const hay = [e.client, e.estimateNo, e.createdBy, e.notes, e.lumpDescription].join(" ").toLowerCase(); if (!hay.includes(query.toLowerCase())) return false; }
     return true;
   });
@@ -2064,7 +2138,10 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
     return "Waiting on";
   }
   const shownInvoices = myInvoices.filter((i) => {
-    if (invFilter === "Archived") { if (!i.archived) return false; }
+    const iput = isHidden(i) || String(i.status || "").toLowerCase() === "void";
+    if (invFilter === "Hidden") { if (!iput) return false; }
+    else if (iput) return false;
+    else if (invFilter === "Archived") { if (!i.archived) return false; }
     else { if (i.archived) return false; if (invFilter !== "All" && invTab(i) !== invFilter) return false; }
     if (query.trim()) { const hay = [i.client, i.invoiceNo, i.createdBy, i.notes].join(" ").toLowerCase(); if (!hay.includes(query.toLowerCase())) return false; }
     return true;
@@ -2902,7 +2979,7 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                   separate thing to go and look at - it is a proposal that
                   changed state, so the count belongs on the tab it moved to. */}
               <div className="fl-filters">
-                {["All", "Sent", "Waiting on", "Approved", "Declined"].map((f) => {
+                {["All", "Sent", "Waiting on", "Approved", "Declined", "Hidden"].map((f) => {
                   const n = f === "Approved"
                     ? answers.filter((a) => String(a.response || "").toLowerCase() === "accepted").length
                     : f === "Declined"
@@ -3060,7 +3137,7 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
               {/* Same tabs-and-button shape as Proposals. Overdue carries its
                   count, because that is money somebody should be chasing. */}
               <div className="fl-filters">
-                {["All", "Waiting on", "Sent", "Overdue", "Paid", "Archived"].map((f) => {
+                {["All", "Waiting on", "Sent", "Overdue", "Paid", "Archived", "Hidden"].map((f) => {
                   const n = f === "Overdue" ? myInvoices.filter((x) => !x.archived && invTab(x) === "Overdue").length : 0;
                   return (
                     <button key={f} className={"fl-pill" + (invFilter === f ? " active" : "")} onClick={() => setInvFilter(f)}>
@@ -4559,7 +4636,18 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                       {d.archived
                         ? <button onClick={() => { archiveEstimate(d.id, false); docPanel(null, d.id); }}>Put back in the list</button>
                         : <button onClick={() => { archiveEstimate(d.id, true); closeDoc(); }}>Clear from list</button>}
-                      <button className="danger" onClick={() => docPanel("delete", d.id)}>Delete&hellip;</button>
+                      {/* Hiding is yours alone. Nobody else's list changes. */}
+                      {docRights(d, true).canHide && (isHidden(d)
+                        ? <button onClick={() => { hideDoc(d.id, true, false); docPanel(null, d.id); }}>Show on my list again</button>
+                        : <button onClick={() => { hideDoc(d.id, true, true); closeDoc(); }}>Hide from my list</button>)}
+                      {docRights(d, true).canVoid && <button className="danger" onClick={() => docPanel("void", d.id)}>Void&hellip;</button>}
+                      {docRights(d, true).canDelete
+                        ? <button className="danger" onClick={() => docPanel("delete", d.id)}>Delete&hellip;</button>
+                        : <button className="soon" onClick={() => soon(isSealed(d)
+                            ? "A signed proposal is the record of what was agreed. Void it instead, or hide it from your list."
+                            : "This has gone to the customer and their link is live. Void it instead, or hide it from your list.")}>
+                            Delete <small>locked</small>
+                          </button>}
                     </div>
                   </>
                 )}
@@ -4573,7 +4661,14 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                       {selfEmail && <a href={sendDocMailto(d, "invoice", true)}>Email me a copy</a>}
                       {st === "paid" && !d.archived && <button onClick={() => { archiveInvoice(d.id, true); closeDoc(); }}>Archive (done)</button>}
                       {d.archived && <button onClick={() => { archiveInvoice(d.id, false); docPanel(null, d.id); }}>Unarchive</button>}
-                      <button className="danger" onClick={() => docPanel("delete", d.id)}>Delete&hellip;</button>
+                      {docRights(d, false).canHide && (isHidden(d)
+                        ? <button onClick={() => { hideDoc(d.id, false, false); docPanel(null, d.id); }}>Show on my list again</button>
+                        : <button onClick={() => { hideDoc(d.id, false, true); closeDoc(); }}>Hide from my list</button>)}
+                      {docRights(d, false).canVoid && <button className="danger" onClick={() => docPanel("void", d.id)}>Void&hellip;</button>}
+                      {/* An invoice is a signed proposal. It is never deleted. */}
+                      <button className="soon" onClick={() => soon("An invoice is a signed proposal, so it is never deleted. Void it instead, or hide it from your list.")}>
+                        Delete <small>locked</small>
+                      </button>
                     </div>
                   </>
                 )}
@@ -4647,6 +4742,38 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                   </>
                 )}
 
+                {panel === "void" && (
+                  <>
+                    <h4>Void this {isEst ? "proposal" : "invoice"}?</h4>
+                    <p className="fl-docnote">
+                      The number and the record stay exactly where they are, marked
+                      void, with your name and reason against them in the audit log.
+                      {isEst && d.sentAt ? " The customer's link stops working." : ""}
+                    </p>
+                    <Field label="Why (this is kept)">
+                      <input
+                        value={voidReason}
+                        placeholder="Duplicate, wrong customer, job cancelled..."
+                        onChange={(e) => setVoidReason(e.target.value)}
+                      />
+                    </Field>
+                    <div className="fl-doclist">
+                      <button
+                        className="danger"
+                        disabled={voidReason.trim().length < 3}
+                        onClick={() => {
+                          const id = d.id; const r = voidReason.trim();
+                          closeDoc(); setVoidReason("");
+                          voidDoc(id, isEst, r);
+                        }}
+                      >
+                        Void it
+                      </button>
+                      <button onClick={() => { setVoidReason(""); docPanel(null, d.id); }}>Leave it alone</button>
+                    </div>
+                  </>
+                )}
+
                 {panel === "delete" && (
                   <>
                     <h4>Delete this {isEst ? "proposal" : "invoice"}?</h4>
@@ -4664,16 +4791,30 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
               <span className="fl-docstatus">{isEst ? "Proposal" : "Invoice"}{no ? " #" + no : ""} · {statusWord(d.status)}</span>
               {isEst ? (
                 <>
-                  {isSealed(d)
-                    ? <button className="fl-docbtn soon" onClick={() => editEstimate(d)}>Sealed <small>signed</small></button>
-                    : <button className="fl-docbtn" onClick={() => { closeDoc(); editEstimate(d); }}>Edit</button>}
+                  {docRights(d, true).canEdit
+                    ? <button className="fl-docbtn" onClick={() => { closeDoc(); editEstimate(d); }}>Edit</button>
+                    : <button className="fl-docbtn soon" onClick={() => soon(
+                        docRights(d, true).voided ? "This one was voided. It is kept as a record and is not edited."
+                        : isSealed(d) ? "The customer has signed this. It is the record of what they agreed to, so it is never edited - more work is a new proposal."
+                        : "Only the estimator who wrote this, or an admin, can edit it.")}>
+                        {docRights(d, true).voided ? "Void" : isSealed(d) ? "Sealed" : "Locked"} <small>{docRights(d, true).voided ? "record" : isSealed(d) ? "signed" : "not yours"}</small>
+                      </button>}
                   <button className="fl-docbtn" disabled={sending} onClick={() => emailProposalRec(d)}>{sending ? "Sending…" : "Email"}</button>
                   <button className="fl-docbtn" onClick={printDoc}>Print</button>
                   <button className="fl-docbtn" onClick={() => turnIntoInvoice(d)}>Turn into invoice</button>
                 </>
               ) : (
                 <>
-                  <button className="fl-docbtn" onClick={() => { closeDoc(); editInvoice(d); }}>Edit</button>
+                  {/* AN INVOICE IS A SIGNED PROPOSAL. Editing one would change
+                      what a customer already put their name to. */}
+                  {can.seeAllWork && !d.sentAt && String(d.status || "").toLowerCase() !== "void"
+                    ? <button className="fl-docbtn" onClick={() => { closeDoc(); editInvoice(d); }}>Edit</button>
+                    : <button className="fl-docbtn soon" onClick={() => soon(
+                        String(d.status || "").toLowerCase() === "void"
+                          ? "This one was voided. It is kept as a record and is not edited."
+                          : "An invoice is a signed proposal, so it is not edited. More work is a new proposal.")}>
+                        Sealed <small>signed</small>
+                      </button>}
                   {custEmail
                     ? <a className="fl-docbtn" href={sendDocMailto(d, "invoice")}>Email</a>
                     : <button className={"fl-docbtn" + (panel === "email" ? " on" : "")} onClick={() => toggle("email")}>Email</button>}
@@ -5046,6 +5187,10 @@ const CSS = `
   background:#f8fafc; border:1px solid #d4d4d4;
 }
 .fl-doclist > .danger{color:#BC4A3C}
+/* Locked, not broken. It is still there and it still explains itself when you
+   press it, so nobody wonders where the button went. */
+.fl-doclist > .soon{color:var(--muted); border-style:dashed}
+.fl-doclist > .soon small{font-size:10px; font-weight:700; text-transform:uppercase; opacity:.8; margin-left:6px}
 .fl-docemail{display:flex; gap:8px; flex-wrap:wrap}
 .fl-docemail input{flex:1 1 200px; padding:9px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; color:#1e293b}
 .fl-docsheet .so-pay-fields input, .fl-docsheet .so-pay-fields select{color:#1e293b}
