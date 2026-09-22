@@ -1705,8 +1705,20 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     let id = rec.id;
     if (rec.id) save(STORAGE.invoices, invoices.map((i) => (i.id === rec.id ? rec : i)), setInvoices);
     else {
+      // ONE SEQUENCE, BECAUSE AN INVOICE IS A SIGNED PROPOSAL.
+      //
+      // Converting carries the proposal's number straight across, which is
+      // the normal path and the whole point - proposal #1042 becomes invoice
+      // #1042 and anybody can follow the job from quote to payment.
+      //
+      // This only fires for the rare invoice that arrived without one: a
+      // proposal saved before numbering was ever set up. It takes the next
+      // PROPOSAL number rather than an invoice number, so the two never run
+      // as separate sequences and there is no second counter to forget to
+      // create. Asking for an "invoice" number on a company that never set
+      // one up returned nothing at all, and the invoice went out blank.
       if (!String(rec.invoiceNo || "").trim()) {
-        const num = await takeNumber("invoice");
+        const num = await takeNumber("estimate");
         if (num) rec.invoiceNo = num;
       }
       id = uid();

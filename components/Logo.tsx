@@ -10,7 +10,7 @@ export default function Logo({ size = 40, tagline = true, dark = false, stacked 
   return (
     <span style={{ display: "inline-flex", flexDirection: stacked ? "column" : "row", alignItems: "center", gap: stacked ? 6 : 9 }}>
       <img
-        src="/reyguild-crest.png"
+        src="/logo/crest-chrome.png"
         alt="ReyGuild"
         width={Math.round(size * 0.72)}
         height={size}

@@ -38,7 +38,7 @@ export default function ResetPasswordPage() {
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900/60 p-8">
         <div className="text-center mb-6">
-          <img src="/crest.png" alt="ReyGuild" className="w-16 h-auto mx-auto mb-3" />
+          <img src="/logo/crest-chrome.png" alt="ReyGuild" className="w-16 h-auto mx-auto mb-3" />
           <div className="text-lg font-bold text-white">Set a new password</div>
         </div>
 

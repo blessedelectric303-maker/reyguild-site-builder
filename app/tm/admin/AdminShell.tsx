@@ -159,7 +159,7 @@ export default function AdminShell({
           <span className="gold-ink text-[13px] font-bold uppercase leading-none tracking-[0.12em]" style={{ color: "#CC9000" }}>
             T&amp;M
           </span>
-          <img src="/reyguild-crest.png" alt="ReyGuild" height={30} width={22}
+          <img src="/logo/crest-chrome.png" alt="ReyGuild" height={30} width={22}
                style={{ height: 30, width: "auto", display: "block" }} />
           <span className="text-[13px] font-bold uppercase leading-none tracking-[0.12em] text-white">
             P&amp;L

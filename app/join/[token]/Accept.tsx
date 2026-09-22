@@ -117,7 +117,7 @@ export default function Accept({ token }: { token: string }) {
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-md text-center">
-        <img src="/crest.png" alt="ReyGuild" className="mx-auto mb-6 h-auto w-20" />
+        <img src="/logo/crest-chrome.png" alt="ReyGuild" className="mx-auto mb-6 h-auto w-20" />
 
         {loading ? (
           <p className="text-slate-300">Checking your invite...</p>

@@ -247,7 +247,7 @@ export default async function Home() {
             <div className="rg-wordmark rg-coname gold-shine gold-outline text-3xl md:text-4xl tracking-wide text-center">{companyName}</div>
           ) : (
             <>
-              <img src="/crest.png" alt="ReyGuild" className="w-16 md:w-20 h-auto drop-shadow" />
+              <img src="/logo/crest-chrome.png" alt="ReyGuild" className="w-16 md:w-20 h-auto drop-shadow" />
               <div className="rg-wordmark mt-1 text-lg tracking-wide"><span className="gold-shine gold-outline">REY</span><span className="text-white">GUILD</span></div>
             </>
           )}

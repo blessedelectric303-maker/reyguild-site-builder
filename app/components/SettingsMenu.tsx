@@ -162,7 +162,7 @@ export default function SettingsMenu({ email, role, companyName, isStaff, compan
           <div className="mt-10 w-full max-w-md overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl sm:mt-0" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
               <div className="flex items-center gap-2">
-                <img src="/crest.png" alt="" className="h-5 w-auto" />
+                <img src="/logo/crest-chrome.png" alt="" className="h-5 w-auto" />
                 <span className="text-sm font-bold text-white">Settings</span>
               </div>
               <div className="flex items-center gap-1">
