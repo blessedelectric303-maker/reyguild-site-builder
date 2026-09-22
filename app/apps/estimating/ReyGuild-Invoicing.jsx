@@ -2783,11 +2783,23 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
               <Field label="Job description"><textarea rows={3} value={estForm.jobDescription} placeholder="Describe the job in plain language — what you'll do and what's included." onChange={(e) => setEstForm({ ...estForm, jobDescription: e.target.value })} /></Field>
               <p className="fl-hint">Build it as a priced-out sheet: write the job description, then add each item from the price list as its own line (include labor as a line too). Your one-year warranty and service agreement are attached to every proposal automatically.</p>
 
+              {/* TWO WAYS TO PRICE A JOB, AND THE SECOND ONE WAS HIDING.
+                  Itemized builds from the price list. "One price" is a
+                  description and a number - paste the scope in from anywhere,
+                  put a figure on it, done. It was already here under a small
+                  grey label that nobody found, which is the same as it not
+                  existing. */}
+              <p className="fl-sub" style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>How do you want to price this job?</p>
               <p className="fl-sub">How to price this</p>
               <Seg value={estForm.mode === "lumpsum" ? "One price + description" : "Itemized"} options={["Itemized", "One price + description"]} onChange={(v) => setEstForm({ ...estForm, mode: v === "Itemized" ? "itemized" : "lumpsum" })} />
 
               {estForm.mode === "lumpsum" ? (
                 <>
+                  <p className="fl-hint">
+                    Write or paste the whole scope here and put one figure on it.
+                    No line items, no price list - useful when you have written
+                    the description somewhere else and only need a number on it.
+                  </p>
                   <Field label="Description (what the job covers)"><textarea rows={5} value={estForm.lumpDescription} placeholder="Describe the full scope here — materials and labor — in plain language." onChange={(e) => setEstForm({ ...estForm, lumpDescription: e.target.value })} /></Field>
                   <Field label="Price ($)"><input value={estForm.lumpPrice} inputMode="decimal" placeholder="0.00" onChange={(e) => setEstForm({ ...estForm, lumpPrice: e.target.value })} /></Field>
                   <Field label="Hours (internal - the customer never sees this)"><input value={estForm.lumpHours} inputMode="decimal" placeholder="e.g. 4" onChange={(e) => setEstForm({ ...estForm, lumpHours: e.target.value })} /></Field>
@@ -3112,10 +3124,15 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
               )}
 
               <p className="fl-sub">How to bill this</p>
+              <p className="fl-sub" style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>How do you want to price this invoice?</p>
               <Seg value={invForm.mode === "lumpsum" ? "One price + description" : "Itemized"} options={["Itemized", "One price + description"]} onChange={(v) => setInvForm({ ...invForm, mode: v === "Itemized" ? "itemized" : "lumpsum" })} />
 
               {invForm.mode === "lumpsum" ? (
                 <>
+                  <p className="fl-hint">
+                    One description, one figure. Paste in what was done and put
+                    a price on it.
+                  </p>
                   <Field label="Description (what was done)"><textarea rows={5} value={invForm.lumpDescription} placeholder="Describe the work billed — materials and labor — in plain language." onChange={(e) => setInvForm({ ...invForm, lumpDescription: e.target.value })} /></Field>
                   <Field label="Price ($)"><input value={invForm.lumpPrice} inputMode="decimal" placeholder="0.00" onChange={(e) => setInvForm({ ...invForm, lumpPrice: e.target.value })} /></Field>
                 </>

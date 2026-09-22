@@ -5,6 +5,8 @@ import Footer from "@/components/Footer";
 import Logo from "@/components/Logo";
 import TechTextSize from "./TechTextSize";
 import { createClient } from "@/utils/supabase/server";
+import { paperworkDaysLeft } from "@/lib/signingGate";
+import PaperworkBanner from "@/components/PaperworkBanner";
 import { roleLabel } from "@/utils/roles";
 
 const NAV = [
@@ -57,7 +59,10 @@ export default async function TechLayout({ children }: { children: React.ReactNo
   } catch (e) {
     needsPaperwork = false;
   }
-  if (needsPaperwork) redirect("/onboarding");
+  // SEVEN DAYS, THEN THE DOOR SHUTS.
+  // A new man gets a week to get through it, with the app counting down at
+  // him every time he opens it. Past that, this is as far as he goes.
+  if (needsPaperwork && (await paperworkDaysLeft()) <= 0) redirect("/onboarding");
 
   // The title under the name, and the watermark, both come from the ReyGuild
   // side. The T and M role cannot tell a supervisor from a tech - both are
@@ -145,7 +150,12 @@ export default async function TechLayout({ children }: { children: React.ReactNo
           it&apos;s reactivated - please contact your manager.
         </div>
       )}
-      <main className="relative z-10 max-w-2xl mx-auto w-full px-4 py-4 flex-1">{children}</main>
+      <main className="relative z-10 max-w-2xl mx-auto w-full px-4 py-4 flex-1">
+        {/* The countdown. Renders nothing once the paperwork is done, which
+            is most people most of the time. */}
+        <PaperworkBanner />
+        {children}
+      </main>
       <div className="relative z-10"><Footer /></div>
     </div>
   );

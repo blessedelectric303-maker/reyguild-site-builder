@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasUnsignedDocuments } from "@/lib/signingGate";
+import PaperworkBanner from "@/components/PaperworkBanner";
 import { createClient } from "@/utils/supabase/server";
 import { isStaff, homeFor } from "@/utils/roles";
 import SettingsMenu from "@/app/components/SettingsMenu";
@@ -294,6 +295,10 @@ export default async function Home() {
             height made the rows overlap. On a phone the order is the one that
             matches how the job actually goes: calendar, then all eight
             colours together, then the apps. */}
+        {/* The paperwork countdown, above everything, for anybody still
+            inside their first week. Renders nothing once they are done. */}
+        <PaperworkBanner />
+
         <div className="md:hidden">
           <Calendar companyId={companyId} canEdit={isStaff(myRole)} userId={user.id} userEmail={user.email || ""} logoUrl={companyLogo} />
 
