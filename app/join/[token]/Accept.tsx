@@ -48,6 +48,26 @@ export default function Accept({ token }: { token: string }) {
       setInvite(row);
 
       if (user) {
+        // AN INVITE BELONGS TO THE ADDRESS IT WAS SENT TO.
+        //
+        // This used to accept the moment it saw anybody signed in - so an
+        // owner opening his own tech's invite link, in his own browser, to
+        // check that it worked, was joined to his own company AS THAT TECH.
+        // His membership was overwritten, he lost the command centre, the
+        // real tech never got in, and nothing anywhere said what had
+        // happened. Nobody accepts an invite addressed to somebody else.
+        const signedInAs = String(user.email || "").trim().toLowerCase();
+        const invitedIs = String(row.email || "").trim().toLowerCase();
+        if (signedInAs && invitedIs && signedInAs !== invitedIs) {
+          setProblem(
+            "This invite is for " + row.email + ", but you are signed in as " +
+            user.email + ". Sign out first, then open the link again - or send " +
+            "it to them to open on their own phone."
+          );
+          setLoading(false);
+          return;
+        }
+
         const { error: accErr } = await supabase
           .schema("suite")
           .rpc("accept_invite", { invite_token: token });
@@ -124,13 +144,23 @@ export default function Accept({ token }: { token: string }) {
         ) : problem ? (
           <>
             <p className="text-slate-200">{problem}</p>
-            <a
-              href={"/login?next=/join/" + token}
-              className="mt-6 inline-block rounded-md px-4 py-2 text-sm font-semibold text-slate-900"
-              style={{ background: "#CC9000" }}
-            >
-              Sign in
-            </a>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {/* Signed in as the wrong person is the common case now, so the
+                  way OUT is the first button, not the way further in. */}
+              <a
+                href={"/auth/signout?next=/join/" + token}
+                className="inline-block rounded-md px-4 py-2 text-sm font-semibold text-slate-900"
+                style={{ background: "#CC9000" }}
+              >
+                Sign out and use this invite
+              </a>
+              <a
+                href={"/login?next=/join/" + token}
+                className="inline-block rounded-md border border-slate-500 px-4 py-2 text-sm font-semibold text-slate-200"
+              >
+                Sign in
+              </a>
+            </div>
           </>
         ) : msg ? (
           <p className="text-slate-200">{msg}</p>

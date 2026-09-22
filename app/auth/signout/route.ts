@@ -32,14 +32,26 @@ async function signOutEverything() {
   }
 }
 
+// WHERE TO LAND AFTER SIGNING OUT.
+// Only a path on this site, never an address somebody put in the link - a
+// sign-out that can be made to bounce you to another website is how people
+// get phished by their own app.
+function safeNext(request: Request): string {
+  try {
+    const raw = new URL(request.url).searchParams.get("next") || "";
+    if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+  } catch { /* fall through */ }
+  return "/";
+}
+
 export async function POST(request: Request) {
   await signOutEverything();
-  return NextResponse.redirect(new URL("/", request.url), { status: 303 });
+  return NextResponse.redirect(new URL(safeNext(request), request.url), { status: 303 });
 }
 
 // Some places link to sign out rather than posting to it. A GET that does not
 // sign out is worse than no link at all - the person believes they are out.
 export async function GET(request: Request) {
   await signOutEverything();
-  return NextResponse.redirect(new URL("/", request.url), { status: 303 });
+  return NextResponse.redirect(new URL(safeNext(request), request.url), { status: 303 });
 }

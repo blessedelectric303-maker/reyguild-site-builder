@@ -61,7 +61,12 @@ export default async function Home() {
   let companyEmail = "";
   let webmailOverride = "";
   let companyId = "";
-  let myRole = "owner";
+  // NO MEMBERSHIP IS NOT "OWNER".
+  // This defaulted to owner, so anybody who reached this page without a
+  // membership row - an invited person whose join never completed, say - was
+  // handed the full command centre of a company they do not belong to. The
+  // lowest access is the only safe answer to "we do not know who you are".
+  let myRole = "tech";
   let armyMode = false;
   let ownerIsAdmin = true;
   try {
@@ -74,7 +79,7 @@ export default async function Home() {
       .limit(1)
       .maybeSingle();
     if (mem) {
-      myRole = (mem as any).role || "owner";
+      myRole = (mem as any).role || "tech";
       companyId = (mem as any).company_id || "";
       const { data: co } = await supabase
         .schema("suite")
