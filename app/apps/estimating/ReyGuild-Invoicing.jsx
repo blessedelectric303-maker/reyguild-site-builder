@@ -2792,8 +2792,17 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                 </Field>
               )}
 
-              <Field label="Job description"><textarea rows={3} value={estForm.jobDescription} placeholder="Describe the job in plain language — what you'll do and what's included." onChange={(e) => setEstForm({ ...estForm, jobDescription: e.target.value })} /></Field>
-              <p className="fl-hint">Build it as a priced-out sheet: write the job description, then add each item from the price list as its own line (include labor as a line too). Your one-year warranty and service agreement are attached to every proposal automatically.</p>
+              {/* ONE DESCRIPTION, NOT TWO.
+                  On the itemized sheet this is the summary above the line
+                  items. On a one-price job the description IS the job, so a
+                  second box underneath asking the same question again was
+                  just somewhere to lose half your scope. */}
+              {estForm.mode !== "lumpsum" ? (
+                <>
+                                <Field label="Job description"><textarea rows={3} value={estForm.jobDescription} placeholder="Describe the job in plain language — what you'll do and what's included." onChange={(e) => setEstForm({ ...estForm, jobDescription: e.target.value })} /></Field>
+                  <p className="fl-hint">Build it as a priced-out sheet: write the job description, then add each item from the price list as its own line (include labor as a line too). Your one-year warranty and service agreement are attached to every proposal automatically.</p>
+                </>
+              ) : null}
 
               {/* TWO WAYS TO PRICE A JOB, AND THE SECOND ONE WAS HIDING.
                   Itemized builds from the price list. "One price" is a
@@ -2812,7 +2821,7 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                     No line items, no price list - useful when you have written
                     the description somewhere else and only need a number on it.
                   </p>
-                  <Field label="Description (what the job covers)"><textarea rows={5} value={estForm.lumpDescription} placeholder="Describe the full scope here — materials and labor — in plain language." onChange={(e) => setEstForm({ ...estForm, lumpDescription: e.target.value })} /></Field>
+                  <Field label="Job description - what the job covers"><textarea rows={5} value={estForm.lumpDescription} placeholder="Describe the full scope here — materials and labor — in plain language." onChange={(e) => setEstForm({ ...estForm, lumpDescription: e.target.value })} /></Field>
                   <Field label="Price ($)"><input value={estForm.lumpPrice} inputMode="decimal" placeholder="0.00" onChange={(e) => setEstForm({ ...estForm, lumpPrice: e.target.value })} /></Field>
                   <Field label="Hours (internal - the customer never sees this)"><input value={estForm.lumpHours} inputMode="decimal" placeholder="e.g. 4" onChange={(e) => setEstForm({ ...estForm, lumpHours: e.target.value })} /></Field>
                 </>
@@ -3145,7 +3154,7 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
                     One description, one figure. Paste in what was done and put
                     a price on it.
                   </p>
-                  <Field label="Description (what was done)"><textarea rows={5} value={invForm.lumpDescription} placeholder="Describe the work billed — materials and labor — in plain language." onChange={(e) => setInvForm({ ...invForm, lumpDescription: e.target.value })} /></Field>
+                  <Field label="Job description - what was done"><textarea rows={5} value={invForm.lumpDescription} placeholder="Describe the work billed — materials and labor — in plain language." onChange={(e) => setInvForm({ ...invForm, lumpDescription: e.target.value })} /></Field>
                   <Field label="Price ($)"><input value={invForm.lumpPrice} inputMode="decimal" placeholder="0.00" onChange={(e) => setInvForm({ ...invForm, lumpPrice: e.target.value })} /></Field>
                 </>
               ) : (

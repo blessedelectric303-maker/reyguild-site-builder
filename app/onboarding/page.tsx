@@ -40,14 +40,6 @@ export default async function OnboardingPage() {
     } catch (e) {
       preview = [];
     }
-    const { data: mem } = await supabase
-      .schema("suite")
-      .from("memberships")
-      .select("role")
-      .eq("user_id", user.id)
-      .limit(1)
-      .maybeSingle();
-    role = ((mem as any) || {}).role || "";
   } catch (e) {
     // Fall through. An empty list means nothing to do, which is the right
     // answer on a deployment where the documents have not been loaded yet.
@@ -60,6 +52,25 @@ export default async function OnboardingPage() {
   const total = docs.filter((d) => d.requires_signature).length + forms.filter((f) => f.required).length;
   const finished = total - unsignedDocs - missingForms;
   const pct = total ? Math.round((finished / total) * 100) : 100;
+
+  // READ THE ROLE ON ITS OWN, NOT AT THE END OF SOMEBODY ELSE'S TRY BLOCK.
+  // It used to be the last line of the block above, so if ANY call before it
+  // failed - a document list, a preview - the whole thing jumped to the catch
+  // and the role stayed empty. Empty is not owner, so an owner pressing "let
+  // me get to work" was quietly sent to the phone app instead of his own
+  // command centre, and nothing said why.
+  try {
+    const { data: mem } = await supabase
+      .schema("suite")
+      .from("memberships")
+      .select("role")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    role = ((mem as any) || {}).role || "";
+  } catch (e) {
+    role = "";
+  }
 
   const home = role === "owner" || role === "admin" ? "/" : "/tm/enter";
 
