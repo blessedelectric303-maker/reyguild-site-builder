@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordEvent } from "@/lib/ledger";
 import { createClient } from "@/utils/supabase/server";
 import { signProposal } from "@/lib/proposalToken";
 
@@ -151,6 +152,21 @@ export async function POST(req: NextRequest) {
     // The customer has the email; a missing log line must not look like a
     // failure to the person who pressed send.
   }
+
+  // THE LEDGER. Written by the server, at the moment it happened, into a
+  // table nothing in the app can change or delete. Whatever becomes of this
+  // proposal afterwards, it is on record as having gone to this customer, on
+  // this day, for this money, sent by this person.
+  await recordEvent({
+    companyId,
+    event: "proposal.sent",
+    refId,
+    actor: user.email || null,
+    amount: Number(String(total).replace(/[^0-9.\-]/g, "")) || null,
+    detail: { to, client: clientName, description: String(description || "").slice(0, 300) },
+    ip: (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || null,
+    userAgent: req.headers.get("user-agent"),
+  });
 
   return NextResponse.json({ ok: true, sentTo: to });
 }

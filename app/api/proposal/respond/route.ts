@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordEvent } from "@/lib/ledger";
 import { createClient } from "@supabase/supabase-js";
 import { verifyProposal } from "@/lib/proposalToken";
 
@@ -144,6 +145,26 @@ export async function POST(req: NextRequest) {
       console.error("[respond] approve step failed:", e && e.message);
     }
   }
+
+  // THE LEDGER. The customer's answer, written down by the server the second
+  // it arrives, in a place nobody can go back and change - including whoever
+  // owns the company. If it is ever disputed, this is the record.
+  await recordEvent({
+    companyId: claim.companyId,
+    event: response === "accepted" ? "proposal.accepted" : "proposal.declined",
+    refId: claim.refId,
+    actor: signatureName || "customer",
+    detail: {
+      reason: reason || null,
+      signature: signatureData ? "drawn" : "none",
+      // The exact wording in front of them when they signed. Change the
+      // company's standard warranty next year and this still says what THIS
+      // customer agreed to.
+      terms: terms || null,
+    },
+    ip,
+    userAgent: req.headers.get("user-agent"),
+  });
 
   return NextResponse.json({ ok: true });
 }

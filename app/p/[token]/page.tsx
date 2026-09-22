@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { verifyProposal } from "@/lib/proposalToken";
+import { recordEvent } from "@/lib/ledger";
 import Respond from "./Respond";
 
 export const dynamic = "force-dynamic";
@@ -194,6 +195,18 @@ export default async function ProposalPage({
         subject: "Your proposal was opened",
         ok: true,
       });
+      // Only once per proposal - the unique index on email_log decides that,
+      // and logErr being empty is how we know this is the first open. A
+      // ledger line every time somebody refreshed would be noise, not record.
+      if (!logErr) {
+        await recordEvent({
+          companyId: claim.companyId,
+          event: "proposal.opened",
+          refId: claim.refId,
+          actor: "customer",
+          detail: { client: String(est.client || "") },
+        });
+      }
       const resendKey = process.env.RESEND_API_KEY;
       if (!logErr && resendKey && companyEmail) {
         const who = String(est.client || "The customer");

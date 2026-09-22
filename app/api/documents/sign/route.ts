@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { createClient } from "@/utils/supabase/server";
+import { recordEvent } from "@/lib/ledger";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,32 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  // THE LEDGER. The signature row itself can be deleted by anybody with
+  // database access; this line cannot, by anybody at all. It carries the hash
+  // of the words that were actually signed, so the document can be proved
+  // unchanged years later.
+  try {
+    const { data: mem } = await supabase
+      .schema("suite")
+      .from("memberships")
+      .select("company_id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    const companyId = ((mem as any) || {}).company_id || "";
+    if (companyId) {
+      await recordEvent({
+        companyId,
+        event: "document.signed",
+        refId: key,
+        actor: user.email || name.trim(),
+        detail: { typed_name: name.trim(), body_sha256: hash },
+        ip: clientIp(req),
+        userAgent: req.headers.get("user-agent"),
+      });
+    }
+  } catch { /* the signature is saved; the ledger is evidence, not a gate */ }
 
   return NextResponse.json({ ok: true });
 }

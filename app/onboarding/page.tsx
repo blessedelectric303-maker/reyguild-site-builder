@@ -4,6 +4,7 @@ import DocumentList, { type DocRow } from "@/components/DocumentList";
 import RequiredForms, { type FormRow } from "@/components/RequiredForms";
 import DocumentPreviewList, { type PreviewRow } from "@/components/DocumentPreviewList";
 import Logo from "@/components/Logo";
+import { paperworkDaysLeft } from "@/lib/signingGate";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,9 @@ export default async function OnboardingPage() {
   const pct = total ? Math.round((finished / total) * 100) : 100;
 
   const home = role === "owner" || role === "admin" ? "/" : "/tm/enter";
+
+  // How long is left in the week. Past zero there is no way out of this page.
+  const daysLeft = await paperworkDaysLeft();
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -126,7 +130,34 @@ export default async function OnboardingPage() {
           >
             All done - take me into the app
           </a>
-        ) : null}
+        ) : daysLeft > 0 ? (
+          /* GET TO WORK NOW, SIGN IT TONIGHT.
+             A man handed a phone at 7am on a job site should not be standing
+             in a driveway reading a drug and alcohol policy while a customer
+             waits. He has a week, and the app reminds him every time he opens
+             it. This is the door out - it is not a way of avoiding the
+             paperwork, it is a way of doing it at the right time of day. */
+          <div className="mt-4 rounded-xl border border-slate-300 bg-white p-4">
+            <a
+              href={home}
+              className="block rounded-lg bg-slate-900 py-3.5 text-center text-base font-bold text-white"
+            >
+              Not now - let me get to work
+            </a>
+            <p className="mt-2 text-center text-xs text-slate-500">
+              {daysLeft === 1
+                ? "Today is your last day. Finish this before tomorrow or the app will stop here."
+                : "You have " + daysLeft + " days to finish this. After that the app stops here until it is done."}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-red-300 bg-red-50 p-4 text-center">
+            <p className="text-sm font-bold text-red-800">Your week is up.</p>
+            <p className="mt-1 text-xs text-red-700">
+              Finish the paperwork below and the app opens straight back up.
+            </p>
+          </div>
+        )}
 
         <DocumentList
           docs={docs}
