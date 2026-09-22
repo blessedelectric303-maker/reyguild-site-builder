@@ -11,9 +11,24 @@ import { updateSession } from "@/utils/supabase/middleware";
 // page and anything after the question mark with it.
 const HOME = (process.env.NEXT_PUBLIC_APP_URL || "https://tm.serviceopspro.com").replace(/\/+$/, "");
 
+// EXCEPT THE SCHEDULED JOBS.
+//
+// Vercel calls its own cron URLs on the deployment's *.vercel.app address,
+// never on the custom domain - so the redirect above caught every one of
+// them and answered 307. A browser follows a redirect; a cron runner does
+// not. The nightly backup and every customer follow-up email silently
+// stopped the day that rule went in, and nothing anywhere said so: the job
+// was listed, enabled, and returning a perfectly healthy 307.
+//
+// These paths are machine-to-machine, they are guarded by CRON_SECRET, and
+// there is no stale-preview problem to solve for something with no screen.
+function isMachineCall(pathname: string): boolean {
+  return pathname.startsWith("/api/cron/");
+}
+
 export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
-  if (host.endsWith(".vercel.app")) {
+  if (host.endsWith(".vercel.app") && !isMachineCall(request.nextUrl.pathname)) {
     const to = new URL(request.nextUrl.pathname + request.nextUrl.search, HOME);
     // 307, not a permanent redirect: a browser remembers a permanent one for
     // good, and that is a hard thing to undo if the real address ever moves.
