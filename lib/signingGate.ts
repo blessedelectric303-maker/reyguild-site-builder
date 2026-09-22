@@ -52,7 +52,35 @@ export async function paperworkState(): Promise<PaperworkState> {
 
     if (outstanding === 0) return none;
 
-    const started = Date.parse(String(user.created_at || "")) || Date.now();
+    // WHEN DOES THIS PERSON'S WEEK START?
+    //
+    // Normally when their login was made, which for an invited person is the
+    // moment they set their password. But an owner who has been running for
+    // months has a login from months ago, so the day his company's documents
+    // change - or the day somebody clears the signatures - he is locked out
+    // on the spot with no way for anyone to give him time. There was no way
+    // to extend anybody's week at all, which is the actual bug.
+    //
+    // paperwork_from on the membership overrides it. Set it to now and that
+    // person gets a fresh week: an owner granting an extension, a new man
+    // starting late, or a company that has just loaded a new document
+    // everybody has to read.
+    let startedFrom = String(user.created_at || "");
+    try {
+      const { data: mem } = await supabase
+        .schema("suite")
+        .from("memberships")
+        .select("paperwork_from")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      const override = ((mem as any) || {}).paperwork_from;
+      if (override) startedFrom = String(override);
+    } catch {
+      // The column may not exist yet on an older deployment. The login date
+      // still answers the question, which is how it worked before.
+    }
+    const started = Date.parse(startedFrom) || Date.now();
     const elapsed = (Date.now() - started) / 86400000;
     const daysLeft = Math.max(0, Math.ceil(PAPERWORK_DAYS - elapsed));
 
