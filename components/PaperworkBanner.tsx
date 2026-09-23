@@ -22,12 +22,19 @@ export default async function PaperworkBanner() {
   const fg = urgent ? "#FFE9E4" : warn ? "#16243F" : "#E8D5A8";
   const border = urgent ? "#BC4A3C" : warn ? "#CC9000" : "rgba(204,144,0,.45)";
 
-  const when =
-    s.daysLeft === 1
+  // Past the week an owner is still here - he is told, not blocked - so the
+  // line has to keep making sense at zero instead of reading "0 days left".
+  const when = s.overdue
+    ? "This is past due."
+    : s.daysLeft === 1
       ? "Today is the last day."
       : s.daysLeft === 2
         ? "You have 2 days left."
         : "You have " + s.daysLeft + " days left.";
+
+  const after = s.boss
+    ? "Your people cannot be asked to sign what you have not signed yourself."
+    : "After that you will have to finish them before you can use the app.";
 
   const what =
     s.outstanding === 1
@@ -53,7 +60,7 @@ export default async function PaperworkBanner() {
     >
       <span style={{ fontWeight: 700 }}>{what}</span>
       <span style={{ opacity: 0.9 }}>
-        {when} After that you will have to finish them before you can use the app.
+        {when} {after}
       </span>
       <Link
         href="/onboarding"

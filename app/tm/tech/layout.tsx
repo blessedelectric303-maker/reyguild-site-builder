@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import Logo from "@/components/Logo";
 import TechTextSize from "./TechTextSize";
 import { createClient } from "@/utils/supabase/server";
-import { paperworkDaysLeft } from "@/lib/signingGate";
+import { paperworkState } from "@/lib/signingGate";
 import PaperworkBanner from "@/components/PaperworkBanner";
 import { roleLabel } from "@/utils/roles";
 
@@ -62,7 +62,12 @@ export default async function TechLayout({ children }: { children: React.ReactNo
   // SEVEN DAYS, THEN THE DOOR SHUTS.
   // A new man gets a week to get through it, with the app counting down at
   // him every time he opens it. Past that, this is as far as he goes.
-  if (needsPaperwork && (await paperworkDaysLeft()) <= 0) redirect("/onboarding");
+  //
+  // Asked as "is this person locked" rather than "how many days are left", so
+  // the owner rule written at the top of this file is the SAME answer every
+  // door in the app gets. Counting the days here on its own is what let the
+  // front door and this door disagree.
+  if (needsPaperwork && (await paperworkState()).locked) redirect("/onboarding");
 
   // The title under the name, and the watermark, both come from the ReyGuild
   // side. The T and M role cannot tell a supervisor from a tech - both are

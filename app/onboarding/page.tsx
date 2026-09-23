@@ -4,7 +4,7 @@ import DocumentList, { type DocRow } from "@/components/DocumentList";
 import RequiredForms, { type FormRow } from "@/components/RequiredForms";
 import DocumentPreviewList, { type PreviewRow } from "@/components/DocumentPreviewList";
 import Logo from "@/components/Logo";
-import { paperworkDaysLeft } from "@/lib/signingGate";
+import { paperworkState } from "@/lib/signingGate";
 
 export const dynamic = "force-dynamic";
 
@@ -74,8 +74,14 @@ export default async function OnboardingPage() {
 
   const home = role === "owner" || role === "admin" ? "/" : "/tm/enter";
 
-  // How long is left in the week. Past zero there is no way out of this page.
-  const daysLeft = await paperworkDaysLeft();
+  // How long is left in the week, and whether this person can be stopped at
+  // all. An owner or an administrator never can - see lib/signingGate.ts - so
+  // the door out of this page stays open for them however long it has been.
+  // It is the same answer the front door uses, asked once, so the two can
+  // never disagree and send somebody round in a circle again.
+  const paperwork = await paperworkState();
+  const daysLeft = paperwork.daysLeft;
+  const walled = paperwork.locked;
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -141,7 +147,7 @@ export default async function OnboardingPage() {
           >
             All done - take me into the app
           </a>
-        ) : daysLeft > 0 ? (
+        ) : !walled ? (
           /* GET TO WORK NOW, SIGN IT TONIGHT.
              A man handed a phone at 7am on a job site should not be standing
              in a driveway reading a drug and alcohol policy while a customer
@@ -156,9 +162,11 @@ export default async function OnboardingPage() {
               Not now - let me get to work
             </a>
             <p className="mt-2 text-center text-xs text-slate-500">
-              {daysLeft === 1
-                ? "Today is your last day. Finish this before tomorrow or the app will stop here."
-                : "You have " + daysLeft + " days to finish this. After that the app stops here until it is done."}
+              {daysLeft <= 0
+                ? "This is past due. The app will keep asking every time you open it until it is done."
+                : daysLeft === 1
+                  ? "Today is your last day. Finish this before tomorrow or the app will stop here."
+                  : "You have " + daysLeft + " days to finish this. After that the app stops here until it is done."}
             </p>
           </div>
         ) : (
