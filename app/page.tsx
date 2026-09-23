@@ -51,9 +51,19 @@ export default async function Home() {
     // The block below tries again and shows the real error if it matters.
   }
 
-  // PAPERWORK FIRST. Anyone who still owes a signature - owner included -
-  // lands on the documents instead of the command centre, every time, until
-  // they are done.
+  // THE ONLY PAPERWORK GATE ON THIS PAGE.
+  //
+  // It asks lib/signingGate.ts, which knows the difference between the four
+  // ReyGuild documents (hard stop, everybody, no grace) and the company
+  // booklet (seven days, a banner, then a stop). Nothing here counts days or
+  // reads documents on its own.
+  //
+  // THERE USED TO BE A SECOND GATE two hundred lines further down this file,
+  // added later, which redirected on my_onboarding().complete === false with no
+  // clock, no role check and no way past it. That is what put somebody in an
+  // endless loop: the paperwork page's "let me get to work" button sent him
+  // here, this line let him through, and the second gate threw him straight
+  // back. Two gates on one page can only ever disagree. There is one.
   if (await hasUnsignedDocuments()) redirect("/onboarding");
 
   let companyName = "";
@@ -104,38 +114,17 @@ export default async function Home() {
   // supervisor sees three tiles that would turn him away.
   const isOffice = myRole === "owner" || myRole === "admin";
 
-  // PAPERWORK GATE FOR THE OFFICE.
+  // THE SECOND PAPERWORK GATE THAT USED TO LIVE HERE IS GONE.
   //
-  // The gate lives in the tech layout, and owners are redirected away from
-  // that - so an owner signed up, was made owner, and was never asked to sign
-  // anything at all. Correct for the employee booklet, which is not his to
-  // sign. Wrong for the four ReyGuild documents that everybody agrees to:
-  // the terms, the privacy policy, the cookie policy and the NDA.
+  // It redirected to /onboarding whenever my_onboarding() said "not complete",
+  // with no seven day clock, no role check and no way past it - so an owner who
+  // pressed "not now, let me get to work" was sent here and thrown straight
+  // back to the paperwork, for ever. The work it was doing (making sure an
+  // owner signs the four ReyGuild documents, which the tech layout never asked
+  // him for) now happens properly at the single gate above, where it can tell
+  // those four apart from the company booklet.
   //
-  // Fails OPEN. If the documents are not loaded, or the call errors, the
-  // command centre opens exactly as it did before.
-  //
-  // NOTE ON THE FIRST VERSION OF THIS: supabase-js does NOT throw on an
-  // error - it returns { data, error }. The first attempt read only `data`
-  // and wrapped it in a try/catch, so a permission problem or a stale schema
-  // cache came back as an error object, `data` was null, and the gate
-  // silently decided there was no paperwork. It failed open on a fault it
-  // never noticed. Read the error.
-  let needsPaperwork = false;
-  try {
-    const { data: st, error: stErr } = await supabase
-      .schema("suite")
-      .rpc("my_onboarding");
-    if (stErr) {
-      console.error("[paperwork gate] my_onboarding failed:", stErr.message);
-    } else {
-      const row: any = Array.isArray(st) ? st[0] : st;
-      needsPaperwork = !!row && row.complete === false;
-    }
-  } catch (e: any) {
-    console.error("[paperwork gate] threw:", e?.message || e);
-  }
-  if (needsPaperwork) redirect("/onboarding");
+  // Do not add a paperwork check to this page. Ask lib/signingGate.ts.
 
   // Role-based access: employees skip the command center and go straight to their app.
   if (!isStaff(myRole)) redirect(homeFor(myRole));

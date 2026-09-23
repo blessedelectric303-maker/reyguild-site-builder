@@ -74,14 +74,21 @@ export default async function OnboardingPage() {
 
   const home = role === "owner" || role === "admin" ? "/" : "/tm/enter";
 
-  // How long is left in the week, and whether this person can be stopped at
-  // all. An owner or an administrator never can - see lib/signingGate.ts - so
-  // the door out of this page stays open for them however long it has been.
-  // It is the same answer the front door uses, asked once, so the two can
-  // never disagree and send somebody round in a circle again.
+  // THE SAME ANSWER THE FRONT DOOR USES, ASKED ONCE.
+  //
+  // This page must never offer a way out that the front door will refuse -
+  // that is a loop, and it is exactly what happened when this page counted the
+  // days itself. So the door out of here opens on the gate's own verdict and
+  // nothing else.
+  //
+  // The four ReyGuild documents are a hard stop with no "not now" beside them.
+  // The company booklet is a countdown, and past the countdown it is a stop
+  // too - for everybody except the owner, who wrote those documents and gets
+  // told rather than blocked.
   const paperwork = await paperworkState();
   const daysLeft = paperwork.daysLeft;
   const walled = paperwork.locked;
+  const mustSignFour = paperwork.platformOutstanding > 0;
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -97,8 +104,10 @@ export default async function OnboardingPage() {
       <div className="mx-auto max-w-2xl px-4 py-6">
         <h1 className="text-xl font-bold text-slate-900">Before you start</h1>
         <p className="mt-1 text-sm leading-snug text-slate-600">
-          There is paperwork to read and sign before your app is switched on.
-          You can stop and come back - everything saves as you go.
+          <strong>The four app documents have to be signed to open your app.</strong>{" "}
+          Your company&rsquo;s own agreements underneath them can wait - you get
+          7 days for those. You can stop and come back at any point; everything
+          saves as you go.
         </p>
         <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-700">
           <p>
@@ -147,6 +156,28 @@ export default async function OnboardingPage() {
           >
             All done - take me into the app
           </a>
+        ) : mustSignFour ? (
+          /* THE FOUR REYGUILD DOCUMENTS. NO WAY ROUND THESE.
+             There is deliberately no button here. These four are the agreement
+             between this person and the software itself - the terms, the
+             privacy policy, the cookie policy and the NDA - and the app does
+             not open until they are signed, for an apprentice or for the owner.
+             It is four signatures, once, for as long as they use ReyGuild. */
+          <div className="mt-4 rounded-xl border-2 border-slate-800 bg-slate-900 p-4 text-center">
+            <p className="text-sm font-bold text-amber-300">
+              Sign the four app documents to open your app.
+            </p>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
+              They are the first section below, and they take a minute.
+              Everybody signs these once, owners included, and never again.
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-400">
+              Your company&rsquo;s own agreements underneath them can wait - you
+              get 7 days for those, and they live in{" "}
+              <strong className="text-slate-300">Settings &rarr; Company Documents</strong>{" "}
+              from now on.
+            </p>
+          </div>
         ) : !walled ? (
           /* GET TO WORK NOW, SIGN IT TONIGHT.
              A man handed a phone at 7am on a job site should not be standing
@@ -167,6 +198,12 @@ export default async function OnboardingPage() {
                 : daysLeft === 1
                   ? "Today is your last day. Finish this before tomorrow or the app will stop here."
                   : "You have " + daysLeft + " days to finish this. After that the app stops here until it is done."}
+            </p>
+            <p className="mt-2 border-t border-slate-200 pt-2 text-center text-xs text-slate-500">
+              You will not have to hunt for it. It is in{" "}
+              <strong className="text-slate-700">Settings &rarr; Company Documents</strong>,
+              and the app reminds you at the top of every screen until it is
+              done.
             </p>
           </div>
         ) : (

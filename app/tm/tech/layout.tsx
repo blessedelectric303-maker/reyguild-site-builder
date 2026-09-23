@@ -34,40 +34,30 @@ export default async function TechLayout({ children }: { children: React.ReactNo
   }
   const locked = isOrgLocked(user.org);
 
-  // PAPERWORK GATE. Nobody on the phone gets into the app with unsigned
-  // agreements or missing forms. Owners and administrators are deliberately
-  // NOT walled off - they are the ones who load the documents in the first
-  // place, and locking the boss out of his own command center to sign his own
-  // booklet is how a launch day goes wrong. They get told, not blocked.
+  // PAPERWORK GATE. One question, asked of lib/signingGate.ts, which is the
+  // only thing in the app that decides this. It knows both rules:
   //
-  // Fails OPEN on any error. A deployment where SQL 27 has not been run yet
-  // returns nothing, which counts as nothing outstanding, and the app carries
-  // on exactly as it does today.
-  // NOTE: redirect() works by throwing, so it must NOT be called inside the
-  // try - the catch would swallow it and the gate would silently do nothing.
-  let needsPaperwork = false;
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user: su },
-    } = await supabase.auth.getUser();
-    if (su) {
-      const { data: st } = await supabase.schema("suite").rpc("my_onboarding");
-      const row: any = st && st.length ? st[0] : null;
-      needsPaperwork = !!row && row.complete === false;
-    }
-  } catch (e) {
-    needsPaperwork = false;
-  }
-  // SEVEN DAYS, THEN THE DOOR SHUTS.
-  // A new man gets a week to get through it, with the app counting down at
-  // him every time he opens it. Past that, this is as far as he goes.
+  //   * the four ReyGuild documents are a hard stop for everybody, owner
+  //     included - no clock, no skip button, no exceptions
+  //   * the company booklet, the ID and the photo are seven days and a banner,
+  //     and then a stop. Owners and administrators are deliberately NOT walled
+  //     off by that one - they are the people who load those documents in the
+  //     first place, and locking the boss out of his own command center to sign
+  //     his own booklet is how a launch day goes wrong. They get told.
   //
-  // Asked as "is this person locked" rather than "how many days are left", so
-  // the owner rule written at the top of this file is the SAME answer every
-  // door in the app gets. Counting the days here on its own is what let the
-  // front door and this door disagree.
-  if (needsPaperwork && (await paperworkState()).locked) redirect("/onboarding");
+  // Fails OPEN on any error - a deployment where the documents have not been
+  // loaded counts as nothing outstanding, and the app carries on.
+  //
+  // THIS USED TO ASK MY_ONBOARDING() ITSELF and only then consult the clock,
+  // which meant two things. A tech whose booklet was complete could walk in
+  // with the four ReyGuild documents unsigned, because my_onboarding() does not
+  // count those. And this door was counting days in its own way, so it could
+  // disagree with the front door - which is how somebody ended up bounced
+  // between the two. It asks, it does not calculate.
+  //
+  // NOTE: redirect() works by throwing, so it must NOT be called inside a try -
+  // the catch would swallow it and the gate would silently do nothing.
+  if ((await paperworkState()).locked) redirect("/onboarding");
 
   // The title under the name, and the watermark, both come from the ReyGuild
   // side. The T and M role cannot tell a supervisor from a tech - both are

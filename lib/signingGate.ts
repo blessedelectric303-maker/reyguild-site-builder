@@ -1,80 +1,102 @@
 import { createClient } from "@/utils/supabase/server";
 
-// HAS THIS PERSON SIGNED EVERYTHING THEY HAVE TO SIGN?
+// PAPERWORK: TWO KINDS, TWO RULES.
 //
-// The handbook, the safety rules and the platform terms are not optional, so
-// the app asks this at every front door and sends anyone with paperwork
-// outstanding to /onboarding first. It answers "no paperwork" whenever the
-// question cannot be answered - a company that has not loaded any documents,
-// or a database hiccup, must not lock people out of their own app.
-
-// SEVEN DAYS TO DO THE PAPERWORK.
+// This used to be one question - "does this person owe a signature?" - and one
+// answer, which was to shut the door. That was wrong twice over, and it cost a
+// day of testing to see why.
 //
-// Locking somebody out on their first morning is how a new man decides this
-// company is a pain to work for before he has swung a hammer. He gets a week
-// to sign everything, and the app tells him how long is left every time he
-// opens it. On the eighth day he cannot get past it.
+// There are two completely different piles of paper here:
 //
-// The clock runs from when the account was made, which for an invited person
-// is the moment they set their password.
-
-// THE BOSS IS TOLD. THE BOSS IS NEVER BLOCKED.
+//   THE FOUR REYGUILD DOCUMENTS. The terms, the privacy policy, the cookie
+//   policy and the NDA. These are the agreement between the person and the
+//   software itself, and nothing should happen before they are signed - not by
+//   a new apprentice, not by the owner. No grace period, no skip button, no
+//   role gets out of it. Sign them and you are done with them for ever.
 //
-// This is the rule the rest of the app was already written to - it is spelled
-// out in app/tm/tech/layout.tsx in those words - and the gate on the front
-// door was the one place that broke it. An owner or an administrator is the
-// person who LOADS the documents in the first place. Walling him out of his
-// own command centre until he has signed his own booklet is how a launch day
-// goes wrong, and it is exactly what happened: the week ran out, the door
-// closed, and the only button on the page led back to the same page.
+//   THE COMPANY BOOKLET. Conduct, safety, drug and alcohol, harassment,
+//   non-solicit, side work, the NDA, plus the ID and the photo. These belong
+//   to the company, not to us. A man handed a phone at 7am on a job site
+//   should not be stood in a driveway reading a drug and alcohol policy while
+//   a customer waits. He gets SEVEN DAYS, the app tells him where they live
+//   and how long is left every time he opens it, and on the eighth day the
+//   door shuts.
 //
-// So owners and administrators are never locked, at any number of days. They
-// get the banner, every screen, every time, getting louder as the week runs
-// down - and the countdown still runs for them so the banner can say it.
-// Everybody else is gated on day eight, which is the point of the week.
+// The old code treated both as the same wall, which is how somebody ended up
+// in a loop: the front door sent him to the paperwork, the paperwork's only
+// button sent him to the front door, and round he went. Two rules, asked in
+// ONE place, is what stops that happening again - every door in the app asks
+// this file and nothing counts days on its own.
 export const PAPERWORK_DAYS = 7;
 
 export type PaperworkState = {
-  outstanding: number;   // how many required documents are still unsigned
-  daysLeft: number;      // whole days remaining, 0 once the week is up
-  locked: boolean;       // the week is up, something is unsigned, and this person can be stopped
-  boss: boolean;         // owner or administrator - told, never blocked
-  overdue: boolean;      // the week is up, whether or not they can be stopped
+  platformOutstanding: number;  // the four ReyGuild documents - no grace, ever
+  companyOutstanding: number;   // the company booklet, the ID and the photo - seven days
+  outstanding: number;          // the two added together
+  daysLeft: number;             // whole days left in the week, 0 once it is up
+  overdue: boolean;             // the week is up
+  boss: boolean;                // owner or administrator
+  locked: boolean;              // this person must be sent to /onboarding
+  reason: "" | "platform" | "overdue";
+};
+
+const NONE: PaperworkState = {
+  platformOutstanding: 0,
+  companyOutstanding: 0,
+  outstanding: 0,
+  daysLeft: PAPERWORK_DAYS,
+  overdue: false,
+  boss: false,
+  locked: false,
+  reason: "",
 };
 
 export async function paperworkState(): Promise<PaperworkState> {
-  const none: PaperworkState = {
-    outstanding: 0,
-    daysLeft: PAPERWORK_DAYS,
-    locked: false,
-    boss: false,
-    overdue: false,
-  };
   try {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return none;
+    if (!user) return NONE;
 
+    // FAILS OPEN, LOUDLY. If the documents cannot be read, the app opens as it
+    // always did - a database hiccup must never lock a company out of its own
+    // software. But it says so in the server log, because the last time a read
+    // failed silently it locked the owner out for a day and nothing anywhere
+    // said why. supabase-js RETURNS errors rather than throwing them, so a
+    // failed read and an empty one look identical unless you read the error.
     const { data, error } = await supabase.schema("suite").rpc("my_documents");
     if (error) {
       console.error("[paperwork] my_documents failed:", error.message);
-      return none;
+      return NONE;
     }
     const docs = (data as any[]) || [];
-    let outstanding = docs.filter((d) => d && d.requires_signature && !d.signed).length;
+    const unsigned = (platform: boolean) =>
+      docs.filter(
+        (d) => d && !!d.is_platform === platform && d.requires_signature && !d.signed
+      ).length;
 
-    // The phone side counts uploaded forms as paperwork too - an ID and a
-    // photo are as required as a signature. One source of truth for both,
-    // otherwise the banner says "all done" while the gate still says no.
+    const platformOutstanding = unsigned(true);
+    let companyOutstanding = unsigned(false);
+
+    // The ID and the photo are paperwork too, and they sit on the company side
+    // of the line - they are for the employer's file, not for us.
     try {
-      const { data: st } = await supabase.schema("suite").rpc("my_onboarding");
-      const row: any = st && (st as any[]).length ? (st as any[])[0] : null;
-      if (row && row.complete === false && outstanding === 0) outstanding = 1;
-    } catch { /* the documents count stands on its own */ }
+      const { data: files, error: fErr } = await supabase
+        .schema("suite")
+        .rpc("my_required_files");
+      if (fErr) {
+        console.error("[paperwork] my_required_files failed:", fErr.message);
+      } else {
+        const rows = (files as any[]) || [];
+        companyOutstanding += rows.filter((f) => f && f.required && !f.uploaded).length;
+      }
+    } catch (e: any) {
+      console.error("[paperwork] my_required_files threw:", e && e.message);
+    }
 
-    if (outstanding === 0) return none;
+    const outstanding = platformOutstanding + companyOutstanding;
+    if (outstanding === 0) return NONE;
 
     // WHO IS THIS, AND WHEN DOES THEIR WEEK START?
     //
@@ -82,18 +104,17 @@ export async function paperworkState(): Promise<PaperworkState> {
     //
     // paperwork_from overrides the login date. Set it to now and that person
     // gets a fresh week: an owner granting an extension, a new man starting
-    // late, or a company that has just loaded a document everybody has to
-    // read. Without it, an owner whose login is months old is out of time the
+    // late, or a company that has just loaded a document everybody must read.
+    // Without it, an owner whose login is months old is out of time the
     // instant a new document lands, with nobody able to give him more.
     //
-    // NOTHING HERE IS SWALLOWED QUIETLY EVER AGAIN. That column was added to
-    // the database without reloading the API's schema cache, so every read of
-    // it came back an error - and supabase-js RETURNS errors instead of
-    // throwing them, so a failed read looked exactly like "no extension
-    // granted". The extension was sitting in the database the whole time and
-    // the app locked the owner out anyway, saying nothing. Now a bad read is
-    // printed to the server log, and the role is asked for a second time on
-    // its own so that a missing column can never cost us the role as well.
+    // That column was once added to the database without reloading the API's
+    // schema cache, so every read of it came back an error - and because
+    // supabase-js returns errors instead of throwing them, a failed read
+    // looked exactly like "no extension granted". The extension was sitting in
+    // the database the whole time. So: the error is logged, and the role is
+    // asked for a second time on its own, because a missing column must never
+    // cost us the role as well.
     let startedFrom = String(user.created_at || "");
     let role = "";
     {
@@ -128,24 +149,45 @@ export async function paperworkState(): Promise<PaperworkState> {
     const overdue = daysLeft <= 0;
     const boss = role === "owner" || role === "admin";
 
-    return { outstanding, daysLeft, locked: overdue && !boss, boss, overdue };
+    // THE TWO RULES, IN ORDER.
+    //
+    // The four ReyGuild documents come first and admit no exceptions. Past
+    // those, the company booklet is a countdown, and the owner is told rather
+    // than blocked - he is the man who loaded those documents in the first
+    // place, and shutting him out of his own command centre over his own
+    // booklet is how a launch day goes wrong. It is the rule the tech layout
+    // was already written to; the front door is now written to it as well.
+    const lockedForPlatform = platformOutstanding > 0;
+    const lockedForOverdue = companyOutstanding > 0 && overdue && !boss;
+
+    return {
+      platformOutstanding,
+      companyOutstanding,
+      outstanding,
+      daysLeft,
+      overdue,
+      boss,
+      locked: lockedForPlatform || lockedForOverdue,
+      reason: lockedForPlatform ? "platform" : lockedForOverdue ? "overdue" : "",
+    };
   } catch (e: any) {
     console.error("[paperwork] threw:", e && e.message);
-    return none;
+    return NONE;
   }
 }
 
-// Whole days left in the week, for the gates that measure "outstanding" their
-// own way and only need the clock.
+// Whole days left in the week, for anything that only needs the clock.
 export async function paperworkDaysLeft(): Promise<number> {
   const s = await paperworkState();
   return s.outstanding === 0 ? PAPERWORK_DAYS : s.daysLeft;
 }
 
-// The gate itself. It answers "no" whenever the question cannot be answered -
-// a company that has loaded no documents, a database hiccup, or the person
-// being the owner - because none of those are a reason to shut somebody out
-// of their own app.
+// THE ONE GATE. Every front door in the app asks this and nothing else.
+//
+// It answers "let them in" whenever the question cannot be answered - no
+// documents loaded, a database fault, or the person being the owner with only
+// his own booklet outstanding. None of those are a reason to shut somebody out
+// of software they are paying for.
 export async function hasUnsignedDocuments(): Promise<boolean> {
   const s = await paperworkState();
   return s.locked;

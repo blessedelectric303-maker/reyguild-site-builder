@@ -7,13 +7,18 @@ import { paperworkState, PAPERWORK_DAYS } from "@/lib/signingGate";
 // opens. A line across the top of the app reaches them every single time they
 // clock in, and it gets louder as the week runs down: a quiet note at first,
 // gold in the middle, red on the last day. Nobody arrives at day eight
-// surprised.
+// surprised, and nobody has to go looking - it says where the documents live.
 //
-// It renders nothing at all once everything is signed, which is most people
-// most of the time.
+// It is about the COMPANY BOOKLET only. The four ReyGuild documents are a hard
+// gate, so a person who still owes one of those is never looking at the app to
+// begin with - they are on the paperwork page. Counting them here would have
+// this banner nagging about something the person cannot currently see.
+//
+// It renders nothing at all once the booklet is done, which is most people most
+// of the time.
 export default async function PaperworkBanner() {
   const s = await paperworkState();
-  if (s.outstanding === 0 || s.locked) return null;
+  if (s.companyOutstanding === 0 || s.locked) return null;
 
   const urgent = s.daysLeft <= 1;
   const warn = s.daysLeft <= PAPERWORK_DAYS - 3 && !urgent;
@@ -32,14 +37,14 @@ export default async function PaperworkBanner() {
         ? "You have 2 days left."
         : "You have " + s.daysLeft + " days left.";
 
-  const after = s.boss
-    ? "Your people cannot be asked to sign what you have not signed yourself."
-    : "After that you will have to finish them before you can use the app.";
-
   const what =
-    s.outstanding === 1
-      ? "1 document still needs your signature."
-      : s.outstanding + " documents still need your signature.";
+    s.companyOutstanding === 1
+      ? "1 company document still needs your signature."
+      : s.companyOutstanding + " company documents still need your signature.";
+
+  const after = s.boss
+    ? "They are in Settings under Company Documents. Your people cannot be asked to sign what you have not signed yourself."
+    : "They are in Settings under Company Documents. After that the app stops there until they are done.";
 
   return (
     <div
@@ -76,7 +81,7 @@ export default async function PaperworkBanner() {
           whiteSpace: "nowrap",
         }}
       >
-        Finish my paperwork
+        Open my documents
       </Link>
     </div>
   );
