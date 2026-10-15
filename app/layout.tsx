@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./reyguild-brand.css";
 import Splash from "@/components/Splash";
+import FieldAssistant from "@/components/FieldAssistant";
 
 export const metadata: Metadata = {
   title: "ReyGuild - Service Company Software",
@@ -31,6 +32,7 @@ export default function RootLayout({
             wherever somebody lands first. */}
         <Splash />
         {children}
+        {process.env.REYGUILD_ASSISTANT_ENABLED === "true" && <FieldAssistant />}
       </body>
     </html>
   );

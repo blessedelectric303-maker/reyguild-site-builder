@@ -5,6 +5,7 @@ import Link from "next/link";
 import ClockInPanel from "./ClockInPanel";
 import MarkJobDoneButton from "./MarkJobDoneButton";
 import JobChecklist from "@/components/JobChecklist";
+import ActivityNotes from "@/components/ActivityNotes";
 import { createClient as createSupabase } from "@/utils/supabase/server";
 
 export default async function TechJobDetailPage({
@@ -133,6 +134,7 @@ export default async function TechJobDetailPage({
 
   return (
     <div className="space-y-4">
+      <ActivityNotes jobId={job.id} orgId={user.orgId} />
       <div>
         <Link href="/tm/tech" className="text-xs text-brand-600 hover:underline">
           ← Back

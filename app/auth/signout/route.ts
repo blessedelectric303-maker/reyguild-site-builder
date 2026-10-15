@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
+import { safeNextPath } from "@/lib/invite-flow";
 
 // SIGN OUT MUST CLEAR BOTH SESSIONS.
 //
@@ -38,8 +39,7 @@ async function signOutEverything() {
 // get phished by their own app.
 function safeNext(request: Request): string {
   try {
-    const raw = new URL(request.url).searchParams.get("next") || "";
-    if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+    return safeNextPath(new URL(request.url).searchParams.get("next"));
   } catch { /* fall through */ }
   return "/";
 }

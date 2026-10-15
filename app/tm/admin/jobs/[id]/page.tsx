@@ -10,6 +10,7 @@ import TimeEntryActions from "./TimeEntryActions";
 import AssignmentRateEditor from "./AssignmentRateEditor";
 import SalePriceEditor from "./SalePriceEditor";
 import JobInfoEditor from "./JobInfoEditor";
+import ActivityNotes from "@/components/ActivityNotes";
 
 export const dynamic = "force-dynamic";
 
@@ -158,6 +159,7 @@ export default async function JobDetailPage({
 
   return (
     <div className="space-y-6 max-w-4xl">
+      <ActivityNotes jobId={job.id} orgId={actor.orgId} />
       <div>
         <Link href="/tm/admin/jobs" className="text-xs text-brand-600 hover:underline">
           ← Back to jobs
