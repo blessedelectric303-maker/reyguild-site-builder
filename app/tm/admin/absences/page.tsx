@@ -6,8 +6,8 @@ import AbsenceManager from "./AbsenceManager";
 export const dynamic = "force-dynamic";
 
 // Three unexcused absences in ninety days is the threshold being watched.
-export const WINDOW_DAYS = 90;
-export const THRESHOLD = 3;
+const WINDOW_DAYS = 90;
+const THRESHOLD = 3;
 
 export default async function AbsencesPage() {
   const me = await getCurrentUser();

@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import {
+  createSubmissionLock, hasVerifiedMembership, inviteProblemMessage,
+  readInviteLookup, safeNextPath, signInDestination,
+} from "@/lib/invite-flow";
 
 type Mode = "signin" | "signup" | "reset";
 
 export default function LoginPage() {
   const supabase = createClient();
+
+  const submission = useRef(createSubmissionLock());
 
   const [mode, setMode] = useState<Mode>("signin");
   const [fullName, setFullName] = useState("");
@@ -17,112 +23,123 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  function nextPath(): string {
-    if (typeof window === "undefined") return "/";
-    const raw = new URLSearchParams(window.location.search).get("next") || "/";
-    return raw.startsWith("/") ? raw : "/";
+  function changeMode(nextMode: Mode) {
+    if (submission.current.isLocked()) return;
+    setMode(nextMode);
+    setError(null);
+    setNotice(null);
   }
 
   async function handleSubmit() {
+    if (!submission.current.tryAcquire()) return;
     setBusy(true);
     setError(null);
     setNotice(null);
-
-    const next = nextPath();
-    const base = window.location.origin;
-
-    if (mode === "reset") {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: base + "/auth/callback?next=" + encodeURIComponent("/reset-password"),
-      });
-      setBusy(false);
-      if (error) {
-        setError(error.message);
-        return;
-      }
-      setNotice("If that email has an account, a reset link is on its way. Check your inbox.");
-      return;
+    let navigating = false;
+    let accountCreated = false;
+    function navigate(path: string) {
+      window.location.href = path;
+      navigating = true;
     }
 
-    if (mode === "signup") {
-      // NOBODY WHO WAS INVITED MAY START A SECOND COMPANY.
-      // Signing up here means "I am an owner, build me a company". If this
-      // email was already invited by somebody, doing that would split them off
-      // into a company of their own and the office would never see them. Send
-      // them to their invite instead - same password box, right company.
-      {
-        const { data: inv } = await supabase
-          .schema("suite")
-          .rpc("invite_for_email", { p_email: email });
-        const row = Array.isArray(inv) && inv.length ? inv[0] : null;
-        if (row?.token) {
-          window.location.href = "/join/" + row.token;
+    try {
+      const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+      const base = window.location.origin;
+      const address = email.trim();
+
+      if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(address, {
+          redirectTo: base + "/auth/callback?next=" + encodeURIComponent("/reset-password"),
+        });
+        if (error) {
+          setError(error.message);
           return;
         }
-      }
-      if (!agreed) {
-        setError("Tick the box to agree to the terms before creating an account.");
-        setBusy(false);
+        setNotice("If that email has an account, a reset link is on its way. Check your inbox.");
         return;
       }
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
-          emailRedirectTo: base + "/auth/callback?next=" + encodeURIComponent(next),
-        },
-      });
-      if (error) {
-        setError(error.message);
-        setBusy(false);
-        return;
-      }
-      if (data.session) {
-        // NOTHING IS SIGNED HERE. Signing up used to tick the terms, the
-        // privacy policy and the cookie policy on the person's behalf, so a
-        // brand new owner walked straight into the app having signed four
-        // documents they never saw. Every signature is made by hand now, on
-        // the document itself, at /onboarding.
-        //
-        // And a sign up always lands on the command centre, never on whatever
-        // page they happened to arrive from. Somebody signing up IS an owner
-        // starting a company; the command centre is what creates that company.
-        // Sent to a T and M address instead, they arrived with no company at
-        // all and were taken for an employee.
-        // Make the company and clear any leftover T and M cookie BEFORE
-        // going anywhere, so the first page this person opens already knows
-        // they are an owner with a company of their own.
-        try {
-          await fetch("/api/start-company", { method: "POST" });
-        } catch {}
-        window.location.href = "/";
-      } else {
-        setNotice("Account created. Check your email to confirm it, then you'll be signed in.");
-        setBusy(false);
-      }
-      return;
-    }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message);
-      setBusy(false);
-      return;
-    }
-    // Invited, but signed in here instead of opening the invite link? Finish
-    // the job for them so they land inside the company that asked for them.
-    try {
-      const { data: inv } = await supabase
-        .schema("suite")
-        .rpc("invite_for_email", { p_email: email });
-      const row = Array.isArray(inv) && inv.length ? inv[0] : null;
-      if (row?.token) {
-        window.location.href = "/join/" + row.token;
+      if (mode === "signup") {
+        // Only an explicit, successful no-invite result permits owner signup.
+        // A paused lookup must never separate an invitee into a new company.
+        const invite = await readInviteLookup(() => supabase
+          .schema("suite").rpc("invite_for_email", { p_email: address }));
+        if (invite.kind === "unavailable") {
+          setError(inviteProblemMessage(invite.error, "lookup"));
+          return;
+        }
+        if (invite.kind === "pending") {
+          navigate("/join/" + encodeURIComponent(invite.token));
+          return;
+        }
+        if (!agreed) {
+          setError("Tick the box to agree to the terms before creating an account.");
+          return;
+        }
+        const { data, error } = await supabase.auth.signUp({
+          email: address,
+          password,
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: base + "/auth/callback?next=" + encodeURIComponent(next),
+          },
+        });
+        if (error) {
+          setError(error.message);
+          return;
+        }
+        accountCreated = true;
+        if (data.session) {
+          // Establish the owner's company before opening the command centre.
+          // Document signatures still happen by hand during onboarding.
+          const response = await fetch("/api/start-company", { method: "POST" });
+          const company = await response.json();
+          if (!response.ok || company.ok !== true || !company.company_id) {
+            setError("Your login is ready, but we couldn't finish setting up your company. Please sign in to try again.");
+            setMode("signin");
+            return;
+          }
+          navigate("/");
+        } else {
+          setNotice("Account created. Check your email to confirm it, then you'll be signed in.");
+        }
         return;
       }
-    } catch {}
-    window.location.href = next;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email: address, password });
+      if (error || !data.user) {
+        setError(error?.message || "We couldn't verify your sign-in. Please try again.");
+        return;
+      }
+      const invite = await readInviteLookup(() => supabase
+        .schema("suite").rpc("invite_for_email", { p_email: data.user.email || address }));
+      let verifiedMember = false;
+      if (invite.kind === "unavailable") {
+        // Existing members may sign in during an invite-service pause, but an
+        // unknown membership must not reach a page that creates a company.
+        const membership = await supabase.schema("suite").from("memberships")
+          .select("user_id,company_id").eq("user_id", data.user.id).limit(1).maybeSingle();
+        verifiedMember = hasVerifiedMembership(membership.data, membership.error, data.user.id);
+      }
+      const destination = signInDestination(invite, next, verifiedMember);
+      if (!destination) {
+        setError(inviteProblemMessage(invite.kind === "unavailable" ? invite.error : null, "lookup"));
+        return;
+      }
+      navigate(destination);
+    } catch {
+      if (accountCreated) {
+        setMode("signin");
+        setError("Your login is ready, but we couldn't finish setting up your company. Please sign in to try again.");
+      } else {
+        setError("We couldn't finish that request. Please check your connection and try again.");
+      }
+    } finally {
+      if (!navigating) {
+        submission.current.release();
+        setBusy(false);
+      }
+    }
   }
 
   const tabCls = (active: boolean) =>
@@ -145,8 +162,8 @@ export default function LoginPage() {
         </div>
 
         <div className="flex rounded-lg bg-slate-800 p-1 mb-6 text-sm">
-          <button type="button" onClick={() => setMode("signin")} className={tabCls(mode === "signin")}>Sign in</button>
-          <button type="button" onClick={() => setMode("signup")} className={tabCls(mode === "signup")}>Sign up</button>
+          <button type="button" disabled={busy} onClick={() => changeMode("signin")} className={tabCls(mode === "signin")}>Sign in</button>
+          <button type="button" disabled={busy} onClick={() => changeMode("signup")} className={tabCls(mode === "signup")}>Sign up</button>
         </div>
 
         {mode === "reset" ? (
@@ -155,16 +172,17 @@ export default function LoginPage() {
 
         <div className="space-y-3">
           {mode === "signup" && (
-            <input type="text" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none" />
+            <input disabled={busy} type="text" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none" />
           )}
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none" />
+          <input disabled={busy} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none" />
           {mode !== "reset" && (
-            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none" />
+            <input disabled={busy} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none" />
           )}
 
           {mode === "signup" && (
             <label className="flex items-start gap-2 pt-1 text-xs leading-snug text-slate-400">
               <input
+                disabled={busy}
                 type="checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
@@ -189,14 +207,14 @@ export default function LoginPage() {
           <button type="button" onClick={handleSubmit} disabled={busy || (mode === "signup" && !agreed)} className="w-full rounded-md py-2 text-sm font-semibold text-slate-900 disabled:opacity-60" style={{ background: "#CC9000" }}>{buttonLabel}</button>
 
           {mode === "signin" ? (
-            <button type="button" onClick={() => { setMode("reset"); setError(null); setNotice(null); }} className="w-full text-center text-xs text-slate-400 hover:text-slate-200">Forgot password?</button>
+            <button type="button" disabled={busy} onClick={() => changeMode("reset")} className="w-full text-center text-xs text-slate-400 hover:text-slate-200">Forgot password?</button>
           ) : null}
           {mode === "reset" ? (
-            <button type="button" onClick={() => { setMode("signin"); setError(null); setNotice(null); }} className="w-full text-center text-xs text-slate-400 hover:text-slate-200">Back to sign in</button>
+            <button type="button" disabled={busy} onClick={() => changeMode("signin")} className="w-full text-center text-xs text-slate-400 hover:text-slate-200">Back to sign in</button>
           ) : null}
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          {notice && <p className="text-sm text-emerald-400">{notice}</p>}
+          {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+          {notice && <p role="status" className="text-sm text-emerald-400">{notice}</p>}
         </div>
       </div>
     </main>

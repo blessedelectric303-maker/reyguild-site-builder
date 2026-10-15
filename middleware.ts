@@ -28,7 +28,9 @@ function isMachineCall(pathname: string): boolean {
 
 export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
-  if (host.endsWith(".vercel.app") && !isMachineCall(request.nextUrl.pathname)) {
+  // Keep production aliases canonical while allowing a real preview to be
+  // tested. Redirecting preview builds to production hides all staged changes.
+  if (host.endsWith(".vercel.app") && process.env.VERCEL_ENV !== "preview" && !isMachineCall(request.nextUrl.pathname)) {
     const to = new URL(request.nextUrl.pathname + request.nextUrl.search, HOME);
     // 307, not a permanent redirect: a browser remembers a permanent one for
     // good, and that is a hard thing to undo if the real address ever moves.

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { safeNextPath } from "@/lib/invite-flow";
 
 // Handles links from Supabase auth emails (password reset, and email
 // confirmation if turned on). Exchanges the one-time code for a session,
@@ -7,8 +8,7 @@ import { createClient } from "@/utils/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const rawNext = searchParams.get("next") || "/";
-  const next = rawNext.startsWith("/") ? rawNext : "/";
+  const next = safeNextPath(searchParams.get("next"));
 
   if (code) {
     const supabase = await createClient();

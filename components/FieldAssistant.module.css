@@ -1,0 +1,28 @@
+.root { position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:80; font-family:Inter,Arial,sans-serif; font-size:14px; color:#e2e8f0; }
+.launcher { border:1px solid #e6b848; border-radius:999px; background:#16243f; color:#f5cb65; padding:12px 18px; box-shadow:0 4px 18px #0005; font-weight:700; }
+.panel { width:min(400px,calc(100vw - 24px)); max-height:calc(100dvh - 36px); background:#111c31; border:1px solid #475569; border-radius:16px; box-shadow:0 12px 40px #0008; display:flex; flex-direction:column; overflow:hidden; }
+.header { padding:14px 16px; border-bottom:1px solid #334155; display:flex; align-items:center; justify-content:space-between; color:#f5cb65; }
+.header button { padding:0 8px; font-size:26px; color:#e2e8f0; }
+.body { overflow:auto; overscroll-behavior:contain; padding:16px; }
+.body p { white-space:pre-wrap; overflow-wrap:anywhere; margin:0 0 12px; line-height:1.5; }
+.body button { min-height:42px; border-radius:8px; padding:8px 12px; border:1px solid #64748b; }
+.body button:disabled { opacity:.5; }
+.body .primary { background:#cc9000; color:#111c31; border-color:#cc9000; font-weight:700; }
+.hint,.body small { color:#acbdd5; font-size:12px; }
+.messages { display:flex; flex-direction:column; gap:10px; }
+.messages p { margin:4px 0 0; }
+.user,.answer { border-radius:10px; padding:10px; background:#1c2c48; }
+.user { border-left:2px solid #cc9000; }
+.answer { background:#152239; }
+.sources { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.sources a { color:#f5cb65; text-decoration:underline; }
+.review { background:#263349; border:1px solid #cc9000; border-radius:10px; padding:12px; margin:12px 0; }
+.review p { margin-top:8px; }
+.controls { display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; }
+.error { color:#fca5a5; }
+.inputLabel { display:block; margin:12px 0 6px; font-size:12px; }
+.body textarea { width:100%; min-height:76px; resize:vertical; border:1px solid #64748b; background:#0f172a; border-radius:8px; padding:10px; color:#f8fafc; font-size:16px; }
+.handsFree { display:flex; align-items:flex-start; gap:8px; color:#cbd5e1; font-size:12px; margin-top:10px; }
+.handsFree input { margin-top:3px; accent-color:#cc9000; }
+.root button:focus-visible,.root a:focus-visible,.root textarea:focus-visible { outline:2px solid #f5cb65; outline-offset:3px; }
+@media(max-width:480px) { .root { right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); } }
