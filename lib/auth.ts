@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "./prisma";
+import { verifiedSuiteIdentity } from "./suite-identity";
 
 const SESSION_COOKIE = "blessed_track_session";
 // A YEAR, NOT A MONTH. These are people on a roof with gloves on. Being
@@ -24,12 +25,18 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
-export async function createSessionToken(userId: string): Promise<string> {
+export type SessionProvenance =
+  | { source: "password" }
+  | { source: "suite"; suiteUserId: string; companyId: string };
+
+export async function createSessionToken(userId: string, provenance: SessionProvenance): Promise<string> {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + SESSION_DAYS);
 
-  const jwt = await new SignJWT({ userId })
+  const jwt = await new SignJWT({ userId, ...provenance })
     .setProtectedHeader({ alg: "HS256" })
+    // Multiple bridge visits in one second must create distinct session tokens.
+    .setJti(crypto.randomUUID())
     .setIssuedAt()
     .setExpirationTime(`${SESSION_DAYS}d`)
     .sign(getSecret());
@@ -67,8 +74,9 @@ export async function clearSessionCookie() {
 
   try {
     const { payload } = await jwtVerify(token, getSecret());
-    const userId = payload.userId as string;
-    if (!userId) return null;
+    const userId = payload.userId;
+    if (typeof userId !== "string" || !userId ||
+        (payload.source !== "suite" && payload.source !== "password")) return null;
 
     const session = await prisma.session.findUnique({
       where: { token },
@@ -76,7 +84,18 @@ export async function clearSessionCookie() {
     });
 
     if (!session || session.expiresAt < new Date()) return null;
-    if (!session.user.isActive) return null;
+    if (!session.user.isActive || session.user.id !== userId) return null;
+
+    // Legacy unmarked tokens require signing in again. A Suite token must
+    // remain bound to the current verified account, company and role on every
+    // request, including direct deep links and API requests.
+    if (payload.source === "suite") {
+      const identity = await verifiedSuiteIdentity();
+      if (!identity || identity.suiteUserId !== payload.suiteUserId ||
+          identity.companyId !== payload.companyId || identity.orgId !== session.user.orgId ||
+          identity.email !== session.user.email.trim().toLowerCase() ||
+          identity.role !== session.user.role) return null;
+    }
 
     return session.user;
   } catch {

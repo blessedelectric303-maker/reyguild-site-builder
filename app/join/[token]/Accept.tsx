@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { roleLabel } from "@/utils/roles";
+import { createSubmissionLock, inviteEmailMatches, inviteProblemMessage } from "@/lib/invite-flow";
 
 // JOINING A COMPANY IS NOT SIGNING UP.
 //
@@ -13,6 +14,9 @@ import { roleLabel } from "@/utils/roles";
 // owner of a brand new company, which is exactly what we are avoiding.
 
 export default function Accept({ token }: { token: string }) {
+  const submission = useRef(createSubmissionLock());
+  const acceptance = useRef<{ key: string; promise: Promise<{ error: unknown }> } | null>(null);
+  const [wrongAccount, setWrongAccount] = useState(false);
   const [loading, setLoading] = useState(true);
   const [invite, setInvite] = useState<any>(null);
   const [problem, setProblem] = useState("");
@@ -22,114 +26,151 @@ export default function Accept({ token }: { token: string }) {
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
 
+  function acceptForUser(supabase: ReturnType<typeof createClient>, userId: string) {
+    const key = token + ":" + userId;
+    // React may replay the loading effect. Reuse acceptance so one page
+    // cannot submit the same invite twice while the first call is in flight.
+    if (acceptance.current?.key !== key) {
+      acceptance.current = {
+        key,
+        promise: Promise.resolve(supabase.schema("suite").rpc("accept_invite", { invite_token: token })),
+      };
+    }
+    return acceptance.current.promise;
+  }
+
   useEffect(() => {
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | undefined;
+    setLoading(true);
+    setProblem("");
+    setMsg("");
+    setWrongAccount(false);
+    setInvite(null);
     (async () => {
-      const supabase = createClient();
-      // Already signed in? Then this is just an acceptance.
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const { data, error } = await supabase
-        .schema("suite")
-        .rpc("invite_preview", { p_token: token });
-      const row = Array.isArray(data) && data.length ? data[0] : null;
-
-      if (error || !row) {
-        setProblem("This invite link is not valid. Ask the office to send another one.");
-        setLoading(false);
-        return;
-      }
-      if (String(row.status || "").toLowerCase() !== "pending") {
-        setProblem("This invite has already been used or was cancelled.");
-        setLoading(false);
-        return;
-      }
-      setInvite(row);
-
-      if (user) {
-        // AN INVITE BELONGS TO THE ADDRESS IT WAS SENT TO.
-        //
-        // This used to accept the moment it saw anybody signed in - so an
-        // owner opening his own tech's invite link, in his own browser, to
-        // check that it worked, was joined to his own company AS THAT TECH.
-        // His membership was overwritten, he lost the command centre, the
-        // real tech never got in, and nothing anywhere said what had
-        // happened. Nobody accepts an invite addressed to somebody else.
-        const signedInAs = String(user.email || "").trim().toLowerCase();
-        const invitedIs = String(row.email || "").trim().toLowerCase();
-        if (signedInAs && invitedIs && signedInAs !== invitedIs) {
-          setProblem(
-            "This invite is for " + row.email + ", but you are signed in as " +
-            user.email + ". Sign out first, then open the link again - or send " +
-            "it to them to open on their own phone."
-          );
-          setLoading(false);
+      try {
+        const supabase = createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (cancelled) return;
+        if (authError && authError.name !== "AuthSessionMissingError") {
+          setProblem("We couldn't check your sign-in. Please try again.");
           return;
         }
-
-        const { error: accErr } = await supabase
-          .schema("suite")
-          .rpc("accept_invite", { invite_token: token });
-        if (accErr) {
-          setProblem("This invite could not be used: " + accErr.message);
-          setLoading(false);
+        const { data, error } = await supabase.schema("suite")
+          .rpc("invite_preview", { p_token: token });
+        if (cancelled) return;
+        if (error) {
+          setProblem(inviteProblemMessage(error, "preview"));
           return;
         }
-        setMsg("You're in. Taking you to your paperwork...");
-        setTimeout(() => {
-          window.location.href = "/onboarding";
-        }, 900);
-        return;
+        const row = Array.isArray(data) && data.length ? data[0] : null;
+        if (!row || typeof row.email !== "string" || !row.email.trim()) {
+          setProblem("This invite link is not valid. Ask the office to send another one.");
+          return;
+        }
+        if (String(row.status || "").toLowerCase() !== "pending") {
+          setProblem("This invite has already been used or was cancelled.");
+          return;
+        }
+        setInvite(row);
+
+        if (user) {
+          // Only the verified recipient may accept; missing emails fail closed.
+          if (!inviteEmailMatches(user.email, row.email)) {
+            setWrongAccount(true);
+            setProblem(
+              "This invite is for " + row.email + ", but you are signed in as " +
+              (user.email || "a different account") + ". Sign out first, then open the link again - or send " +
+              "it to them to open on their own phone."
+            );
+            return;
+          }
+          const { error: accErr } = await acceptForUser(supabase, user.id);
+          if (cancelled) return;
+          if (accErr) {
+            setProblem(inviteProblemMessage(accErr, "accept"));
+            return;
+          }
+          setMsg("You're in. Taking you to your paperwork...");
+          redirectTimer = setTimeout(() => { window.location.href = "/onboarding"; }, 900);
+        }
+      } catch {
+        if (!cancelled) setProblem("We couldn't check this invite. Please check your connection and try again.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     })();
+    return () => {
+      cancelled = true;
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [token]);
 
   async function createAccount() {
-    if (password.length < 8) {
-      setError("Use at least 8 characters.");
-      return;
-    }
-    if (fullName.trim().length < 2) {
-      setError("Type your full name - it goes on everything you sign.");
-      return;
-    }
-    setBusy(true);
+    if (loading || problem || msg || !invite || !submission.current.tryAcquire()) return;
+    let navigating = false;
+    let accountCreated = false;
     setError("");
-    const supabase = createClient();
-    const { data, error: signErr } = await supabase.auth.signUp({
-      email: String(invite.email),
-      password,
-      options: { data: { full_name: fullName.trim() } },
-    });
-    if (signErr) {
-      // Most likely: they already have a login. Send them to sign in and come
-      // straight back here, where the invite is accepted automatically.
-      setBusy(false);
-      setError(
-        signErr.message.toLowerCase().includes("already")
-          ? "You already have a ReyGuild login for this address. Sign in and this page will finish the job."
-          : signErr.message
-      );
-      return;
+    try {
+      if (password.length < 8) {
+        setError("Use at least 8 characters.");
+        return;
+      }
+      if (fullName.trim().length < 2) {
+        setError("Type your full name - it goes on everything you sign.");
+        return;
+      }
+      setBusy(true);
+      const supabase = createClient();
+      const { data, error: signErr } = await supabase.auth.signUp({
+        email: String(invite.email),
+        password,
+        options: {
+          data: { full_name: fullName.trim() },
+          emailRedirectTo: window.location.origin + "/auth/callback?next=" +
+            encodeURIComponent("/join/" + encodeURIComponent(token)),
+        },
+      });
+      if (signErr) {
+        setError(
+          signErr.message.toLowerCase().includes("already")
+            ? "You already have a ReyGuild login for this address. Sign in and this page will finish the job."
+            : signErr.message
+        );
+        return;
+      }
+      accountCreated = true;
+      if (!data.session) {
+        setMsg("Account created. Check your email to confirm it, then open this link again.");
+        return;
+      }
+      if (!data.user || !inviteEmailMatches(data.user.email, invite.email)) {
+        setProblem("Your login is ready, but we couldn't verify the invite's email address. Please sign in with the invited address to continue.");
+        return;
+      }
+      const { error: accErr } = await acceptForUser(supabase, data.user.id);
+      if (accErr) {
+        setProblem("Your login is ready. " + inviteProblemMessage(accErr, "accept"));
+        return;
+      }
+      window.location.href = "/onboarding";
+      navigating = true;
+    } catch {
+      if (accountCreated) {
+        setProblem("Your login is ready, but we couldn't finish joining your company. Please sign in to try again.");
+      } else {
+        setError("We couldn't finish that request. Please check your connection and try again.");
+      }
+    } finally {
+      if (!navigating) {
+        submission.current.release();
+        setBusy(false);
+      }
     }
-    if (!data.session) {
-      setBusy(false);
-      setMsg("Account created. Check your email to confirm it, then open this link again.");
-      return;
-    }
-    const { error: accErr } = await supabase
-      .schema("suite")
-      .rpc("accept_invite", { invite_token: token });
-    if (accErr) {
-      setBusy(false);
-      setError("Your account was created, but joining the company failed: " + accErr.message);
-      return;
-    }
-    // Straight to the paperwork. The gate would send them here anyway.
-    window.location.href = "/onboarding";
   }
+
+  const joinPath = "/join/" + encodeURIComponent(token);
+  const loginPath = "/login?next=" + encodeURIComponent(joinPath);
 
   const box =
     "w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2.5 text-base text-slate-100";
@@ -143,23 +184,22 @@ export default function Accept({ token }: { token: string }) {
           <p className="text-slate-300">Checking your invite...</p>
         ) : problem ? (
           <>
-            <p className="text-slate-200">{problem}</p>
+            <p role="alert" className="text-slate-200">{problem}</p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
-              {/* Signed in as the wrong person is the common case now, so the
-                  way OUT is the first button, not the way further in. */}
-              <a
-                href={"/auth/signout?next=/join/" + token}
+              {wrongAccount && <a
+                href={"/auth/signout?next=" + encodeURIComponent(joinPath)}
                 className="inline-block rounded-md px-4 py-2 text-sm font-semibold text-slate-900"
                 style={{ background: "#CC9000" }}
               >
                 Sign out and use this invite
-              </a>
+              </a>}
               <a
-                href={"/login?next=/join/" + token}
+                href={loginPath}
                 className="inline-block rounded-md border border-slate-500 px-4 py-2 text-sm font-semibold text-slate-200"
               >
                 Sign in
               </a>
+              {!wrongAccount && <button type="button" onClick={() => window.location.reload()} className="rounded-md border border-slate-500 px-4 py-2 text-sm font-semibold text-slate-200">Try again</button>}
             </div>
           </>
         ) : msg ? (
@@ -181,6 +221,7 @@ export default function Accept({ token }: { token: string }) {
               <div>
                 <label className="text-xs font-semibold text-slate-400">Your full name</label>
                 <input
+                  disabled={busy}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="First and last name"
@@ -191,6 +232,7 @@ export default function Accept({ token }: { token: string }) {
               <div>
                 <label className="text-xs font-semibold text-slate-400">Choose a password</label>
                 <input
+                  disabled={busy}
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -201,7 +243,8 @@ export default function Accept({ token }: { token: string }) {
               </div>
             </div>
 
-            {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
+            {error ? <p role="alert" className="mt-3 text-sm text-red-400">{error}</p> : null}
+            <p className="mt-3 text-center text-xs text-slate-400">Already have a login? <a href={loginPath} className="underline">Sign in</a></p>
 
             <button
               type="button"

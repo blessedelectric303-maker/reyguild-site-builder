@@ -27,8 +27,15 @@ function isMachineCall(pathname: string): boolean {
 }
 
 export async function middleware(request: NextRequest) {
+  // Bearer-authenticated MCP endpoints must never refresh or use browser cookies.
+  // Their handlers validate the canonical resource host and fail closed while
+  // OAuth is unconfigured. Keep this bypass exact, never /api/* or all metadata.
+  if (["/api/mcp", "/.well-known/oauth-protected-resource/api/mcp"].includes(request.nextUrl.pathname))
+    return NextResponse.next();
   const host = request.headers.get("host") || "";
-  if (host.endsWith(".vercel.app") && !isMachineCall(request.nextUrl.pathname)) {
+  // Keep production aliases canonical while allowing a real preview to be
+  // tested. Redirecting preview builds to production hides all staged changes.
+  if (host.endsWith(".vercel.app") && process.env.VERCEL_ENV !== "preview" && !isMachineCall(request.nextUrl.pathname)) {
     const to = new URL(request.nextUrl.pathname + request.nextUrl.search, HOME);
     // 307, not a permanent redirect: a browser remembers a permanent one for
     // good, and that is a hard thing to undo if the real address ever moves.

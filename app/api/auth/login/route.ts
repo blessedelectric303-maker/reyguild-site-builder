@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const token = await createSessionToken(user.id);
+    const token = await createSessionToken(user.id, { source: "password" });
     await setSessionCookie(token);
 
     return NextResponse.json({

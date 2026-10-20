@@ -2,179 +2,83 @@ import { NextResponse } from "next/server";
 import { hasUnsignedDocuments } from "@/lib/signingGate";
 import { createClient } from "@/utils/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { createSessionToken, setSessionCookie, getCurrentUser } from "@/lib/auth";
-import { tmRoleFor, normalizeRole } from "@/utils/roles";
-
-// The bridge. You sign in once on ReyGuild; this hands the Time and Material
-// app the session it already knows how to read, so there is no second login.
-// This MUST be a route handler, not a page: Next.js only allows cookies to be
-// written from a route handler or a server action.
+import { createSessionToken, setSessionCookie, clearSessionCookie } from "@/lib/auth";
+import { safeNextPath } from "@/lib/invite-flow";
 
 export const dynamic = "force-dynamic";
 
-// Only the office tier gets the T and M admin screens. Supervisor, tech and
-// apprentice all work from the phone view.
-function homeForRole(role: string): string {
-  return role === "owner" || role === "admin" ? "/tm/admin" : "/tm/tech";
-}
+// This bridge authorizes a T&M session from the current verified Suite identity.
+// An old T&M cookie, an email match in another company or one organization in
+// the database is never evidence of current company membership.
+const roles: Record<string, string> = {
+  owner: "owner", manager: "owner", admin: "admin", administrator: "admin",
+  supervisor: "technician", tech: "technician", technician: "technician",
+  estimator: "technician", sales_rep: "technician", apprentice: "apprentice",
+};
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const origin = url.origin;
-  // A link can say where it wants to land. Only same-site paths, so this
-  // cannot be used to bounce somebody off to another website.
-  const wanted = url.searchParams.get("next") || "";
-  const safeNext = wanted.startsWith("/") && !wanted.startsWith("//") ? wanted : "";
-  const go = (path: string) =>
-    NextResponse.redirect(new URL(safeNext || path, origin));
-  const problem = (reason: string, detail?: string) => {
-    const u = new URL("/tm/no-access", origin);
-    u.searchParams.set("reason", reason);
-    if (detail) u.searchParams.set("detail", detail);
-    return NextResponse.redirect(u);
+  const problem = (reason: string) => {
+    const target = new URL("/tm/no-access", url.origin);
+    target.searchParams.set("reason", reason);
+    return NextResponse.redirect(target);
   };
+  // Clear before every denial as well as account switches. Never leave the
+  // previous person's cookie active when this identity cannot enter T&M.
+  try { await clearSessionCookie(); } catch { return problem("session"); }
 
-  // Paperwork first, for the field side too - checked before the session
-  // shortcut below, or somebody who signed in yesterday would walk straight
-  // past documents added today.
-  if (await hasUnsignedDocuments()) return NextResponse.redirect(new URL("/onboarding", origin));
-
-  // Already carrying a valid T and M session? Go straight in.
   try {
-    const existing = await getCurrentUser();
-    if (existing) return go(homeForRole(existing.role));
-  } catch (e) {
-    // No usable session yet. Fall through and build one.
-  }
+    const sb = await createClient();
+    const { data: { user }, error: authError } = await sb.auth.getUser();
+    if (authError || !user) return NextResponse.redirect(new URL("/login", url.origin));
+    const email = (user.email || "").trim().toLowerCase();
+    if (!email) return problem("noemail");
+    if (await hasUnsignedDocuments()) return NextResponse.redirect(new URL("/onboarding", url.origin));
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return go("/login");
+    const { data: memberships, error: membershipError } = await sb.schema("suite")
+      .from("memberships").select("role,company_id").eq("user_id", user.id).limit(2);
+    if (membershipError || !memberships || memberships.length !== 1) return problem("nolink");
+    const membership = memberships[0];
+    const roleKey = String(membership.role || "").trim().toLowerCase();
+    const role = Object.hasOwn(roles, roleKey) ? roles[roleKey] : undefined;
+    if (!membership.company_id || !role) return problem("nolink");
+    const { data: company, error: companyError } = await sb.schema("suite")
+      .from("companies").select("tm_org_id").eq("id", membership.company_id).maybeSingle();
+    if (companyError || !company?.tm_org_id) return problem("nolink");
 
-  const email = (user.email || "").trim().toLowerCase();
-  if (!email) return problem("noemail");
-
-  // WHICH COMPANY, BEFORE WHICH PERSON.
-  //
-  // This used to find a T&M user by email alone and then mint a year-long
-  // session as them - including, if that row happened to be an owner, a
-  // session with owner powers over a company this person has nothing to do
-  // with. The same email is deliberately allowed in two companies, so the
-  // match was a coin toss. The membership says where this person belongs;
-  // everything below is scoped to it.
-  let myOrgId = "";
-  try {
-    const { data: mem } = await supabase
-      .schema("suite")
-      .from("memberships")
-      .select("company_id")
-      .eq("user_id", user.id)
-      .limit(1)
-      .maybeSingle();
-    const cid = ((mem as any) || {}).company_id || "";
-    if (cid) {
-      const { data: co } = await supabase
-        .schema("suite")
-        .from("companies")
-        .select("tm_org_id")
-        .eq("id", cid)
-        .maybeSingle();
-      myOrgId = ((co as any) || {}).tm_org_id || "";
-    }
-  } catch (e) {
-    return problem("db");
-  }
-
-  let tmUser = null;
-  try {
-    tmUser = await prisma.user.findFirst({
-      where: myOrgId
-        ? { email: { equals: email, mode: "insensitive" }, isActive: true, orgId: myOrgId }
-        // No company link yet. One organisation total is still unambiguous;
-        // two or more and a guess would put somebody in the wrong company's
-        // jobs and hours, so the branch below refuses instead.
-        : { email: { equals: email, mode: "insensitive" }, isActive: true },
+    // Include inactive rows in the lookup: an inactive employee must not be
+    // recreated as an active employee merely by revisiting the bridge.
+    const findMatches = () => prisma.user.findMany({
+      where: { orgId: company.tm_org_id, email: { equals: email, mode: "insensitive" } },
+      select: { id: true, orgId: true, role: true, isActive: true }, take: 2,
     });
-    if (!myOrgId && tmUser) {
-      const orgs = await prisma.organization.findMany({ take: 2, select: { id: true } });
-      if (orgs.length !== 1) return problem("nolink", email);
+    let matches = await findMatches();
+    if (matches.length === 0) {
+      // Preserve the one-invite flow only for an explicit, verified company
+      // link and a recognized role. No single-company or default-role guess.
+      const meta = user.user_metadata || {};
+      const name = String(meta.full_name || meta.name || "").trim() || email.split("@")[0];
+      try {
+        await prisma.user.create({ data: {
+          id: "usr_" + crypto.randomUUID(), orgId: company.tm_org_id,
+          email, name, role, isActive: true, passwordHash: "",
+        } });
+      } catch (error) {
+        // Parallel entry may have already provisioned this exact org/email.
+        if ((error as { code?: string }).code !== "P2002") return problem("nouser");
+      }
+      matches = await findMatches();
     }
-  } catch (e) {
+    if (matches.length !== 1 || !matches[0].isActive || matches[0].role !== role)
+      return problem("nouser");
+
+    const token = await createSessionToken(matches[0].id, { source: "suite", suiteUserId: user.id, companyId: membership.company_id });
+    await setSessionCookie(token);
+    const home = role === "owner" || role === "admin" ? "/tm/admin" : "/tm/tech";
+    const wanted = url.searchParams.get("next");
+    const safe = safeNextPath(wanted);
+    return NextResponse.redirect(new URL(wanted && safe !== "/" ? safe : home, url.origin));
+  } catch {
     return problem("db");
   }
-
-  // No T and M record yet? Build one from the ReyGuild invite instead of
-  // sending somebody to a dead end. This is what makes ONE invite enough -
-  // before this, an invited employee got a login that went nowhere because
-  // their T and M side had to be typed in separately by hand.
-  if (!tmUser) {
-    try {
-      const { data: mem } = await supabase
-        .schema("suite")
-        .from("memberships")
-        .select("role,company_id")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      const suiteRole = normalizeRole((mem as any)?.role);
-      const companyId = (mem as any)?.company_id || "";
-
-      // Which company in T and M. This used to be a guess:
-      //
-      //     const orgs = await prisma.organization.findMany({ take: 2 });
-      //     if (orgs.length !== 1) return problem("nouser", email);
-      //
-      // Right every time while there was one customer, and a dead end the
-      // moment there were two. Now the company carries the answer.
-      let orgId = "";
-      if (companyId) {
-        const { data: co } = await supabase
-          .schema("suite")
-          .from("companies")
-          .select("tm_org_id")
-          .eq("id", companyId)
-          .maybeSingle();
-        orgId = ((co as any) || {}).tm_org_id || "";
-      }
-
-      // No link yet? Fall back to the old guess, but ONLY while a guess is
-      // still safe. Two organisations and no link means we would be putting
-      // somebody into another company's jobs and hours, so refuse instead.
-      if (!orgId) {
-        const orgs = await prisma.organization.findMany({ take: 2, select: { id: true } });
-        if (orgs.length !== 1) return problem("nolink", email);
-        orgId = orgs[0].id;
-      }
-
-      const meta: any = (user as any).user_metadata || {};
-      const name =
-        (meta.full_name || meta.name || "").trim() ||
-        email.split("@")[0];
-
-      tmUser = await prisma.user.create({
-        data: {
-          id: "usr_" + crypto.randomUUID(),
-          orgId,
-          email,
-          name,
-          role: tmRoleFor(suiteRole),
-          isActive: true,
-          passwordHash: "",
-        },
-      });
-    } catch (e) {
-      return problem("nouser", email);
-    }
-  }
-
-  try {
-    const token = await createSessionToken(tmUser.id);
-    await setSessionCookie(token);
-  } catch (e) {
-    return problem("session");
-  }
-
-  return go(homeForRole(tmUser.role));
 }

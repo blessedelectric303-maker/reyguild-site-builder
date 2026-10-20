@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { verifiedSuiteTmUser } from "@/lib/suite-identity";
 import { createClient as createSuiteClient } from "@/utils/supabase/server";
 
 // The calendar talks to jobs through here. A scheduled job IS the calendar
@@ -10,60 +9,10 @@ import { createClient as createSuiteClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-// The command center has a ReyGuild session but not always a T and M cookie,
-// so fall back to matching by email the way the bridge does.
-async function whoami() {
-  try {
-    const tm = await getCurrentUser();
-    if (tm) return tm;
-  } catch (e) {
-    // fall through
-  }
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const email = (user?.email || "").trim().toLowerCase();
-    if (!email || !user) return null;
-
-    // AN EMAIL ADDRESS IS NOT AN IDENTITY HERE.
-    //
-    // The same address is allowed to exist in two different companies - the
-    // sign-in screen has a "which company?" step precisely because of it. So
-    // matching on email alone handed back whichever row the database felt
-    // like returning, and with it that company's whole calendar: customers,
-    // addresses, job descriptions, who is assigned. A man who is a tech at
-    // one company and the owner of another could land in either. It would
-    // have looked like a flaky bug rather than what it is.
-    //
-    // The company this person actually belongs to is written down. Ask it.
-    const { data: mem } = await supabase
-      .schema("suite")
-      .from("memberships")
-      .select("company_id")
-      .eq("user_id", user.id)
-      .limit(1)
-      .maybeSingle();
-    const companyId = ((mem as any) || {}).company_id || "";
-    if (!companyId) return null;
-
-    const { data: co } = await supabase
-      .schema("suite")
-      .from("companies")
-      .select("tm_org_id")
-      .eq("id", companyId)
-      .maybeSingle();
-    const orgId = ((co as any) || {}).tm_org_id || "";
-    if (!orgId) return null;
-
-    return await prisma.user.findFirst({
-      where: { email: { equals: email, mode: "insensitive" }, isActive: true, orgId },
-    });
-  } catch (e) {
-    return null;
-  }
-}
+// This endpoint belongs to the Suite command center. Resolve its current
+// verified identity directly; a standalone or stale T&M cookie cannot choose
+// which company's calendar the signed-in Suite account sees.
+const whoami = verifiedSuiteTmUser;
 
 function localDay(d: Date): string {
   const p = (n: number) => (n < 10 ? "0" + n : "" + n);
