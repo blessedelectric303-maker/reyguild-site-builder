@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
+import { shouldRedirectDeployment } from "@/lib/deployment-routing";
 
 // THE ONE FRONT DOOR.
 // Every Vercel build also answers on its own long random address, and those
@@ -22,13 +23,9 @@ const HOME = (process.env.NEXT_PUBLIC_APP_URL || "https://tm.serviceopspro.com")
 //
 // These paths are machine-to-machine, they are guarded by CRON_SECRET, and
 // there is no stale-preview problem to solve for something with no screen.
-function isMachineCall(pathname: string): boolean {
-  return pathname.startsWith("/api/cron/");
-}
-
 export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
-  if (host.endsWith(".vercel.app") && !isMachineCall(request.nextUrl.pathname)) {
+  if (shouldRedirectDeployment(host, request.nextUrl.pathname, process.env.VERCEL_ENV)) {
     const to = new URL(request.nextUrl.pathname + request.nextUrl.search, HOME);
     // 307, not a permanent redirect: a browser remembers a permanent one for
     // good, and that is a hard thing to undo if the real address ever moves.
@@ -42,3 +39,4 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
+

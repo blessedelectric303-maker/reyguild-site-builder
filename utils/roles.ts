@@ -68,8 +68,8 @@ export function isStaff(role: string): boolean {
 //   time_material = T and M and P and L
 //   estimating    = Proposals and Invoicing
 const ROLE_APPS: Record<RoleKey, string[]> = {
-  owner: ["time_material", "estimating", "app_four"],
-  admin: ["time_material", "estimating", "app_four"],
+  owner: ["time_material", "estimating", "app_four", "site_builder"],
+  admin: ["time_material", "estimating", "app_four", "site_builder"],
   supervisor: ["time_material", "estimating"],
   tech: ["time_material", "estimating"],
   apprentice: ["time_material"],
@@ -101,3 +101,4 @@ export function tmRoleFor(role: string): string {
   if (r === "apprentice") return "apprentice";
   return "technician";
 }
+

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { safePath } from "@/lib/safe-path";
 
 type Mode = "signin" | "signup" | "reset";
 
@@ -17,16 +18,23 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("auth_error")) {
+      setError("This sign-in link has expired or was already used. Please sign in or request a new link.");
+    }
+  }, []);
+
   function nextPath(): string {
     if (typeof window === "undefined") return "/";
-    const raw = new URLSearchParams(window.location.search).get("next") || "/";
-    return raw.startsWith("/") ? raw : "/";
+    return safePath(new URLSearchParams(window.location.search).get("next"));
   }
 
   async function handleSubmit() {
     setBusy(true);
     setError(null);
     setNotice(null);
+
+    try {
 
     const next = nextPath();
     const base = window.location.origin;
@@ -94,8 +102,18 @@ export default function LoginPage() {
         // going anywhere, so the first page this person opens already knows
         // they are an owner with a company of their own.
         try {
-          await fetch("/api/start-company", { method: "POST" });
-        } catch {}
+          const response = await fetch("/api/start-company", { method: "POST" });
+          const result = await response.json();
+          if (!response.ok || !result.ok || !result.company_id) {
+            setError("Your login was created, but company setup did not finish. Sign in again to retry setup.");
+            setBusy(false);
+            return;
+          }
+        } catch {
+          setError("Your login was created, but we could not finish company setup. Sign in again to retry setup.");
+          setBusy(false);
+          return;
+        }
         window.location.href = "/";
       } else {
         setNotice("Account created. Check your email to confirm it, then you'll be signed in.");
@@ -104,6 +122,12 @@ export default function LoginPage() {
       return;
     }
 
+    // Retire the previous person's T&M session before changing portal identity.
+    const signedOut = await fetch("/api/auth/logout", { method: "POST" });
+    if (!signedOut.ok) {
+      setError("Could not reset this device's previous session. Please try again.");
+      return;
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setError(error.message);
@@ -123,6 +147,11 @@ export default function LoginPage() {
       }
     } catch {}
     window.location.href = next;
+    } catch {
+      setError("Could not reach ReyGuild. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   const tabCls = (active: boolean) =>
@@ -202,3 +231,4 @@ export default function LoginPage() {
     </main>
   );
 }
+

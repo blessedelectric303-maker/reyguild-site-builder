@@ -3,6 +3,7 @@ import { hasUnsignedDocuments } from "@/lib/signingGate";
 import { createClient } from "@/utils/supabase/server";
 import { canAccess, homeFor } from "@/utils/roles";
 import Invoicing from "./Invoicing";
+import { hasAppAccess } from "@/lib/entitlements";
 
 export const metadata = {
   title: "ReyGuild - Proposals & Invoicing",
@@ -31,19 +32,13 @@ export default async function EstimatingPage() {
   const { data: ents, error: entErr } = await supabase
     .schema("suite")
     .from("entitlements")
-    .select("status")
+    .select("status,trial_ends_at")
     .eq("user_id", user.id)
     .eq("app_key", "estimating");
 
   if (entErr) console.error("[estimating] entitlement read failed:", entErr.message);
 
-  const statuses = (ents || []).map((e: any) => String(e.status));
-  // 'trial' is accepted alongside 'trialing' so an account written before
-  // SQL 51 is not locked out of the app it is paying for.
-  const ok = statuses.some((st) =>
-    st === "active" || st === "trialing" || st === "trial"
-  );
-  if (!ok) redirect("/?no_access=estimating");
+  if (!hasAppAccess(ents)) redirect("/?no_access=estimating");
 
   const { data: mem } = await supabase
     .schema("suite")
@@ -52,8 +47,10 @@ export default async function EstimatingPage() {
     .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();
-  const role = (mem as any)?.role || "owner";
+  if (!mem?.role) redirect("/setup");
+  const role = mem.role;
   if (!canAccess(role, "estimating")) redirect(homeFor(role));
 
   return <Invoicing />;
 }
+
