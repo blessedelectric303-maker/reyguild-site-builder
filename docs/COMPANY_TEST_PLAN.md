@@ -63,7 +63,7 @@ Current database billing functions use $99.99 for five people plus $5 per additi
 
 Run `npm test` with Node.js 22.18+ or Node.js 24. Run `npm run typecheck` and `npm run build` after installing dependencies. Unit tests cover redirects, trial expiry, duplicate entitlements, role limits, T&M identity matching, preview routing, AI output validation, incomplete responses, missing configuration and provider failures. AI tests use mocked responses and do not establish live provider connectivity.
 
-At review time, npm package downloads were blocked by the execution environment. Full TypeScript, Next.js build and browser checks have not passed yet.
+Local npm downloads are blocked by the execution environment. GitHub Actions run 39851064932 passed dependency installation, the regression tests, TypeScript and the Next.js build for commit a63b5144e2f7ba0d150a5ab5170e21c9c854099f. Browser acceptance checks and live AI verification remain outstanding. Additional route tests exercise the real AI and T&M handlers with mocked authentication, database and provider dependencies.
 
 Vercel identified project `reyguild-site-builder` (`prj_b4zgglWccWe02xuXUj2uA7MyxCoM`) under team `team_w7Ls5kvXAegtCUav3f3Y6u3S`, but project/deployment reads returned 403 for scope `blessedelectric303-7315s-projects`. Team authorization is needed to inspect configuration, create a company test deployment, and verify it.
 
