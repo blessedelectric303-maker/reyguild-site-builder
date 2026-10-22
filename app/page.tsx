@@ -9,6 +9,8 @@ import Messages from "@/app/components/Messages";
 import Calendar from "@/app/components/Calendar";
 import CallLinks from "@/app/components/CallLinks";
 import { webmailFor } from "@/utils/webmail";
+import { bestEntitlement, entitlementState } from "@/lib/entitlements";
+import CompanyAssistant from "@/components/CompanyAssistant";
 
 type AppRow = {
   key: string;
@@ -163,13 +165,17 @@ export default async function Home() {
   const { data: ents } = await supabase
     .schema("suite")
     .from("entitlements")
-    .select("app_key,status,trial_ends_at");
+    .select("app_key,status,trial_ends_at")
+    .eq("user_id", user.id);
 
-  const entByApp = new Map<string, EntRow>(
-    (ents ?? []).map((e: EntRow) => [e.app_key, e])
-  );
+  const entByApp = new Map<string, EntRow>();
+  for (const entitlement of (ents || []) as EntRow[]) {
+    const current = entByApp.get(entitlement.app_key);
+    const best = bestEntitlement(current ? [current, entitlement] : [entitlement]);
+    if (best) entByApp.set(entitlement.app_key, best);
+  }
 
-  const trialing = (ents ?? []).filter((e: EntRow) => e.status === "trialing");
+  const trialing = Array.from(entByApp.values()).filter((e) => entitlementState(e) === "trial");
   const trialDaysLeft = trialing.length
     ? Math.max(...trialing.map((e: EntRow) => daysLeft(e.trial_ends_at) ?? 0))
     : null;
@@ -181,22 +187,22 @@ export default async function Home() {
   function tile(app: AppRow | undefined) {
     if (!app) return null;
     const ent = entByApp.get(app.key);
-    const status = ent?.status ?? "locked";
+    const status = entitlementState(ent);
     const left = daysLeft(ent?.trial_ends_at ?? null);
-    const entitled = status === "active" || status === "trialing";
+    const entitled = status === "active" || status === "trial";
     const live = LIVE_APPS[app.key];
     const canOpen = entitled && !!live;
 
     const badge =
       status === "active"
         ? "Active"
-        : status === "trialing"
+        : status === "trial"
         ? "Free trial \u00b7 " + (left ?? 0) + "d left"
         : "Locked";
     const badgeColor =
       status === "active"
         ? "text-emerald-400 border-emerald-700"
-        : status === "trialing"
+        : status === "trial"
         ? "text-amber-300 border-amber-700"
         : "text-slate-400 border-slate-700";
 
@@ -344,6 +350,8 @@ export default async function Home() {
             the handful of things somebody does every day, not a list of
             everything that exists. */}
 
+        <CompanyAssistant />
+
         <div className="text-center mt-8">
           <h1 className="rg-wordmark gold-shine gold-outline text-2xl tracking-wide">YOUR COMMAND CENTER</h1>
           {trialDaysLeft != null && (
@@ -359,3 +367,4 @@ export default async function Home() {
     </main>
   );
 }
+

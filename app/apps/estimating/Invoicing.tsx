@@ -25,7 +25,10 @@ function installStorage(companyId: string) {
         .maybeSingle();
       // A refused read and an absent record both arrived here as null, which
       // is how "permission denied" spent months looking like "not found".
-      if (error) console.error("[storage] read failed for", key, error.message);
+      if (error) {
+        console.error("[storage] read failed for", key, error.message);
+        throw new Error("Could not load your saved data. Check your connection and reload.");
+      }
       const row = data as Row | null;
       return row ? { key: row.key, value: row.value } : null;
     },
@@ -44,14 +47,16 @@ function installStorage(companyId: string) {
       return { key, value };
     },
     async delete(key: string) {
-      await table().delete().eq("company_id", companyId).eq("key", key);
+      const { error } = await table().delete().eq("company_id", companyId).eq("key", key);
+      if (error) throw new Error("Could not delete saved data.");
       return { key, deleted: true };
     },
     async list(prefix = "") {
-      const { data } = await table()
+      const { data, error } = await table()
         .select("key")
         .eq("company_id", companyId)
         .like("key", prefix + "%");
+      if (error) throw new Error("Could not list your saved data.");
       const keys = ((data as Row[]) || []).map((r) => r.key);
       return { keys, prefix };
     },
@@ -1144,7 +1149,8 @@ export default function Invoicing() {
         }
 
         installStorage(companyId);
-        await migrateLegacy(companyId);
+        // Browser-local legacy data has no company identity. Keep it untouched
+        // until an owner explicitly imports it into the correct company.
         if (alive) { setRole(suiteRole); setWho(myName); setReady(true); }
       } catch (e: any) {
         if (alive) setErr("Could not reach your company data. Check your connection and reload.");
@@ -1169,3 +1175,4 @@ export default function Invoicing() {
     </>
   );
 }
+

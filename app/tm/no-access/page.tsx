@@ -4,6 +4,18 @@ import Link from "next/link";
 // bridge itself stays a route handler and is allowed to write the cookie.
 
 const MESSAGES: Record<string, { title: string; body: string }> = {
+  membership: {
+    title: "Finish joining your company",
+    body: "Open your company invitation or ask the owner to confirm your membership before opening Time and Material.",
+  },
+  unverified: {
+    title: "Confirm your email first",
+    body: "Use the confirmation link in your email, then sign in again to open your company's workspace.",
+  },
+  inactive: {
+    title: "Your account is inactive",
+    body: "Ask your company owner or administrator to reactivate your Time and Material access.",
+  },
   noemail: {
     title: "No email on this account",
     body: "Time and Material matches people by email address, and this account does not have one.",
@@ -18,7 +30,7 @@ const MESSAGES: Record<string, { title: string; body: string }> = {
   },
   nolink: {
     title: "Your company is not linked yet",
-    body: "This company has no Time and Material workspace attached to it, and there is more than one to choose from - so we will not guess and risk putting you in somebody else's jobs. An owner or admin needs to link them under Settings.",
+    body: "Your company does not have a Time and Material workspace linked yet. Ask the owner or administrator to finish company setup.",
   },
   nouser: {
     title: "No Time and Material account yet",
@@ -39,3 +51,4 @@ export default async function NoAccess({ searchParams }: { searchParams: Promise
     </main>
   );
 }
+

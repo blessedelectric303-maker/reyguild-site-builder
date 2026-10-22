@@ -1,0 +1,28 @@
+name: Company test checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SUPABASE_URL: https://build-only.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: build-only-publishable-key
+      DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+      DIRECT_URL: postgresql://build:build@127.0.0.1:5432/build
+      JWT_SECRET: build-only-not-a-live-signing-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm test
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run build

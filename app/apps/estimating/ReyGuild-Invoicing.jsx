@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
+import AIProposalDraft from "@/components/AIProposalDraft";
+import { draftScopeText } from "@/lib/reyguild-ai";
 
 const LOGO = "data:image/png;base64,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";
 
@@ -721,7 +723,10 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
               }
               return v;
             }
-            catch (e) { return fallback; }
+            catch (e) {
+              setErr("Some saved data could not be loaded. Check your connection and reload before editing.");
+              return fallback;
+            }
           };
           setPeople(await load(STORAGE.people, []));
           setClients(await load(STORAGE.clients, []));
@@ -773,14 +778,17 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
   //                          it while I was working. KEEP IT.
   //   on the server only, and I did know about it   -> I deleted it. Drop it.
   async function save(key, next, setter) {
-    setter(next);
     try {
-      if (!window.storage) return;
+      if (!window.storage) {
+        setErr("Storage is not ready. Nothing was saved.");
+        return false;
+      }
 
       const mergeable = Array.isArray(next) && next.every((x) => x && typeof x === "object" && x.id);
       if (!mergeable) {
         await window.storage.set(key, JSON.stringify(next), false);
-        return;
+        setter(next);
+        return true;
       }
 
       let server = [];
@@ -792,7 +800,7 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
         // Cannot read what is there, so cannot merge safely. Writing the
         // whole array now is exactly the overwrite this exists to prevent.
         setErr("Couldn't check for other changes — nothing was saved. Try again.");
-        return;
+        return false;
       }
 
       const mine = new Set(next.map((x) => x.id));
@@ -802,9 +810,11 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
 
       await window.storage.set(key, JSON.stringify(merged), false);
       seenIds.current[key] = new Set(merged.map((x) => x && x.id).filter(Boolean));
-      if (theirs.length) setter(merged);
+      setter(merged);
+      return true;
     } catch (e) {
-      setErr("Couldn't save — changes are held for this session but may not persist.");
+      setErr("Couldn't save. Your draft is still in the form; check your connection and try again.");
+      return false;
     }
   }
 
@@ -1158,8 +1168,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
     setErr("");
     try {
       const id = await saveEstimate("Submitted");
-      const ref = id || estForm.id;
-      if (!ref) { setErr("Save the proposal first."); setSending(false); return; }
+      const ref = id;
+      if (!ref) { setSending(false); return; }
       const res = await fetch("/api/proposal/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1223,7 +1233,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       }, ...clients], setClients);
     }
     if (rec.id) {
-      await save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
+      const saved = await save(STORAGE.estimates, estimates.map((e) => (e.id === rec.id ? rec : e)), setEstimates);
+      if (!saved) return;
       logAudit("Edited proposal", (rec.client || "") + (rec.estimateNo ? " #" + rec.estimateNo : ""));
       return rec.id;
     }
@@ -1232,7 +1243,8 @@ export default function ReyGuild({ suiteRole = "tech", signedInName = "" }) {
       if (num) rec.estimateNo = num;
     }
     const newId = uid();
-    await save(STORAGE.estimates, [{ ...rec, id: newId }, ...estimates], setEstimates);
+    const saved = await save(STORAGE.estimates, [{ ...rec, id: newId }, ...estimates], setEstimates);
+    if (!saved) return;
     // THE FORM KEEPS THE ID IT WAS JUST SAVED UNDER.
     // Without this the form still looked brand new after a save, so the next
     // save minted a SECOND record with a new id - and the accept link already
@@ -2618,6 +2630,10 @@ Prices as plain numbers, no dollar signs and no commas. Quote any field containi
           <section className="fl-panel" ref={formRef}>
             <div className="fl-panel-head">
               <h2>{estForm.id ? "Edit proposal" : "New proposal"}</h2>
+              {!estForm.id && <AIProposalDraft onUseDraft={(draft) => setEstForm((form) => ({
+                ...form, jobDescription: draft.title, mode: "lumpsum",
+                lumpDescription: draftScopeText(draft), lumpPrice: "",
+              }))} />}
               <button className="fl-panel-close" title="Close"
                 onClick={() => { setEstForm(emptyEstimate()); setEstFormOpen(false); setErr(""); }}>&times;</button>
             </div>
@@ -5429,3 +5445,4 @@ a.fl-job-btn{display:inline-block; text-decoration:none}
 .fl-root .fl-meta { font-size:15px; }
 
 `;
+
